@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Cpu, Users, CreditCard, Settings, LayoutDashboard, Building2, Mail, LogOut } from 'lucide-react';
+import { Cpu, Users, CreditCard, Settings, LayoutDashboard, Building2, Mail, LogOut, Smartphone, Tag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,8 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     { href: '/admin/users', label: 'Usuarios', icon: Users },
     { href: '/admin/emails', label: 'Correos', icon: Mail },
     { href: '/admin/billing', label: 'Facturación', icon: CreditCard },
+    { href: '/admin/pagos-moviles', label: 'Pagos Móviles', icon: Smartphone },
+    { href: '/admin/cupones', label: 'Cupones', icon: Tag },
     { href: '/admin/settings', label: 'Configuración Global', icon: Settings },
   ];
 

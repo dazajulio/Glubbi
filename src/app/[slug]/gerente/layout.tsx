@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera } from 'lucide-react';
+import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard } from 'lucide-react';
 import { WaiterNotificationBell } from './components/WaiterNotificationBell';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
 
@@ -76,6 +76,7 @@ export default function GerenteLayout({
     { href: `/${slug}/gerente/qr`, label: 'Códigos QR', icon: QrCode },
     { href: `/${slug}/gerente/guia-visual`, label: 'Guía Visual', icon: Camera },
     { href: `/${slug}/gerente/ai`, label: 'Agente IA', icon: Brain },
+    { href: `/${slug}/gerente/suscripcion`, label: 'Suscripción', icon: CreditCard },
   ];
 
   return (

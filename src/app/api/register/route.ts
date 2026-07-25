@@ -62,6 +62,7 @@ export async function POST(request: Request) {
       glubbi_category,
       manualPayment,
       paymentReference,
+      couponId,
     } = body;
 
     // Validation
@@ -250,6 +251,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // 4.5 Register Coupon Redemption if exists
+    if (couponId) {
+      try {
+        const { data: couponData } = await supabaseAdmin.from('coupons').select('discount_percentage, current_uses').eq('id', couponId).single();
+        if (couponData) {
+          const discountApplied = 29 * (couponData.discount_percentage / 100);
+          await supabaseAdmin.from('coupon_redemptions').insert({
+            coupon_id: couponId,
+            restaurant_id: newRestaurantId,
+            discount_applied: discountApplied
+          });
+          // Increment uses
+          await supabaseAdmin.from('coupons').update({ current_uses: couponData.current_uses + 1 }).eq('id', couponId);
+        }
+      } catch (err) {
+        console.error('Error redeeming coupon:', err);
+      }
+    }
+
     // 5. Construir URL de checkout de Lemon Squeezy con datos del restaurante
     if (!manualPayment) {
       let checkoutUrl = '';
@@ -283,7 +303,26 @@ export async function POST(request: Request) {
           from: 'Glubbi Soporte <soporte@glubbi.app>',
           to: email,
           subject: `Bienvenido a Glubbi, ${restaurantName}`,
-          html: `¡Hola ${contactName}!<br><br>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma.<br><br>Puedes acceder a tu panel administrativo desde el siguiente enlace oficial:<br><br><a href="https://www.glubbi.app/${slug}/gerente" style="color: #ff6b00; font-weight: bold; font-size: 16px;">Acceder al Panel de Glubbi</a><br><br>¡Muchos éxitos en tus ventas!<br>El equipo de Glubbi`
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+              <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
+              <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma.</p>
+              <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
+              </p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">
+                <h3 style="margin-top: 0; color: #333; font-size: 14px;">📄 Acuerdo de Uso y Términos del Servicio</h3>
+                <p>Por motivos de transparencia y seguridad jurídica, hemos adjuntado nuestro Acuerdo de Uso Oficial aplicable a todos los comercios afiliados.</p>
+                <p><strong>Cláusula Legal:</strong> <i>La recepción de este correo electrónico, sumado a tu primer inicio de sesión (Log In) y el uso continuo de la plataforma, constituye una firma digital vinculante y la aceptación total e irrevocable de todos los términos, condiciones y políticas descritas en nuestro Acuerdo de Uso.</i></p>
+                <p style="text-align: center; margin-top: 15px;">
+                  <a href="https://www.glubbi.app/legal/acuerdo-de-uso" target="_blank" style="color: #FF6B00; font-weight: bold; text-decoration: underline;">Leer el Acuerdo de Uso Legal</a>
+                </p>
+              </div>
+              <p style="margin-top: 30px; font-size: 14px;">¡Muchos éxitos en tus ventas!<br><strong>El equipo de Glubbi</strong></p>
+            </div>
+          `
         });
       } catch (emailErr) {
         console.error('Error sending emails:', emailErr);
@@ -311,7 +350,29 @@ export async function POST(request: Request) {
         from: 'Glubbi Soporte <soporte@glubbi.app>',
         to: email,
         subject: `Bienvenido a Glubbi, ${restaurantName}`,
-        html: `¡Hola ${contactName}!<br><br>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma.<br><br>Puedes acceder a tu panel administrativo desde el siguiente enlace oficial:<br><br><a href="https://www.glubbi.app/${slug}/gerente" style="color: #ff6b00; font-weight: bold; font-size: 16px;">Acceder al Panel de Glubbi</a><br><br>Recuerda que como seleccionaste Pago Móvil, es posible que algunas funciones tarden en habilitarse mientras verificamos el pago.<br><br>¡Muchos éxitos en tus ventas!<br>El equipo de Glubbi`
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
+            <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma.</p>
+            <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
+            </p>
+            <p style="font-size: 13px; color: #666; background-color: #fff3e0; padding: 10px; border-left: 3px solid #FF6B00;">
+              <strong>Nota sobre tu Pago Móvil:</strong> Es posible que algunas funciones tarden en habilitarse mientras verificamos tu pago de forma manual.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">
+              <h3 style="margin-top: 0; color: #333; font-size: 14px;">📄 Acuerdo de Uso y Términos del Servicio</h3>
+              <p>Por motivos de transparencia y seguridad jurídica, hemos adjuntado nuestro Acuerdo de Uso Oficial aplicable a todos los comercios afiliados.</p>
+              <p><strong>Cláusula Legal:</strong> <i>La recepción de este correo electrónico, sumado a tu primer inicio de sesión (Log In) y el uso continuo de la plataforma, constituye una firma digital vinculante y la aceptación total e irrevocable de todos los términos, condiciones y políticas descritas en nuestro Acuerdo de Uso.</i></p>
+              <p style="text-align: center; margin-top: 15px;">
+                <a href="https://www.glubbi.app/legal/acuerdo-de-uso" target="_blank" style="color: #FF6B00; font-weight: bold; text-decoration: underline;">Leer el Acuerdo de Uso Legal</a>
+              </p>
+            </div>
+            <p style="margin-top: 30px; font-size: 14px;">¡Muchos éxitos en tus ventas!<br><strong>El equipo de Glubbi</strong></p>
+          </div>
+        `
       });
     } catch (emailErr) {
       console.error('Error sending emails:', emailErr);

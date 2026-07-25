@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { 
   CheckCircle2, 
   Loader2, 
@@ -72,6 +73,39 @@ export default function RegisterPage() {
     glubbi_category: 'Otras',
   });
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; discount_percentage: number; code: string } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setCouponLoading(true);
+    const supabase = createClient();
+    
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', couponCode.toUpperCase())
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) {
+      setCouponError('Cupón inválido o inactivo');
+      setAppliedCoupon(null);
+    } else {
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        setCouponError('El cupón alcanzó su límite de usos');
+        setAppliedCoupon(null);
+      } else {
+        setAppliedCoupon(data);
+      }
+    }
+    setCouponLoading(false);
+  };
+
+
 
   // Unique generated slug to show at the end
   const [registeredSlug, setRegisteredSlug] = useState('');
@@ -119,7 +153,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, manualPayment: false }),
+        body: JSON.stringify({ ...formData, manualPayment: false, couponId: appliedCoupon?.id }),
       });
 
       const result = await response.json();
@@ -167,7 +201,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, manualPayment: true, paymentReference }),
+        body: JSON.stringify({ ...formData, manualPayment: true, paymentReference, couponId: appliedCoupon?.id }),
       });
 
       const result = await response.json();
@@ -522,6 +556,33 @@ export default function RegisterPage() {
                   <p className="text-slate-400 text-sm">Selecciona tu método de pago preferido para activar tu suscripción de $29/mes.</p>
                 </div>
 
+                {/* Coupon Section */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-4">
+                  <label className="text-sm font-bold text-slate-700 block mb-2">¿Tienes un código de descuento?</label>
+                  <div className="flex gap-2">
+                    <input 
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Ingresa tu cupón"
+                      className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm uppercase focus:border-orange-500 outline-none"
+                    />
+                    <button 
+                      onClick={handleApplyCoupon}
+                      type="button"
+                      disabled={couponLoading || !couponCode}
+                      className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      {couponLoading ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+                  {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+                  {appliedCoupon && (
+                    <p className="text-green-600 text-xs mt-2 font-bold">
+                      ¡Cupón {appliedCoupon.code} aplicado! Tienes un {appliedCoupon.discount_percentage}% de descuento.
+                    </p>
+                  )}
+                </div>
+
                 {errorMsg && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-xs font-semibold">
                     {errorMsg}
@@ -574,9 +635,9 @@ export default function RegisterPage() {
 
                 <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 space-y-3">
                   <div className="flex justify-between items-center border-b border-orange-200/50 pb-3">
-                    <span className="text-slate-600 text-sm font-bold">Monto a pagar ($29 USD):</span>
+                    <span className="text-slate-600 text-sm font-bold">Monto a pagar ({appliedCoupon ? `Con ${appliedCoupon.discount_percentage}% desc.` : '$29 USD'}):</span>
                     <span className="text-xl font-black text-orange-600">
-                      Bs. {bcvRate ? (bcvRate * 29).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Calculando...'}
+                      Bs. {bcvRate ? (bcvRate * (appliedCoupon ? 29 * (1 - appliedCoupon.discount_percentage / 100) : 29)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Calculando...'}
                     </span>
                   </div>
                   <div className="text-sm text-slate-700 space-y-1 pt-1">

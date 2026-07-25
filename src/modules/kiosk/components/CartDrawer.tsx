@@ -12,9 +12,12 @@ interface CartDrawerProps {
   onCheckout: () => void;
   currency: string;
   onEditItem?: (item: any) => void;
+  deliveryFee?: number;
+  discountPercentage?: number;
+  isDelivery?: boolean;
 }
 
-export function CartDrawer({ isOpen, onClose, onCheckout, currency, onEditItem }: CartDrawerProps) {
+export function CartDrawer({ isOpen, onClose, onCheckout, currency, onEditItem, deliveryFee = 0, discountPercentage = 0, isDelivery = false }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, getTotal, getItemCount } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
@@ -135,10 +138,34 @@ export function CartDrawer({ isOpen, onClose, onCheckout, currency, onEditItem }
         {/* Footer / Checkout */}
         {items.length > 0 && (
           <div className="p-6 border-t border-gray-200/80 bg-slate-50 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.5)]">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-lg font-medium text-gray-500">{t('total')}</span>
+            <div className="space-y-2 mb-4 text-sm">
+              <div className="flex justify-between text-gray-500">
+                <span>Subtotal</span>
+                <span>{formatPrice(getTotal(), currency)}</span>
+              </div>
+              {isDelivery && deliveryFee > 0 && (
+                <div className="pt-2">
+                  <div className="flex justify-between text-gray-500">
+                    <span>Delivery</span>
+                    <div className="text-right">
+                      {discountPercentage > 0 ? (
+                        <>
+                          <span className="line-through text-gray-400 mr-2">{formatPrice(deliveryFee, currency)}</span>
+                          <span className="font-bold text-gray-900">{formatPrice(deliveryFee * (1 - discountPercentage / 100), currency)}</span>
+                          <p className="text-green-600 text-[10px] font-bold uppercase mt-0.5">{discountPercentage}% de descuento</p>
+                        </>
+                      ) : (
+                        <span>{formatPrice(deliveryFee, currency)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between items-center mb-6 pt-3 border-t border-gray-200">
+              <span className="text-lg font-bold text-gray-900">{t('total')}</span>
               <span className="text-2xl font-bold text-gray-900">
-                {formatPrice(getTotal(), currency)}
+                {formatPrice(getTotal() + (isDelivery ? deliveryFee * (1 - discountPercentage / 100) : 0), currency)}
               </span>
             </div>
             

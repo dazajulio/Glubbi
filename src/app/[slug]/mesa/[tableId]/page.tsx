@@ -46,6 +46,10 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [deliveryPhone, setDeliveryPhone] = useState('');
   const [deliveryReference, setDeliveryReference] = useState('');
   
+  // Pricing Rules
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
+  
   // Flow state
   const [step, setStep] = useState<FlowStep>('browse');
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -66,6 +70,13 @@ export default function KioskPage({ params }: KioskPageProps) {
   
   // Currency from restaurant (hardcoded USD for now, could be fetched)
   const currency = 'USD';
+
+  // Derived Pricing
+  const subtotal = getTotal();
+  const deliveryCost = isDelivery ? deliveryFee : 0;
+  const deliveryDiscountAmount = deliveryCost * (discountPercentage / 100);
+  const finalDeliveryCost = deliveryCost - deliveryDiscountAmount;
+  const finalTotal = subtotal + finalDeliveryCost;
 
   // Helper to change step and push browser history state
   const changeStep = (newStep: FlowStep, replace = false) => {
@@ -138,6 +149,9 @@ export default function KioskPage({ params }: KioskPageProps) {
           setPaymentMethods(restaurant.payment_methods as any[]);
         } catch (e) {}
       }
+      
+      setDeliveryFee(restaurant.delivery_fee || 0);
+      setDiscountPercentage(restaurant.discount_percentage || 0);
       
       // Load categories
       const { data: catsData } = await supabase
@@ -376,7 +390,7 @@ export default function KioskPage({ params }: KioskPageProps) {
     const supabase = createClient();
     
     // Save total before processing
-    const currentTotal = getTotal();
+    const currentTotal = finalTotal;
     setLastTotal(currentTotal);
     
     // Insert into orders
@@ -404,7 +418,7 @@ export default function KioskPage({ params }: KioskPageProps) {
         table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
         customer_id: customerId || null,
         status: 'pending',
-        total_amount: getTotal(),
+        total_amount: finalTotal,
         payment_method: method.title, // Store the title of the custom method
         payment_status: 'pending',
         notes: notesPrefix || null
@@ -542,7 +556,7 @@ export default function KioskPage({ params }: KioskPageProps) {
           Volver
         </button>
         <CheckoutForm 
-          total={getTotal()} 
+          total={finalTotal} 
           currency={currency}
           onSelectPayment={handleProcessPayment}
           isProcessing={isProcessing}
@@ -664,7 +678,7 @@ export default function KioskPage({ params }: KioskPageProps) {
               </div>
               <span>Ver Pedido</span>
             </div>
-            <span>{formatPrice(getTotal(), currency)}</span>
+            <span>{formatPrice(finalTotal, currency)}</span>
           </button>
         </div>
       )}
@@ -675,6 +689,9 @@ export default function KioskPage({ params }: KioskPageProps) {
         onCheckout={handleCheckoutClick}
         currency={currency}
         onEditItem={handleEditCartItem}
+        deliveryFee={deliveryFee}
+        discountPercentage={discountPercentage}
+        isDelivery={isDelivery}
       />
 
       <UpsellModal 

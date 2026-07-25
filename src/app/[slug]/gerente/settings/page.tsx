@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PinAuthModal } from '@/components/shared/PinAuthModal';
-import { BarChart3, Building2, Save, Lock, TrendingUp, Users, Package, DollarSign, Calendar } from 'lucide-react';
+import { BarChart3, Building2, Save, Lock, TrendingUp, Users, Package, DollarSign, Calendar, Truck, Percent } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import type { Product, OrderWithItems, Customer } from '@/types/database';
 
@@ -39,6 +39,9 @@ export default function SettingsAdminPage() {
   const [glubbiType, setGlubbiType] = useState('Restaurantes');
   const [glubbiCategory, setGlubbiCategory] = useState('');
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodItem[]>([]);
+  const [deliveryEnabled, setDeliveryEnabled] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
 
   // --- Admin Password State ---
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -89,6 +92,9 @@ export default function SettingsAdminPage() {
             console.error('Error parsing payment methods', e);
           }
         }
+        setDeliveryEnabled(restData.delivery_enabled || false);
+        setDeliveryFee(restData.delivery_fee || 0);
+        setDiscountPercentage(restData.discount_percentage || 0);
       }
       
       // Products for upsell selection
@@ -137,7 +143,10 @@ export default function SettingsAdminPage() {
         address,
         glubbi_type: glubbiType,
         glubbi_category: glubbiCategory,
-        payment_methods: paymentMethods
+        payment_methods: paymentMethods,
+        delivery_enabled: deliveryEnabled,
+        delivery_fee: deliveryFee,
+        discount_percentage: discountPercentage
       } as any)
       .eq('id', restaurantId);
       
@@ -700,6 +709,84 @@ export default function SettingsAdminPage() {
               >
                 <Save className="w-5 h-5" />
                 {isSaving ? 'Guardando...' : 'Guardar Datos'}
+              </button>
+            </div>
+          </div>
+
+          {/* Delivery & Descuentos */}
+          <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 shadow-xl h-fit">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Truck className="w-5 h-5 text-orange-500" /> Envío a Domicilio
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Configura el costo del envío a domicilio y aplica descuentos promocionales al costo del delivery.
+            </p>
+            
+            <div className="space-y-6">
+              {/* Delivery Toggle & Fee */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Activar Delivery</h3>
+                    <p className="text-xs text-gray-500">Permitir envíos a domicilio en el menú público.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={deliveryEnabled}
+                      onChange={(e) => setDeliveryEnabled(e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+
+                {deliveryEnabled && (
+                  <div className="pt-2 animate-fade-in">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Costo de Envío ($)</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={deliveryFee}
+                      onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      placeholder="Ej. 2.50"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Delivery Discount */}
+              {deliveryEnabled && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Percent className="w-4 h-4 text-emerald-500" />
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Descuento en Delivery (%)</label>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">Aplica un porcentaje de descuento exclusivo al costo del envío. (0 = sin descuento)</p>
+                  <input 
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="100"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Ej. 50"
+                  />
+                </div>
+              )}
+              
+              <button 
+                onClick={saveSettings}
+                disabled={isSaving}
+                className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-5 h-5" />
+                {isSaving ? 'Guardando...' : 'Guardar Delivery'}
               </button>
             </div>
           </div>
