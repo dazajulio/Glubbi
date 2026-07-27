@@ -205,17 +205,17 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
           return (
             <div key={table.id} className="bg-white rounded-2xl overflow-hidden border border-zinc-200 flex flex-col relative group shadow-sm hover:shadow-md transition-shadow">
               {/* Table Actions Overlay */}
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 flex gap-1 z-10">
                 <button 
                   onClick={() => handleEditTable(table.id, table.label || '')}
-                  className="p-2 bg-white/50 hover:bg-white/80 rounded-lg text-white backdrop-blur-sm transition-colors"
+                  className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white backdrop-blur-sm transition-colors shadow-sm"
                   title="Editar"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => handleDeleteTable(table.id)}
-                  className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg text-white backdrop-blur-sm transition-colors"
+                  className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white backdrop-blur-sm transition-colors shadow-sm"
                   title="Eliminar"
                 >
                   <Trash2 className="w-4 h-4" />
