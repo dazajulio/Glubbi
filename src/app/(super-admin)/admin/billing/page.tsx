@@ -57,12 +57,12 @@ export default function BillingPage() {
       {/* Alert box - Pending Gateway setup */}
       <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-3xl p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="space-y-1">
-          <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Integración en Desarrollo</span>
+          <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Integración Próxima: Lemon Squeezy</span>
           <p className="text-sm text-gray-800">
-            Esta sección se encuentra en modo de previsualización **conectada a los datos reales de registros**.
+            Esta sección usa datos reales de tus restaurantes activos para proyectar tus ganancias mensuales.
           </p>
           <p className="text-xs text-gray-400">
-            Una vez enlacemos las APIs de cobro móvil y Lemon Squeezy en producción, esta pantalla se alimentará adicionalmente de logs de pago directos.
+            En un futuro cercano, conectaremos la API de Lemon Squeezy (plataforma que cobrará las suscripciones por ti). Una vez enlazada, esta pantalla mostrará los pagos reales recibidos en tu cuenta bancaria y los logs de transacciones oficiales.
           </p>
         </div>
         <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-xl text-xs font-bold uppercase tracking-wider">

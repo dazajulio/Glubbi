@@ -59,4 +59,6 @@ El proyecto está dividido en varios portales o "aplicaciones" dentro del mismo 
 ## 5. Próximos Pasos Activos (Roadmap Inmediato)
 1. **Módulo de Suscripción Manual (Pago Móvil):** Reporte desde `/gerente`, aprobación desde `/(super-admin)`, y automatización de suspensión (Cron) más notificaciones de Resend (2 días antes, día de cobro, suspensión a los +5 días).
 2. **Sistema de Cupones B2B:** Gestión de códigos de descuento en `/(super-admin)` aplicables durante el `/register`.
-3. **Módulo de Delivery:** Configuración de habilitación, costo fijo, y porcentaje de descuento visual desde `/gerente` a reflejarse en el carrito del cliente en `/[slug]`.
+## 6. Reglas de Modificación y Despliegue (IMPORTANTE)
+1. **Confirmación antes de push:** A partir de ahora, el agente (yo) NO debe ejecutar `git push` a la rama principal (`main`) de forma automática sin antes presentar un resumen de los cambios y pedir **confirmación explícita** al usuario.
+2. **Protección de flujos estables:** Si se solicita un cambio que afecte el checkout, el carrito o el KDS (flujos ya estables y probados), se debe proponer un plan de acción y obtener luz verde antes de modificar el código.

@@ -227,7 +227,12 @@ export default function SuperAdminDashboard() {
   const totalARR = totalMRR * 12;
 
   // GMV Global (volume transacted by paid/completed orders)
-  const paidOrders = orders.filter(o => o.payment_status === 'paid' && o.status !== 'cancelled');
+  // Instead of strictly filtering by payment_status === 'paid', we count orders that are delivered/ready 
+  // or explicitly paid, since manual payments might remain in 'pending' status.
+  const paidOrders = orders.filter(o => 
+    o.status !== 'cancelled' && 
+    (o.payment_status === 'paid' || o.status === 'delivered' || o.status === 'ready')
+  );
   const gmvGlobal = paidOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
 
   // Orders count

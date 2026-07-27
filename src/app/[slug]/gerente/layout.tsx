@@ -77,6 +77,7 @@ export default function GerenteLayout({
     { href: `/${slug}/gerente/guia-visual`, label: 'Guía Visual', icon: Camera },
     { href: `/${slug}/gerente/ai`, label: 'Agente IA', icon: Brain },
     { href: `/${slug}/gerente/suscripcion`, label: 'Suscripción', icon: CreditCard },
+    { href: `/${slug}/gerente/account`, label: 'Configuración de la Cuenta', icon: ClipboardList },
   ];
 
   return (
