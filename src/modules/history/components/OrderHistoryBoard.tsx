@@ -169,14 +169,28 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                     {order.order_items.map(item => `${item.quantity}x ${item.product_name}`).join(', ')}
                   </p>
                   {order.payment_method ? (
-                    <span className="text-xs px-2 py-1 bg-slate-100 text-gray-800 rounded-md font-medium">
-                      Pago: {order.payment_method === 'stripe' ? 'Tarjeta' : (order.payment_method as any) === 'terminal' ? 'Terminal' : (order.payment_method as any) === 'pago_movil' ? 'Pago Móvil' : 'Efectivo'}
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-xs px-2 py-1 bg-slate-100 text-gray-800 rounded-md font-medium">
+                        Método: {order.payment_method === 'stripe' ? 'Tarjeta' : (order.payment_method as any) === 'terminal' ? 'Terminal' : (order.payment_method as any) === 'pago_movil' ? 'Pago Móvil' : 'Efectivo'}
+                      </span>
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                        {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
+                      </span>
+                    </div>
                   ) : order.notes && order.notes.includes('Validación:') ? (
-                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-md font-bold border border-purple-200">
-                      Pago Móvil Validado
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-md font-bold border border-purple-200">
+                        Pago Móvil (Transferencia)
+                      </span>
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                        {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
+                      {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
                     </span>
-                  ) : null}
+                  )}
                 </div>
 
               </div>

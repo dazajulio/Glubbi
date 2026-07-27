@@ -33,7 +33,7 @@ export default function ReportsPage() {
           *,
           order_items (*)
         `)
-        .eq('status', 'delivered'); // Or all non-cancelled paid orders. Let's just fetch paid orders
+        .neq('status', 'cancelled');
         
       const { data: customersData } = await supabase
         .from('customers')
@@ -76,7 +76,10 @@ export default function ReportsPage() {
   let monthSales = 0;
 
   orders.forEach(order => {
-    if (order.payment_status !== 'paid') return;
+    // Solo contamos órdenes pagadas o entregadas (asumiendo que si se entregó, se cobró)
+    const isPaidOrDelivered = order.payment_status === 'paid' || order.status === 'delivered' || order.status === 'ready';
+    if (!isPaidOrDelivered) return;
+    
     const orderDate = new Date(order.created_at);
     const amount = Number(order.total_amount) || 0;
     
