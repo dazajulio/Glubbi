@@ -12,7 +12,7 @@ import { CheckoutForm } from '@/modules/kiosk/components/CheckoutForm';
 import { OrderStatus } from '@/modules/kiosk/components/OrderStatus';
 import { ProductCustomizationModal } from '@/modules/kiosk/components/ProductCustomizationModal';
 import { useCartStore } from '@/modules/kiosk/stores/cart-store';
-import { ShoppingBag, ChevronLeft, Home, MessageCircle } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { formatPrice } from '@/lib/utils';
 import Link from 'next/link';
