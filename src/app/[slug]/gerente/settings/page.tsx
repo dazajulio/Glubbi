@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PinAuthModal } from '@/components/shared/PinAuthModal';
 import { BarChart3, Building2, Save, Lock, TrendingUp, Users, Package, DollarSign, Calendar, Truck, Percent } from 'lucide-react';
@@ -17,6 +17,9 @@ interface PaymentMethodItem {
 
 export default function SettingsAdminPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  // Extract slug from URL: /[slug]/gerente/settings
+  const slugFromUrl = pathname?.split('/')?.[1] || '';
   const supabase = createClient();
 
   // --- Settings State ---
@@ -55,8 +58,23 @@ export default function SettingsAdminPage() {
   const [restaurantId, setRestaurantId] = useState('');
 
   useEffect(() => {
-    setRestaurantId(localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '');
-  }, []);
+    // Prefer loading by slug from URL for reliability
+    if (slugFromUrl) {
+      supabase
+        .from('restaurants')
+        .select('id')
+        .eq('slug', slugFromUrl)
+        .single()
+        .then(({ data }) => {
+          if (data?.id) {
+            setRestaurantId(data.id);
+            localStorage.setItem('active_restaurant_id', data.id);
+          }
+        });
+    } else {
+      setRestaurantId(localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '');
+    }
+  }, [slugFromUrl]);
 
   // --- Load Data ---
   useEffect(() => {
