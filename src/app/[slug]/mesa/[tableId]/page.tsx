@@ -66,6 +66,7 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [upsellProducts, setUpsellProducts] = useState<ProductWithModifiers[]>([]);
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isFromGlubbi, setIsFromGlubbi] = useState(false);
+  const [kycStatus, setKycStatus] = useState<string>('verified');
   
   const { addItem, getItemCount, getTotal, setContext, items, clearCart, restaurantId, updateItemModifiers } = useCartStore();
   
@@ -145,6 +146,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       setContext(restaurant.id, tableId);
       setRestaurantName(restaurant.name || 'Burger Palace');
       setRestaurantLogo(restaurant.logo_url);
+      setKycStatus(restaurant.kyc_status || 'unverified');
       
       if (restaurant.payment_methods) {
         try {
@@ -534,6 +536,25 @@ export default function KioskPage({ params }: KioskPageProps) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"/>
     </div>;
+  }
+
+  // --- KYC BLOCKER ---
+  if (kycStatus !== 'verified') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans text-center space-y-6">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="relative z-10 w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-200 mx-auto">
+          <ShieldCheck className="w-10 h-10 text-orange-500" />
+        </div>
+        <div className="relative z-10 max-w-md mx-auto space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Restaurante en Validación</h2>
+          <p className="text-gray-500 leading-relaxed">
+            Este local se encuentra en proceso de validación de seguridad por el equipo de Glubbi para proteger a nuestra comunidad. Vuelve pronto.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // --- RENDERING FLOW STEPS ---
