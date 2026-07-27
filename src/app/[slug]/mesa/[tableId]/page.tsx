@@ -399,6 +399,10 @@ export default function KioskPage({ params }: KioskPageProps) {
     // Determine target table ID (waiter selects dynamically)
     const targetTableId = isWaiter ? selectedTableId : tableId;
 
+    // Determine payment method type to satisfy DB CHECK constraint
+    const methodType = (method.type === 'cash' || method.id === 'cash') ? 'cash' : 
+                       (method.type === 'stripe' || method.id === 'stripe') ? 'stripe' : 'terminal';
+
     // Append origin tags to notes
     let notesPrefix = '';
     if (isDelivery) {
@@ -410,6 +414,9 @@ export default function KioskPage({ params }: KioskPageProps) {
     if (verificationNotes) {
       notesPrefix = notesPrefix ? `${notesPrefix} | ${verificationNotes}` : verificationNotes;
     }
+    
+    // Add custom payment method name to notes so KDS/Gerente can see it
+    notesPrefix = notesPrefix ? `${notesPrefix} | [Pago vía: ${method.title || method.id}]` : `[Pago vía: ${method.title || method.id}]`;
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -419,7 +426,7 @@ export default function KioskPage({ params }: KioskPageProps) {
         customer_id: customerId || null,
         status: 'pending',
         total_amount: finalTotal,
-        payment_method: method.title, // Store the title of the custom method
+        payment_method: methodType, // Use validated method to pass DB constraint
         payment_status: 'pending',
         notes: notesPrefix || null
       } as any)

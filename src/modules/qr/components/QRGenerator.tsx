@@ -14,8 +14,16 @@ interface QRGeneratorProps {
 export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGeneratorProps) {
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const supabase = createClient();
-  const domain = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  
+  // Get the base URL safely
+  const getBaseUrl = () => {
+    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+    if (typeof window !== 'undefined') return window.location.origin;
+    return 'https://www.glubbi.app';
+  };
+  const domain = getBaseUrl();
 
   const loadTables = async () => {
     const { data } = await supabase
@@ -29,6 +37,7 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
   };
 
   useEffect(() => {
+    setMounted(true);
     loadTables();
   }, [restaurantId, supabase]);
 
@@ -47,7 +56,8 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
     if (!label) return;
     
     setIsLoading(true);
-    const maxNumber = tables.length > 0 ? Math.max(...tables.map(t => t.table_number)) : 0;
+    const validNumbers = tables.map(t => Number(t.table_number)).filter(n => !isNaN(n));
+    const maxNumber = validNumbers.length > 0 ? Math.max(...validNumbers) : 0;
     
     const { error } = await supabase
       .from('tables')

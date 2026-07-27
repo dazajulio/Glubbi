@@ -234,6 +234,10 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
           </button>
           <button 
             onClick={() => {
+              if (categories.length === 0) {
+                alert('Debes crear al menos una Categoría antes de añadir platos.');
+                return;
+              }
               setProductToEdit(null);
               setIsModalOpen(true);
             }}
