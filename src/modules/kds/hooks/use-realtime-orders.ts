@@ -285,7 +285,7 @@ export function useRealtimeOrders({
 
       const { error } = await supabase
         .from('orders')
-        .update({ payment_status: 'paid', stripe_payment_intent_id: 'terminal' } as any)
+        .update({ payment_status: 'paid', stripe_payment_intent_id: `manual_${reference}` } as any)
         .eq('id', orderId);
 
       if (error) {
