@@ -17,13 +17,19 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
   const [mounted, setMounted] = useState(false);
   const supabase = createClient();
   
-  // Get the base URL safely
+  // Always use glubbi.app in production; fallback to current origin in local dev
   const getBaseUrl = () => {
-    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
-    if (typeof window !== 'undefined') return window.location.origin;
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      // If running on any glubbi/mtriq variant, always normalise to glubbi.app
+      if (origin.includes('glubbi.app') || origin.includes('mtriq.app') || origin.includes('vercel.app')) {
+        return 'https://www.glubbi.app';
+      }
+      return origin;
+    }
     return 'https://www.glubbi.app';
   };
-  const domain = getBaseUrl();
+  const domain = mounted ? getBaseUrl() : 'https://www.glubbi.app';
 
   const loadTables = async () => {
     const { data } = await supabase

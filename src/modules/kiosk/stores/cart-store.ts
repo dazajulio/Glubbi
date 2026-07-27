@@ -27,8 +27,20 @@ export const useCartStore = create<CartState>()(
       addItem: (item: Omit<CartItem, 'id' | 'subtotal'>, newRestaurantId?: string, newTableId?: string) => {
         const id = generateCartItemId();
         const subtotal = item.unitPrice * item.quantity;
+        // Strip heavy fields (images, modifier metadata) to prevent localStorage quota overflow
+        const lightProduct: Product = {
+          ...item.product,
+          image_url: item.product.image_url ? item.product.image_url.substring(0, 200) : null,
+          modifier_groups: undefined as any,
+        };
+        const lightItem: CartItem = {
+          ...item,
+          id,
+          subtotal,
+          product: lightProduct,
+        };
         set((state) => ({
-          items: [...state.items, { ...item, id, subtotal }],
+          items: [...state.items, lightItem],
           ...(newRestaurantId ? { restaurantId: newRestaurantId } : {}),
           ...(newTableId ? { tableId: newTableId } : {})
         }));

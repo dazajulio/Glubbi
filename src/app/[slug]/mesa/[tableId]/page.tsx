@@ -268,6 +268,7 @@ export default function KioskPage({ params }: KioskPageProps) {
         unitPrice
       }, product.restaurant_id, tableId);
     }
+    // Close modal immediately so user returns to browse
     setCustomizingProduct(null);
     setEditingCartItemId(null);
     setEditingInitialSelections([]);
@@ -451,8 +452,15 @@ export default function KioskPage({ params }: KioskPageProps) {
       setLastOrderId(order.id);
     }
     
+    if (orderError) {
+      // Show user-friendly error, don't navigate to success
+      alert('Error al guardar el pedido en la base de datos. Código: ' + orderError.code + '\nMensaje: ' + orderError.message + '\n\nPor favor contacta al administrador.');
+      setIsProcessing(false);
+      return;
+    }
+    
     // Wait slightly so the UI shows success and realtime fires
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 800));
     
     clearCart();
     setIsProcessing(false);
