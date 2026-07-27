@@ -18,6 +18,25 @@ export default function GlobalCustomersPage() {
         .from('customers')
         .select('*');
         
+      const { data: glubbiCustomersData } = await supabase
+        .from('glubbi_customers')
+        .select('*');
+        
+      let combinedCustomers: any[] = [];
+      if (customersData) {
+        combinedCustomers = [...customersData];
+      }
+      if (glubbiCustomersData) {
+        const mapped = glubbiCustomersData.map(gc => ({
+          id: gc.id,
+          name: `${gc.first_name} ${gc.last_name}`.trim(),
+          email: gc.email,
+          phone: gc.phone,
+          restaurant_id: 'APP_GLUBBI',
+        }));
+        combinedCustomers = [...combinedCustomers, ...mapped];
+      }
+        
       // 2. Fetch all orders to calculate GMV per customer
       // Since some orders don't have customer_id, we will do our best to match by email if it were saved,
       // or we just show the customer data we have.
@@ -25,11 +44,11 @@ export default function GlobalCustomersPage() {
         .from('orders')
         .select('id, customer_id, total_amount, restaurant_id, status, payment_status');
         
-      if (customersData) {
+      if (combinedCustomers.length > 0) {
         // Group customers by email (to merge users who bought in multiple restaurants)
         const grouped: { [email: string]: any } = {};
         
-        customersData.forEach(c => {
+        combinedCustomers.forEach(c => {
           const email = c.email?.toLowerCase().trim() || `no-email-${c.id}`;
           if (!grouped[email]) {
             grouped[email] = {
