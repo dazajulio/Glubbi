@@ -1,18 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { OrderHistoryBoard } from '@/modules/history/components/OrderHistoryBoard';
 import { ClipboardList } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function HistoryAdminPage() {
+  const pathname = usePathname();
+  const slugFromUrl = pathname?.split('/')?.[1] || '';
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const id = localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '';
-    setRestaurantId(id);
-    setLoading(false);
-  }, []);
+    if (!slugFromUrl) {
+      const id = localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '';
+      setRestaurantId(id);
+      setLoading(false);
+      return;
+    }
+    const supabase = createClient();
+    supabase
+      .from('restaurants')
+      .select('id')
+      .eq('slug', slugFromUrl)
+      .single()
+      .then(({ data }) => {
+        if (data?.id) setRestaurantId(data.id);
+        setLoading(false);
+      });
+  }, [slugFromUrl]);
 
   if (loading) {
     return (

@@ -14,11 +14,12 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const supabase = createClient();
 
   useEffect(() => {
     async function loadHistory() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orders')
         .select(`
           *,
@@ -27,9 +28,8 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
           customer:customers (*)
         `)
         .eq('restaurant_id', restaurantId)
-        .in('status', ['delivered', 'cancelled'])
         .order('created_at', { ascending: false })
-        .limit(100); // For demo purposes, just the last 100
+        .limit(200);
 
       if (data) setOrders(data as OrderWithItems[]);
       setIsLoading(false);
@@ -37,11 +37,23 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
     loadHistory();
   }, [restaurantId, supabase]);
 
-  const filteredOrders = orders.filter(o => 
-    o.order_number.toString().includes(search) || 
-    (o.customer?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (o.table?.label || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
+    pending:   { label: 'Pendiente',    classes: 'bg-yellow-100 text-yellow-800' },
+    preparing: { label: 'En cocina',    classes: 'bg-blue-100 text-blue-800' },
+    ready:     { label: 'Listo',        classes: 'bg-green-100 text-green-800' },
+    delivered: { label: 'Entregado',    classes: 'bg-slate-100 text-slate-600' },
+    cancelled: { label: 'Cancelado',    classes: 'bg-red-100 text-red-700' },
+  };
+
+  const filteredOrders = orders.filter(o => {
+    const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+    const matchesSearch =
+      o.order_number.toString().includes(search) ||
+      (o.customer?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (o.table?.label || '').toLowerCase().includes(search.toLowerCase()) ||
+      (o.notes || '').toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   if (isLoading) {
     return <div className="p-8 flex justify-center"><div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"></div></div>;
@@ -54,18 +66,43 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
         <input 
           type="text" 
-          placeholder="Buscar por número de orden, cliente o mesa..." 
+          placeholder="Buscar por # orden, cliente, mesa o notas..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-white shadow-sm border border-gray-200 rounded-2xl py-4 pl-14 pr-6 text-lg text-slate-800 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
 
-      {/* Orders Table/List */}
+      {/* Status filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {(['all', 'pending', 'preparing', 'ready', 'delivered', 'cancelled'] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+              statusFilter === s
+                ? 'brand-bg text-white border-transparent'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300'
+            }`}
+          >
+            {s === 'all' ? 'Todos' : (STATUS_LABELS[s]?.label ?? s)}
+            {s !== 'all' && (
+              <span className="ml-1.5 text-xs opacity-75">
+                ({orders.filter(o => o.status === s).length})
+              </span>
+            )}
+          </button>
+        ))}
+        <span className="ml-auto text-sm text-gray-400 self-center">
+          {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Orders List */}
       <div className="bg-white shadow-sm border border-gray-200 rounded-2xl overflow-hidden">
         {filteredOrders.length === 0 ? (
           <div className="p-12 text-center text-gray-400">
-            No se encontraron pedidos en el historial.
+            No se encontraron pedidos{statusFilter !== 'all' ? ` con estado "${STATUS_LABELS[statusFilter]?.label}"` : ''} en el historial.
           </div>
         ) : (
           <div className="divide-y divide-gray-200/50">
@@ -81,10 +118,8 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                   
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        order.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                      }`}>
-                        {order.status === 'delivered' ? 'Entregado' : 'Cancelado'}
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${STATUS_LABELS[order.status]?.classes ?? 'bg-gray-100 text-gray-600'}`}>
+                        {STATUS_LABELS[order.status]?.label ?? order.status}
                       </span>
                       <span className="text-gray-400 text-sm flex items-center">
                         <Clock className="w-3.5 h-3.5 mr-1" />
