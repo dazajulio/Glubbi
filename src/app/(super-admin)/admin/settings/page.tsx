@@ -24,15 +24,42 @@ export default function GlobalSettingsPage() {
 
   useEffect(() => {
     async function fetchLogs() {
-      const { data } = await supabase
+      // 1. Fetch from Supabase
+      const { data: dbLogs } = await supabase
         .from('system_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
-      if (data) setLogs(data);
+        .limit(20);
+        
+      // 2. Fetch from GitHub API (Merged PRs)
+      let githubLogs: any[] = [];
+      try {
+        const res = await fetch('https://api.github.com/repos/dazajulio/Glubbi/pulls?state=closed&per_page=20');
+        if (res.ok) {
+          const prs = await res.json();
+          githubLogs = prs
+            .filter((pr: any) => pr.merged_at) // Only merged PRs
+            .map((pr: any) => ({
+              id: pr.id.toString(),
+              created_at: pr.merged_at,
+              admin_email: `GitHub: ${pr.user.login}`,
+              action: 'Despliegue de Código (PR)',
+              details: pr.title
+            }));
+        }
+      } catch (err) {
+        console.error('Error fetching GitHub PRs:', err);
+      }
+
+      // 3. Combine and Sort
+      const combined = [...(dbLogs || []), ...githubLogs]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 50);
+
+      setLogs(combined);
     }
     fetchLogs();
-  }, []);
+  }, [supabase]);
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
