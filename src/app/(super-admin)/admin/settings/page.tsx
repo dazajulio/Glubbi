@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Settings, 
   Database, 
@@ -17,10 +18,41 @@ export default function GlobalSettingsPage() {
   const [supportEmail, setSupportEmail] = useState('soporte@glubbi.app');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [logs, setLogs] = useState<any[]>([]);
+  const supabase = createClient();
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function fetchLogs() {
+      const { data } = await supabase
+        .from('system_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (data) setLogs(data);
+    }
+    fetchLogs();
+  }, []);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSuccess(true);
+    
+    // Log the change
+    await supabase.from('system_logs').insert({
+      action: 'Configuración Global Modificada',
+      details: `Precio SaaS: ${saasPrice}, Mantenimiento: ${isMaintenanceMode}`,
+      admin_email: 'dazajulio@gmail.com'
+    } as any);
+
+    // Refresh logs
+    const { data } = await supabase
+      .from('system_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (data) setLogs(data);
+
     setTimeout(() => setIsSuccess(false), 3000);
   };
 
@@ -52,7 +84,7 @@ export default function GlobalSettingsPage() {
                   type="text"
                   value={saasPrice}
                   onChange={(e) => setSaasPrice(e.target.value)}
-                  className="w-full bg-slate-50/60 border border-gray-200 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50/60 border border-gray-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-orange-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -61,7 +93,7 @@ export default function GlobalSettingsPage() {
                   type="email"
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
-                  className="w-full bg-slate-50/60 border border-gray-200 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50/60 border border-gray-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-orange-500"
                 />
               </div>
             </div>
@@ -117,10 +149,10 @@ export default function GlobalSettingsPage() {
               Las variables de entorno mostradas aquí controlan el comportamiento por defecto de las nuevas cuentas registradas.
             </p>
             <div className="bg-slate-50/60 p-4 border border-gray-200 rounded-2xl space-y-2 text-xs font-mono">
-              <div><span className="text-gray-600">APP_ENV:</span> <span className="text-white">production</span></div>
-              <div><span className="text-gray-600">PROVIDER:</span> <span className="text-white">Supabase / Next.js</span></div>
-              <div><span className="text-gray-600">DB_ISOLATION:</span> <span className="text-white">Postgres RLS Active</span></div>
-              <div><span className="text-gray-600">SMTP:</span> <span className="text-white">smtp.resend.com</span></div>
+              <div><span className="text-gray-600">APP_ENV:</span> <span className="text-slate-900 font-semibold">production</span></div>
+              <div><span className="text-gray-600">PROVIDER:</span> <span className="text-slate-900 font-semibold">Supabase / Next.js</span></div>
+              <div><span className="text-gray-600">DB_ISOLATION:</span> <span className="text-slate-900 font-semibold">Postgres RLS Active</span></div>
+              <div><span className="text-gray-600">SMTP:</span> <span className="text-slate-900 font-semibold">smtp.resend.com</span></div>
             </div>
           </div>
 
@@ -132,6 +164,45 @@ export default function GlobalSettingsPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* System Logs Section */}
+      <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 md:p-8 shadow-lg backdrop-blur-xl">
+        <h3 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2 mb-6">
+          <Database className="w-5 h-5 text-orange-500" /> Registro de Actividad (System Logs)
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-500">
+            <thead className="bg-slate-50 text-xs uppercase text-gray-700">
+              <tr>
+                <th className="px-4 py-3 rounded-tl-xl">Fecha</th>
+                <th className="px-4 py-3">Administrador</th>
+                <th className="px-4 py-3">Acción</th>
+                <th className="px-4 py-3 rounded-tr-xl">Detalles</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.length > 0 ? logs.map(log => (
+                <tr key={log.id} className="border-b border-gray-100 last:border-0 hover:bg-slate-50/50">
+                  <td className="px-4 py-3 whitespace-nowrap">{new Date(log.created_at).toLocaleString()}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">{log.admin_email}</td>
+                  <td className="px-4 py-3">
+                    <span className="bg-orange-50 text-orange-700 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                      {log.action}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs">{log.details}</td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                    No hay registros de actividad aún. Asegúrate de haber ejecutado el script SQL para la tabla system_logs.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>

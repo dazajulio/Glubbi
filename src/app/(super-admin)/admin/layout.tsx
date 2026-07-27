@@ -23,6 +23,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     { href: '/admin/billing', label: 'Facturación', icon: CreditCard },
     { href: '/admin/pagos-moviles', label: 'Pagos Móviles', icon: Smartphone },
     { href: '/admin/cupones', label: 'Cupones', icon: Tag },
+    { href: '/admin/customers', label: 'Base de Usuarios', icon: Users },
     { href: '/admin/settings', label: 'Configuración Global', icon: Settings },
   ];
 
