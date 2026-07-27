@@ -381,7 +381,12 @@ export default function KioskPage({ params }: KioskPageProps) {
   };
 
   const handleUpsellAdd = (product: ProductWithModifiers) => {
-    handleAddToCart(product);
+    // If product has no modifiers, add directly to cart to avoid opening another modal
+    if (!product.modifier_groups || product.modifier_groups.length === 0) {
+      addItem({ product, quantity: 1, unitPrice: product.base_price, selectedModifiers: [] });
+    } else {
+      handleAddToCart(product);
+    }
   };
   
   const handleUpsellProceed = () => {
@@ -619,14 +624,14 @@ export default function KioskPage({ params }: KioskPageProps) {
 
         <button 
           onClick={() => {
-            if (isWaiter) changeStep('browse');
-            else changeStep('customer');
+            changeStep('browse');
+            setTimeout(() => setIsCartOpen(true), 100);
           }} 
           className="flex items-center text-gray-500 mb-8" 
           disabled={isProcessing}
         >
           <ChevronLeft className="w-5 h-5 mr-1" />
-          Volver
+          Revisar Carrito
         </button>
         <CheckoutForm 
           total={finalTotal} 

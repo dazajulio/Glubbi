@@ -44,8 +44,8 @@ export function UpsellModal({ products, onAdd, onSkip, isOpen, currency }: Upsel
         <div className="bg-white shadow-sm rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl pointer-events-auto animate-scale-in">
           
           {/* Header */}
-          <div className="p-6 text-center border-b border-gray-200/80">
-            <h3 className="text-xl font-bold text-white mb-2">{t('upsellTitle')}</h3>
+          <div className="p-6 text-center border-b border-gray-100">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{t('upsellTitle')}</h3>
             <p className="text-gray-500 text-sm">Complementa tu pedido con estas opciones</p>
           </div>
 
@@ -61,7 +61,7 @@ export function UpsellModal({ products, onAdd, onSkip, isOpen, currency }: Upsel
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-white truncate">{product.name}</h4>
+                  <h4 className="font-semibold text-slate-900 truncate">{product.name}</h4>
                   <p className="brand-text font-medium text-sm mt-1">
                     +{formatPrice(product.base_price, currency)}
                   </p>
@@ -80,7 +80,7 @@ export function UpsellModal({ products, onAdd, onSkip, isOpen, currency }: Upsel
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="font-bold text-white w-4 text-center">{quantity}</span>
+                        <span className="font-bold text-slate-900 w-4 text-center">{quantity}</span>
                         <button 
                           onClick={() => updateQuantity(cartItem!.id, quantity + 1)} 
                           className="w-8 h-8 rounded-full brand-bg text-white flex items-center justify-center hover:brightness-110 transition-colors"
