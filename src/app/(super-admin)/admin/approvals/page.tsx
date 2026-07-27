@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Search, CheckCircle, XCircle, FileText, AlertCircle, Eye } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { toast } from 'sonner';
 
 export default function ApprovalsPage() {
   const supabase = createClient();
@@ -30,7 +29,7 @@ export default function ApprovalsPage() {
 
   const handleApprove = async (id: string) => {
     await supabase.from('restaurants').update({ kyc_status: 'verified' }).eq('id', id);
-    toast.success('Restaurante Aprobado. Ya es público.');
+    alert('Restaurante Aprobado. Ya es público.');
     setSelectedKyc(null);
     fetchPendingKyc();
   };
@@ -38,7 +37,7 @@ export default function ApprovalsPage() {
   const handleReject = async (id: string) => {
     // Para simplificar, lo pasamos a unverified (needs_info) para que vuelva a subir los documentos.
     await supabase.from('restaurants').update({ kyc_status: 'unverified' }).eq('id', id);
-    toast.error('Solicitud rechazada. Se le pedirá que suba los documentos de nuevo.');
+    alert('Solicitud rechazada. Se le pedirá que suba los documentos de nuevo.');
     setSelectedKyc(null);
     fetchPendingKyc();
   };
