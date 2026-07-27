@@ -16,6 +16,7 @@ import {
   Truck,
   Trash2,
   Compass,
+  CreditCard,
 } from 'lucide-react';
 import { cn, formatElapsedTime } from '@/lib/utils';
 import type { OrderWithItems, OrderStatus, ModifierSnapshot } from '@/types/database';

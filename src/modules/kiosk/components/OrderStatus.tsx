@@ -68,9 +68,9 @@ export function OrderStatus({ orderId, restaurantId }: OrderStatusProps) {
   const steps = [
     {
       id: 'pending',
-      label: isPaid ? 'Orden Pagada' : 'Por Pagar',
-      description: isPaid ? 'Hemos recibido tu orden y pago' : 'Acércate a caja o espera la terminal',
-      icon: isPaid ? Clock : Banknote,
+      label: isPaid ? 'Pago Confirmado' : 'Validando Pago',
+      description: isPaid ? 'Tu pago fue recibido y confirmado' : 'Tu pedido fue enviado y el pago está siendo validado',
+      icon: isPaid ? CheckCircle2 : Clock,
       isActive: order.status === 'pending',
       isCompleted: ['preparing', 'ready', 'delivered'].includes(order.status)
     },

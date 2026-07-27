@@ -48,6 +48,7 @@ export default function KioskPage({ params }: KioskPageProps) {
   
   // Pricing Rules
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   
   // Flow state
@@ -73,9 +74,10 @@ export default function KioskPage({ params }: KioskPageProps) {
 
   // Derived Pricing
   const subtotal = getTotal();
-  const deliveryCost = isDelivery ? deliveryFee : 0;
-  const deliveryDiscountAmount = deliveryCost * (discountPercentage / 100);
-  const finalDeliveryCost = deliveryCost - deliveryDiscountAmount;
+  // Only apply delivery fee if delivery is enabled in gerente settings AND it's a delivery order
+  const effectiveDeliveryFee = (isDelivery && deliveryEnabled) ? deliveryFee : 0;
+  const deliveryDiscountAmount = effectiveDeliveryFee * (discountPercentage / 100);
+  const finalDeliveryCost = effectiveDeliveryFee - deliveryDiscountAmount;
   const finalTotal = subtotal + finalDeliveryCost;
 
   // Helper to change step and push browser history state
@@ -151,6 +153,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       }
       
       setDeliveryFee(restaurant.delivery_fee || 0);
+      setDeliveryEnabled(restaurant.delivery_enabled || false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
       
       // Load categories
@@ -467,6 +470,61 @@ export default function KioskPage({ params }: KioskPageProps) {
     changeStep('success');
   };
 
+  /** Enviar pedido para mesa/mesero — paga al final, sin seleccionar método ahora */
+  const handleSendLater = async () => {
+    setIsProcessing(true);
+    const supabase = createClient();
+    const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const targetTableId = isWaiter ? selectedTableId : tableId;
+    const notesPrefix = isWaiter
+      ? `[Origen: Mesero: ${waiterName}] | [Pagar al final]`
+      : `[Pagar al final]`;
+
+    setLastTotal(finalTotal);
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        restaurant_id: restaurantId || GLUBBI_ID,
+        table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
+        customer_id: customerId || null,
+        status: 'pending',
+        total_amount: finalTotal,
+        payment_method: 'cash',
+        payment_status: 'pending',
+        notes: notesPrefix,
+      } as any)
+      .select()
+      .single() as any;
+
+    if (orderError) {
+      alert('Error al enviar el pedido: ' + orderError.message);
+      setIsProcessing(false);
+      return;
+    }
+
+    if (order) {
+      const itemsToInsert = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        subtotal: item.unitPrice * item.quantity,
+        modifiers_snapshot: item.selectedModifiers,
+      }));
+      await supabase.from('order_items').insert(itemsToInsert as any);
+      setLastOrderId(order.id);
+    }
+
+    // Use a neutral placeholder for success screen
+    setPaymentMethod({ id: 'send_later', title: 'Pagar al final', logoUrl: null });
+    await new Promise(r => setTimeout(r, 600));
+    clearCart();
+    setIsProcessing(false);
+    changeStep('success');
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"/>
@@ -702,11 +760,14 @@ export default function KioskPage({ params }: KioskPageProps) {
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
         onCheckout={handleCheckoutClick}
+        onSendLater={handleSendLater}
         currency={currency}
         onEditItem={handleEditCartItem}
         deliveryFee={deliveryFee}
+        deliveryEnabled={deliveryEnabled}
         discountPercentage={discountPercentage}
         isDelivery={isDelivery}
+        isMesaOrWaiter={!isDelivery}
       />
 
       <UpsellModal 
