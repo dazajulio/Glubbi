@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import BottomNav from '@/modules/glubbi/components/BottomNav';
 import HorizontalRestaurantScroll from '@/modules/glubbi/components/HorizontalRestaurantScroll';
 import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
+import { isRestaurantOpen } from '@/lib/utils';
 import { 
   Search, 
   MapPin, 
@@ -29,6 +30,26 @@ export default function GlubbiMarketplace() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
+  const [locationName, setLocationName] = useState('Mi Ubicación Actual');
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      setLocationName('Ubicando...');
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Here we could store lat/lng in global state for future distance sorting
+          setLocationName('Ubicación Obtenida');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationName('Permiso Denegado');
+          setTimeout(() => setLocationName('Mi Ubicación Actual'), 3000);
+        }
+      );
+    } else {
+      alert('Tu navegador no soporta geolocalización.');
+    }
+  };
 
   const categories = [
     { name: 'Restaurantes', emoji: '🍔', bg: 'bg-red-50' },
@@ -53,11 +74,18 @@ export default function GlubbiMarketplace() {
         .eq('is_glubbi_active', true)
         .order('name');
         
-      if (data) setRestaurants(data as Restaurant[]);
+      if (data) {
+        // Evaluar si están abiertos
+        const enriched = data.map(r => ({
+          ...r,
+          isOpen: isRestaurantOpen((r as any).schedule, r.timezone)
+        }));
+        setRestaurants(enriched as Restaurant[]);
+      }
       setIsLoading(false);
     }
     loadRestaurants();
-  }, []);
+  }, [customer, router]);
 
   const filteredRestaurants = restaurants
     .filter(r => {
@@ -65,7 +93,10 @@ export default function GlubbiMarketplace() {
       const matchesCategory = activeCategory === 'Todos' || r.glubbi_category === activeCategory;
       return matchesSearch && matchesCategory;
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
+      // Priorizar los que están abiertos
+      if (a.isOpen && !b.isOpen) return -1;
+      if (!a.isOpen && b.isOpen) return 1;
       // Priorizar los que tienen imagen de portada
       if (a.cover_image_url && !b.cover_image_url) return -1;
       if (!a.cover_image_url && b.cover_image_url) return 1;
@@ -77,14 +108,17 @@ export default function GlubbiMarketplace() {
       {/* App Header */}
       <div className="bg-white px-4 pt-6 pb-4 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-col">
+          <button 
+            onClick={handleGetLocation}
+            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
+          >
             <div className="flex items-center text-sm font-bold text-slate-800">
               <MapPin className="w-4 h-4 mr-1 text-orange-500" />
-              <span>Mi Ubicación Actual</span>
+              <span>{locationName}</span>
               <ChevronRight className="w-4 h-4 ml-0.5 text-slate-400" />
             </div>
             <p className="text-xs text-slate-500 ml-5">Toca para actualizar</p>
-          </div>
+          </button>
           <div className="w-12 h-12 mr-2 rounded-full flex items-center justify-center relative bg-white shadow-sm border border-gray-100 overflow-hidden shrink-0">
             <img src="/logo-glubbi.png" alt="Glubbi" className="w-full h-full object-cover scale-110" />
           </div>
@@ -128,7 +162,7 @@ export default function GlubbiMarketplace() {
               }}
               className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
             >
-              <div className="text-3xl drop-shadow-sm">🍽️</div>
+              <div className="text-3xl drop-shadow-sm">🌟</div>
               <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Todos</span>
             </button>
 

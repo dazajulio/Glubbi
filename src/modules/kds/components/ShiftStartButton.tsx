@@ -131,16 +131,35 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
           const oscillator = audioContext.createOscillator();
           const gainNode = audioContext.createGain();
 
-          oscillator.type = selectedTone === 'digital-chime' ? 'square' : selectedTone === 'soft-alert' ? 'sine' : 'triangle';
-          oscillator.frequency.setValueAtTime(selectedTone === 'digital-chime' ? 880 : 523.25, startTime);
+          oscillator.type = 
+            selectedTone === 'digital-chime' ? 'square' : 
+            selectedTone === 'urgent-buzz' ? 'sawtooth' : 
+            selectedTone === 'siren-alert' ? 'sine' :
+            selectedTone === 'rapid-beep' ? 'square' :
+            selectedTone === 'soft-alert' ? 'sine' : 'triangle';
+            
+          oscillator.frequency.setValueAtTime(
+            selectedTone === 'digital-chime' ? 880 : 
+            selectedTone === 'urgent-buzz' ? 120 :
+            selectedTone === 'rapid-beep' ? 1200 :
+            523.25, startTime);
 
           if (selectedTone === 'new-order') {
             oscillator.frequency.setValueAtTime(523.25, startTime); // C5
             oscillator.frequency.setValueAtTime(659.25, startTime + 0.15); // E5
+          } else if (selectedTone === 'siren-alert') {
+            oscillator.frequency.setValueAtTime(400, startTime);
+            oscillator.frequency.linearRampToValueAtTime(1200, startTime + 0.5);
+            oscillator.frequency.linearRampToValueAtTime(400, startTime + 1.0);
+          } else if (selectedTone === 'urgent-buzz') {
+            oscillator.frequency.setValueAtTime(100, startTime);
+            oscillator.frequency.linearRampToValueAtTime(200, startTime + 0.1);
+          } else if (selectedTone === 'rapid-beep') {
+            oscillator.frequency.setValueAtTime(1000, startTime);
           }
 
           gainNode.gain.setValueAtTime(0, startTime);
-          gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+          gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.05); // Louder
           gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
 
           oscillator.connect(gainNode);
@@ -150,10 +169,29 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
           oscillator.stop(startTime + 0.5);
         };
 
-        // Ring 3 times explicitly with setTimeout to ensure they trigger audibly and distinctively
-        playRing(0);
-        setTimeout(() => playRing(0), 800);
-        setTimeout(() => playRing(0), 1600);
+        // Different repetition patterns depending on urgency
+        if (selectedTone === 'siren-alert') {
+          playRing(0);
+          playRing(1.0);
+          playRing(2.0);
+        } else if (selectedTone === 'rapid-beep') {
+          playRing(0);
+          playRing(0.2);
+          playRing(0.4);
+          playRing(0.6);
+          playRing(0.8);
+          playRing(1.0);
+        } else if (selectedTone === 'urgent-buzz') {
+          playRing(0);
+          playRing(0.3);
+          playRing(0.6);
+          playRing(0.9);
+        } else {
+          // Standard ring 3 times
+          playRing(0);
+          setTimeout(() => playRing(0), 800);
+          setTimeout(() => playRing(0), 1600);
+        }
         
       } catch (err) {
         console.warn('[KDS] Could not play notification sound:', err);
@@ -178,9 +216,12 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
             onChange={handleToneChange}
             className="appearance-none bg-white shadow-sm border border-gray-200 text-gray-800 text-sm rounded-xl pl-9 pr-8 py-2.5 outline-none hover:bg-slate-100 focus:ring-2 focus:ring-orange-500/50 transition-colors cursor-pointer"
           >
-            <option value="new-order">Campana Clásica</option>
+            <option value="new-order">Tono Predeterminado</option>
             <option value="digital-chime">Timbre Digital</option>
             <option value="soft-alert">Alerta Suave</option>
+            <option value="siren-alert">Sirena (Invasivo)</option>
+            <option value="urgent-buzz">Chicharra (Invasivo)</option>
+            <option value="rapid-beep">Pitido Rápido (Invasivo)</option>
           </select>
         </div>
 

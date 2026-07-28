@@ -99,6 +99,25 @@ export default function TenantsPage() {
     setActionMessage('');
   };
 
+  const updateKycStatus = async (tenant: any, newStatus: string) => {
+    setIsUpdating(true);
+    setActionMessage('Actualizando estado KYC...');
+    
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ kyc_status: newStatus } as any)
+      .eq('id', tenant.id);
+
+    if (error) {
+      console.error(error);
+      alert('Error al actualizar el estado KYC.');
+    } else {
+      await loadData();
+    }
+    setIsUpdating(false);
+    setActionMessage('');
+  };
+
   const generateLicense = async (tenantId: string) => {
     setIsUpdating(true);
     setActionMessage('Generando licencia...');
@@ -296,6 +315,28 @@ export default function TenantsPage() {
                     selectedTenant.is_active ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
+              </div>
+
+              {/* KYC status switcher */}
+              <div className="flex flex-col gap-2 bg-slate-50 p-4 rounded-2xl border border-gray-200">
+                <div>
+                  <span className="block text-xs font-bold text-gray-900 uppercase tracking-wider">Estado KYC</span>
+                  <span className="text-[10px] text-gray-400">Verificación de Identidad del Comercio</span>
+                </div>
+                <select 
+                  disabled={isUpdating}
+                  value={selectedTenant.kyc_status || 'en_proceso'}
+                  onChange={(e) => updateKycStatus(selectedTenant, e.target.value)}
+                  className={`mt-2 block w-full rounded-xl text-sm font-semibold border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-orange-500 ${
+                    selectedTenant.kyc_status === 'aprobado' ? 'bg-green-50 text-green-700' :
+                    selectedTenant.kyc_status === 'rechazado' ? 'bg-red-50 text-red-700' :
+                    'bg-yellow-50 text-yellow-700'
+                  }`}
+                >
+                  <option value="en_proceso">⏳ En Proceso</option>
+                  <option value="aprobado">✅ Aprobado</option>
+                  <option value="rechazado">❌ Rechazado</option>
+                </select>
               </div>
 
               {/* License management */}

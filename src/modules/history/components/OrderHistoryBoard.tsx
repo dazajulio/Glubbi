@@ -59,6 +59,36 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
     return <div className="p-8 flex justify-center"><div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"></div></div>;
   }
 
+  const getPaymentStatusUI = (order: OrderWithItems) => {
+    const isPaid = order.payment_status === 'paid';
+    const isPagoMovilValidado = order.notes && order.notes.includes('Validación:');
+    
+    if (isPagoMovilValidado) {
+      return (
+        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
+          ✅ Pago Validado (Móvil)
+        </span>
+      );
+    }
+    
+    if (isPaid) {
+      const method = order.payment_method === 'stripe' ? 'Tarjeta' : 
+                     (order.payment_method as any) === 'terminal' ? 'Terminal' : 
+                     (order.payment_method as any) === 'pago_movil' ? 'Pago Móvil' : 'Efectivo';
+      return (
+        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
+          ✅ Pagado ({method})
+        </span>
+      );
+    }
+
+    return (
+      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-red-100 text-red-700 border border-red-200 flex items-center gap-1">
+        ⏳ Pendiente (Por Pagar)
+      </span>
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Search Bar */}
@@ -168,29 +198,9 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                   <p className="text-sm text-gray-500 line-clamp-2 text-left sm:text-right">
                     {order.order_items.map(item => `${item.quantity}x ${item.product_name}`).join(', ')}
                   </p>
-                  {order.payment_method ? (
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-xs px-2 py-1 bg-slate-100 text-gray-800 rounded-md font-medium">
-                        Método: {order.payment_method === 'stripe' ? 'Tarjeta' : (order.payment_method as any) === 'terminal' ? 'Terminal' : (order.payment_method as any) === 'pago_movil' ? 'Pago Móvil' : 'Efectivo'}
-                      </span>
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
-                        {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
-                      </span>
-                    </div>
-                  ) : order.notes && order.notes.includes('Validación:') ? (
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-md font-bold border border-purple-200">
-                        Pago Móvil (Transferencia)
-                      </span>
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
-                        {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${order.payment_status === 'paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}`}>
-                      {order.payment_status === 'paid' ? 'Pagado (Paid)' : 'Pendiente (Por Pagar)'}
-                    </span>
-                  )}
+                  <div className="mt-1 flex justify-end">
+                    {getPaymentStatusUI(order)}
+                  </div>
                 </div>
 
               </div>

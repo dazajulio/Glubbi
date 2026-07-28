@@ -224,50 +224,7 @@ export function printOrder(order: OrderWithItems) {
     </div>
   ` : '';
 
-  // Copy 1: Cocina
-  const cocinaCopy = `
-    <div class="print-page" style="font-family: monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 10px; border: 1px solid #000; color: #000 !important; background: #fff !important;">
-      <div style="text-align: center; font-weight: bold; font-size: 15px; margin-bottom: 3px;">COMANDA - COCINA</div>
-      <div style="text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 8px;">Orden #${order.order_number}</div>
-      <div><strong>Origen:</strong> ${originLabel}</div>
-      <div><strong>Ubicación:</strong> ${tableLabel}</div>
-      ${customerLabel ? `<div><strong>Cliente:</strong> ${order.customer?.name}</div>` : ''}
-      <div><strong>Fecha:</strong> ${orderDate}</div>
-      ${deliveryHtml}
-      ${validationHtml}
-      <div style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 4px;"></div>
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr style="border-bottom: 1px solid #000;">
-            <th style="text-align: left; font-size: 10px; padding-bottom: 2px;">Cant</th>
-            <th style="text-align: left; font-size: 10px; padding-bottom: 2px;">Producto / Modificadores</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${order.order_items.map(item => {
-            const mods = item.modifiers_snapshot && item.modifiers_snapshot.length > 0
-              ? item.modifiers_snapshot.map((m: any) => `
-                  <div style="font-size: 9.5px; margin-left: 8px; color: #333 !important;">
-                    - ${m.group}: ${m.items.map((it: any) => it.name).join(', ')}
-                  </div>
-                `).join('')
-              : '';
-            return `
-              <tr style="border-bottom: 1px dashed #ddd; vertical-align: top;">
-                <td style="padding: 4px 0; font-weight: bold; width: 30px;">${item.quantity}x</td>
-                <td style="padding: 4px 0;">
-                  <div style="font-weight: bold;">${item.product_name}</div>
-                  ${mods}
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-      ${notesHtml}
-      <div style="text-align: center; margin-top: 15px; font-size: 9px; font-weight: bold; border-top: 1px solid #000; padding-top: 4px;">*** COPIA COCINA ***</div>
-    </div>
-  `;
+  // Only Caja copy is printed as requested.
 
   // Copy 2: Caja (Informal Invoice)
   const cajaCopy = `
@@ -314,7 +271,7 @@ export function printOrder(order: OrderWithItems) {
     </div>
   `;
 
-  printDiv.innerHTML = cocinaCopy + cajaCopy;
+  printDiv.innerHTML = cajaCopy;
   document.body.appendChild(printDiv);
 
   const style = document.createElement('style');
