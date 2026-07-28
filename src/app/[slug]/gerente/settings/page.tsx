@@ -773,8 +773,6 @@ export default function SettingsAdminPage() {
                     </label>
                   </div>
                 </div>
-              )}
-              
               <button 
                 onClick={saveSettings}
                 disabled={isSaving}
