@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Restaurant } from '@/types/database';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import BottomNav from '@/modules/glubbi/components/BottomNav';
+import { BottomNav } from '@/modules/glubbi/components/BottomNav';
 import HorizontalRestaurantScroll from '@/modules/glubbi/components/HorizontalRestaurantScroll';
 import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 import { isRestaurantOpen } from '@/lib/utils';

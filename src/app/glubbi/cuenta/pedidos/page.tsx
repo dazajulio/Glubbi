@@ -7,7 +7,7 @@ import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 import { ChevronLeft, Receipt, ExternalLink, MapPin, Search } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import Link from 'next/link';
-import BottomNav from '@/modules/glubbi/components/BottomNav';
+import { BottomNav } from '@/modules/glubbi/components/BottomNav';
 
 export default function HistorialPedidos() {
   const { customer } = useGlubbiStore();
