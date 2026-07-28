@@ -60,12 +60,25 @@ export function UpsellModal({ products, onAdd, onSkip, isOpen, currency }: Upsel
                     <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">Sin img</div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-900 truncate">{product.name}</h4>
-                  <p className="brand-text font-medium text-sm mt-1">
-                    +{formatPrice(product.base_price, currency)}
-                  </p>
-                </div>
+                {(() => {
+                  const hasDiscount = (product as any).discount_percentage > 0;
+                  const discountedPrice = hasDiscount 
+                    ? product.base_price - (product.base_price * ((product as any).discount_percentage / 100))
+                    : product.base_price;
+                  
+                  return (
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-slate-900 truncate flex items-center gap-1.5">
+                        {product.name}
+                        {hasDiscount && <span className="bg-orange-100 text-orange-600 px-1 py-0.5 rounded text-[10px] font-bold shrink-0">-{ (product as any).discount_percentage }%</span>}
+                      </h4>
+                      <p className="brand-text font-medium text-sm mt-1 flex gap-1.5 items-center">
+                        {hasDiscount && <span className="line-through text-gray-400 text-xs">+{formatPrice(product.base_price, currency)}</span>}
+                        <span>+{formatPrice(discountedPrice, currency)}</span>
+                      </p>
+                    </div>
+                  );
+                })()}
                 
                 {(() => {
                   const cartItem = items.find(item => item.product.id === product.id && item.selectedModifiers.length === 0);

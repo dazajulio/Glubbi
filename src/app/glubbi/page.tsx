@@ -112,19 +112,54 @@ export default function GlubbiMarketplace() {
       </div> 
       */}
 
-      {/* Promotional Banner */}
+      {/* Promotional Banner -> Category Quick Links */}
       <div className="px-4 mb-6">
-        <div className="w-full bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
-          <div className="relative z-10 w-2/3">
-            <span className="bg-white/20 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">Promo Glubbi</span>
-            <h2 className="text-2xl font-black mt-2 leading-tight">Envío Gratis en tu primer pedido</h2>
-            <button className="mt-4 bg-white text-orange-600 font-bold px-4 py-2 rounded-xl text-sm shadow-sm active:scale-95 transition-transform">
-              Ver restaurantes
+        <div className="w-full bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-5 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <h2 className="font-black text-lg mb-4 relative z-10 text-center">¿Qué vas a pedir hoy?</h2>
+          
+          <div className="grid grid-cols-3 gap-3 relative z-10">
+            {/* Restaurantes */}
+            <button 
+              onClick={() => {
+                setActiveCategory('Todos');
+                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
+            >
+              <div className="text-3xl drop-shadow-sm">🍽️</div>
+              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Todos</span>
+            </button>
+
+            {/* Pizza */}
+            <button 
+              onClick={() => {
+                setActiveCategory('Pizza');
+                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
+            >
+              <div className="text-3xl drop-shadow-sm">🍕</div>
+              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Pizza</span>
+            </button>
+
+            {/* Hamburguesas */}
+            <button 
+              onClick={() => {
+                setActiveCategory('Hamburguesas');
+                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
+            >
+              <div className="text-3xl drop-shadow-sm">🍔</div>
+              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Burgers</span>
             </button>
           </div>
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
         </div>
       </div>
+      
+      <div id="feed-section" className="pt-2">
 
       {/* Envío Gratis */}
       <HorizontalRestaurantScroll 
@@ -142,9 +177,10 @@ export default function GlubbiMarketplace() {
         subtitle="Descuentos que no puedes dejar pasar"
         icon={<Sparkles className="w-5 h-5 text-purple-500" />}
         restaurants={filteredRestaurants.slice().reverse().slice(0, 4)}
-        tagText="HASTA 50% OFF"
-        tagColor="bg-purple-500 text-white"
+        tagText="TENDENCIA"
+        tagColor="bg-blue-500 text-white"
       />
+      </div>
 
       {/* Los más amados */}
       <HorizontalRestaurantScroll 

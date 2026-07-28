@@ -42,6 +42,8 @@ export function ProductFormModal({
   const [categoryId, setCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploadMode, setUploadMode] = useState<'url' | 'file'>('url');
+  const [hasOffer, setHasOffer] = useState(false);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [groups, setGroups] = useState<GroupInput[]>([]);
 
   // Use useEffect to reset state when modal opens or productToEdit changes
@@ -53,6 +55,8 @@ export function ProductFormModal({
         setPrice(productToEdit.base_price || 0);
         setCategoryId(productToEdit.category_id || (categories[0]?.id || ''));
         setImageUrl(productToEdit.image_url || '');
+        setHasOffer((productToEdit.discount_percentage || 0) > 0);
+        setDiscountPercentage(productToEdit.discount_percentage || 0);
         
         // Map groups
         if (productToEdit.modifier_groups) {
@@ -76,6 +80,8 @@ export function ProductFormModal({
         setPrice(0);
         setCategoryId(categories[0]?.id || '');
         setImageUrl('');
+        setHasOffer(false);
+        setDiscountPercentage(0);
         setGroups([]);
       }
     }
@@ -120,6 +126,7 @@ export function ProductFormModal({
             name,
             description,
             base_price: price,
+            discount_percentage: hasOffer ? discountPercentage : 0,
             image_url: imageUrl || null,
           } as any)
           .eq('id', productToEdit.id)
@@ -141,6 +148,7 @@ export function ProductFormModal({
             name,
             description,
             base_price: price,
+            discount_percentage: hasOffer ? discountPercentage : 0,
             image_url: imageUrl || null,
             is_available: true,
             is_featured: false
@@ -212,11 +220,11 @@ export function ProductFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-500 mb-1">Nombre del plato *</label>
-                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none" />
+                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-brand-primary outline-none" />
               </div>
               <div>
                 <label className="block text-sm text-gray-500 mb-1">Categoría *</label>
-                <select required value={categoryId} onChange={e => setCategoryId(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none">
+                <select required value={categoryId} onChange={e => setCategoryId(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-brand-primary outline-none">
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -226,13 +234,13 @@ export function ProductFormModal({
 
             <div>
               <label className="block text-sm text-gray-500 mb-1">Descripción</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none" rows={2} />
+              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-brand-primary outline-none" rows={2} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-500 mb-1">Precio Base ($) *</label>
-                <input required type="number" step="0.01" min="0" value={price} onChange={e => setPrice(parseFloat(e.target.value) || 0)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none" />
+                <input required type="number" step="0.01" min="0" value={price} onChange={e => setPrice(parseFloat(e.target.value) || 0)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none text-slate-800" />
               </div>
               <div className="flex flex-col">
                 <label className="block text-sm text-gray-500 mb-1">Imagen del Plato (Opcional)</label>
@@ -292,6 +300,43 @@ export function ProductFormModal({
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Offer Section */}
+            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-orange-900">Activar Oferta en este Plato</h4>
+                  <p className="text-xs text-orange-700">El producto aparecerá con una insignia y precio rebajado en la app y el kiosko.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={hasOffer} onChange={(e) => setHasOffer(e.target.checked)} />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                </label>
+              </div>
+
+              {hasOffer && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-orange-200/50">
+                  <div>
+                    <label className="block text-xs font-bold text-orange-800 mb-1">% de Descuento</label>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="100" 
+                        value={discountPercentage} 
+                        onChange={e => setDiscountPercentage(parseFloat(e.target.value) || 0)} 
+                        className="w-full bg-white border border-orange-200 rounded-lg pl-3 pr-8 py-2 text-slate-800 focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
+                      />
+                      <span className="absolute right-3 top-2 text-gray-500 font-bold">%</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-end">
+                    <span className="text-xs text-orange-700 mb-1">Precio Final:</span>
+                    <span className="text-xl font-black text-orange-600">${(price - (price * (discountPercentage / 100))).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

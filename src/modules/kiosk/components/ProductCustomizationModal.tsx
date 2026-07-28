@@ -62,8 +62,13 @@ export function ProductCustomizationModal({
   });
 
   // Calculate current dynamic price
+  const hasDiscount = (product as any).discount_percentage > 0;
+  const basePrice = hasDiscount 
+    ? product.base_price - (product.base_price * ((product as any).discount_percentage / 100))
+    : product.base_price;
+
   const extraPrice = Object.values(selections).flat().reduce((sum, mod) => sum + mod.extra_price, 0);
-  const totalPrice = product.base_price + extraPrice;
+  const totalPrice = basePrice + extraPrice;
 
   const toggleModifier = (group: ModifierGroup, modifier: Modifier) => {
     setSelections(prev => {

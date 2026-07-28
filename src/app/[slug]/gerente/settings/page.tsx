@@ -45,6 +45,7 @@ export default function SettingsAdminPage() {
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [hasFreeDelivery, setHasFreeDelivery] = useState(false);
 
   // --- Admin Password State ---
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -113,6 +114,7 @@ export default function SettingsAdminPage() {
         setDeliveryEnabled(restData.delivery_enabled || false);
         setDeliveryFee(restData.delivery_fee || 0);
         setDiscountPercentage(restData.discount_percentage || 0);
+        setHasFreeDelivery(restData.has_free_delivery || false);
       }
       
       // Products for upsell selection
@@ -164,7 +166,8 @@ export default function SettingsAdminPage() {
         payment_methods: paymentMethods,
         delivery_enabled: deliveryEnabled,
         delivery_fee: deliveryFee,
-        discount_percentage: discountPercentage
+        discount_percentage: discountPercentage,
+        has_free_delivery: hasFreeDelivery
       } as any)
       .eq('id', restaurantId);
       
@@ -792,9 +795,25 @@ export default function SettingsAdminPage() {
                     max="100"
                     value={discountPercentage}
                     onChange={(e) => setDiscountPercentage(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-6"
                     placeholder="Ej. 50"
                   />
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div>
+                      <h3 className="font-bold text-emerald-600">Delivery Gratis (Promoción)</h3>
+                      <p className="text-xs text-gray-500">Aparecerás destacado en la sección de Ofertas Top de la App Glubbi.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={hasFreeDelivery}
+                        onChange={(e) => setHasFreeDelivery(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
                 </div>
               )}
               
