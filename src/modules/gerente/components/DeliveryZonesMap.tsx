@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { createClient } from '@/lib/supabase/client';
@@ -23,7 +23,7 @@ interface DeliveryZonesMapProps {
 export default function DeliveryZonesMap({ restaurantId }: DeliveryZonesMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const drawRef = useRef<MapboxDraw | null>(null);
+  const drawRef = useRef<any | null>(null);
   
   const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,10 @@ export default function DeliveryZonesMap({ restaurantId }: DeliveryZonesMapProps
       zoom: 12
     });
 
-    const draw = new MapboxDraw({
+    const MapboxDrawLib = require('@mapbox/mapbox-gl-draw');
+    const DrawClass = MapboxDrawLib.default || MapboxDrawLib;
+
+    const draw = new DrawClass({
       displayControlsDefault: false,
       controls: {
         polygon: true,
