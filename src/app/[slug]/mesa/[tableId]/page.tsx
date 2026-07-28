@@ -12,6 +12,7 @@ import { CheckoutForm } from '@/modules/kiosk/components/CheckoutForm';
 import { OrderStatus } from '@/modules/kiosk/components/OrderStatus';
 import { ProductCustomizationModal } from '@/modules/kiosk/components/ProductCustomizationModal';
 import { useCartStore } from '@/modules/kiosk/stores/cart-store';
+import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { formatPrice, isRestaurantOpen } from '@/lib/utils';
@@ -129,6 +130,9 @@ export default function KioskPage({ params }: KioskPageProps) {
     }
   }, []);
 
+  // Added location from glubbi store for delivery zone calculation
+  const { location } = useGlubbiStore();
+
   useEffect(() => {
     async function loadData() {
       const supabase = createClient();
@@ -155,6 +159,7 @@ export default function KioskPage({ params }: KioskPageProps) {
         } catch (e) {}
       }
       
+      // Set defaults for delivery
       setDeliveryFee(restaurant.delivery_fee || 0);
       setDeliveryEnabled(restaurant.delivery_enabled || false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
@@ -227,6 +232,26 @@ export default function KioskPage({ params }: KioskPageProps) {
     
     loadData();
   }, [slug, tableId, setContext]);
+
+  // Effect to calculate dynamic delivery fee if location exists
+  useEffect(() => {
+    if (isDelivery && restaurantId && location) {
+      async function calculateZoneDelivery() {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc('get_delivery_zones_for_location', {
+          user_lat: location.lat,
+          user_lng: location.lng,
+          target_restaurant_id: restaurantId
+        });
+        
+        if (data && data.length > 0) {
+          // Si cae en alguna zona, usa el precio de la primera zona encontrada
+          setDeliveryFee(data[0].price);
+        }
+      }
+      calculateZoneDelivery();
+    }
+  }, [isDelivery, restaurantId, location]);
   
   // Scroll spy effect simplified for demo
   const scrollToCategory = (id: string) => {
