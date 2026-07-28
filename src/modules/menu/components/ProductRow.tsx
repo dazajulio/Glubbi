@@ -48,8 +48,13 @@ export function ProductRow({
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h3 className={`text-lg sm:text-xl font-bold truncate ${!product.is_available ? 'text-gray-400 line-through' : 'text-white'}`}>
+              <h3 className={`text-lg sm:text-xl font-bold truncate flex items-center gap-2 ${!product.is_available ? 'text-gray-400 line-through' : 'text-slate-800'}`}>
                 {product.name}
+                {(product.discount_percentage || 0) > 0 && (
+                  <span className="text-[10px] uppercase tracking-wider font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full shrink-0">
+                    -{product.discount_percentage}%
+                  </span>
+                )}
               </h3>
               <p className="text-gray-500 mt-1 font-medium">{formatPrice(product.base_price, 'USD')}</p>
             </div>

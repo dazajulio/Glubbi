@@ -346,13 +346,13 @@ export default function KioskPage({ params }: KioskPageProps) {
     if (data.phone) setDeliveryPhone(data.phone);
     if (data.reference) setDeliveryReference(data.reference);
 
-    // Check if customer exists or create new
+    // Check if customer exists or create new in kiosk customers (for FK)
     let newCustomerId = '';
     const { data: existing } = await supabase
       .from('customers')
       .select('id')
       .eq('restaurant_id', restaurantId || '')
-      .eq('email', data.email)
+      .eq('email', data.email.trim().toLowerCase())
       .maybeSingle() as any;
       
     if (existing) {
@@ -363,7 +363,7 @@ export default function KioskPage({ params }: KioskPageProps) {
         .insert({
           restaurant_id: restaurantId || GLUBBI_ID,
           name: data.name,
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           phone: data.phone || null
         } as any)
         .select('id')
@@ -372,6 +372,50 @@ export default function KioskPage({ params }: KioskPageProps) {
     }
     
     setCustomerId(newCustomerId);
+
+    // Check if they exist in glubbi_customers (App)
+    const { data: glubbiExisting } = await supabase
+      .from('glubbi_customers')
+      .select('id')
+      .eq('email', data.email.trim().toLowerCase())
+      .maybeSingle();
+
+    if (glubbiExisting) {
+       setIsFromGlubbi(true); // Don't show invite
+    } else {
+       // Create Shadow Account
+       const nameParts = data.name.trim().split(' ');
+       const firstName = nameParts[0];
+       const lastName = nameParts.slice(1).join(' ') || ' ';
+       
+       const newAddressEntry = data.address ? [{
+         id: Math.random().toString(36).substring(7),
+         label: 'Dirección Reciente',
+         address: data.address,
+         reference: data.reference,
+         phone: data.phone,
+         is_default: true
+       }] : [];
+
+       const { error: glubbiError } = await supabase
+         .from('glubbi_customers')
+         .insert({
+           first_name: firstName,
+           last_name: lastName,
+           email: data.email.trim().toLowerCase(),
+           phone: data.phone || '',
+           addresses: newAddressEntry
+         } as any);
+
+       if (!glubbiError) {
+         fetch('/api/customer/invite', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ email: data.email.trim().toLowerCase(), firstName })
+         }).catch(e => console.error(e));
+       }
+    }
+
     setIsProcessing(false);
     
     // Check if we should show upsell
@@ -599,8 +643,27 @@ export default function KioskPage({ params }: KioskPageProps) {
         <div className="bg-white shadow-sm rounded-2xl p-6 w-full max-w-sm mb-8 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Total pagado:</p>
           <p className="text-3xl font-bold brand-text">{formatPrice(lastTotal, currency)}</p>
+          {lastOrderId && (
+            <p className="text-xs text-gray-400 mt-3 font-mono">Orden #{lastOrderId.substring(0, 8)}</p>
+          )}
         </div>
         
+        {/* Banner de Invitación a la App (Shadow Registration Conversion) */}
+        {!isFromGlubbi && (
+          <div className="w-full max-w-sm mb-8 bg-gradient-to-r from-orange-500 to-rose-500 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden transform hover:scale-[1.02] transition-transform">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+            <h3 className="font-bold text-xl mb-2 relative z-10">¡Tus datos están seguros!</h3>
+            <p className="text-sm text-white/90 mb-4 relative z-10">
+              Hemos guardado tu dirección para futuras compras. Descarga Glubbi App para rastrear tu orden y acceder a recompensas.
+            </p>
+            <div className="flex flex-col gap-2 relative z-10">
+              <a href="https://play.google.com/store" target="_blank" rel="noreferrer" className="bg-white text-orange-600 font-bold py-2.5 rounded-xl text-sm flex items-center justify-center shadow-sm">
+                Descargar en Google Play
+              </a>
+            </div>
+          </div>
+        )}
+
         <div className="w-full max-w-sm space-y-4">
           <button 
             onClick={() => changeStep('order_status')}

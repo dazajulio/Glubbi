@@ -11,7 +11,8 @@ import {
   Handshake, 
   LogOut,
   ChevronRight,
-  UserCircle
+  UserCircle,
+  MapPin
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,6 +28,7 @@ export default function GlubbiAccount() {
   const menuItems = [
     { title: 'Historial de Pedidos', icon: Receipt, href: '#', color: 'text-blue-500', bg: 'bg-blue-50' },
     { title: 'Mis Cupones', icon: Ticket, href: '#', color: 'text-orange-500', bg: 'bg-orange-50' },
+    { title: 'Mis Direcciones', icon: MapPin, href: '/glubbi/cuenta/direcciones', color: 'text-rose-500', bg: 'bg-rose-50' },
     { title: 'Quiero afiliar mi restaurante', icon: Store, href: '/', color: 'text-green-500', bg: 'bg-green-50' },
     { title: 'Alianzas', icon: Handshake, href: '#', color: 'text-purple-500', bg: 'bg-purple-50' },
     { title: 'Términos y Condiciones', icon: FileText, href: '#', color: 'text-gray-500', bg: 'bg-gray-100' },
