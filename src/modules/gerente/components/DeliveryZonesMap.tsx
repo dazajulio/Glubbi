@@ -7,7 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, Save, Trash2, PlusCircle, AlertCircle, Map } from 'lucide-react';
+import { Loader2, Save, Trash2, PlusCircle, AlertCircle, Map, Edit2 } from 'lucide-react';
 
 interface Zone {
   id: string;
@@ -60,6 +60,13 @@ export default function DeliveryZonesMap({ restaurantId }: DeliveryZonesMapProps
     });
 
     map.addControl(draw, 'top-left');
+
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true
+    });
+    map.addControl(geolocate, 'top-right');
+
     mapRef.current = map;
     drawRef.current = draw;
 
@@ -229,17 +236,36 @@ export default function DeliveryZonesMap({ restaurantId }: DeliveryZonesMapProps
                       <p className="font-bold text-gray-800 text-sm">{zone.name}</p>
                       <p className="text-xs font-bold text-orange-500">{formatPrice(zone.price, 'USD')}</p>
                     </div>
-                    <button 
-                      onClick={async () => {
-                        if(confirm('¿Eliminar esta zona?')) {
-                          await supabase.from('delivery_zones').delete().eq('id', zone.id);
-                          loadZones();
-                        }
-                      }}
-                      className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          let geojsonObj = (zone as any).geojson || zone.geom;
+                          if (typeof geojsonObj === 'string') geojsonObj = JSON.parse(geojsonObj);
+                          setActiveZone({
+                            id: zone.id,
+                            name: zone.name,
+                            price: zone.price,
+                            geometry: geojsonObj
+                          });
+                        }}
+                        className="p-2 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if(confirm('¿Eliminar esta zona?')) {
+                            await supabase.from('delivery_zones').delete().eq('id', zone.id);
+                            loadZones();
+                          }
+                        }}
+                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

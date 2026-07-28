@@ -78,7 +78,7 @@ export default function KioskPage({ params }: KioskPageProps) {
   // Derived Pricing
   const subtotal = getTotal();
   // Only apply delivery fee if delivery is enabled in gerente settings AND it's a delivery order
-  const effectiveDeliveryFee = (isDelivery && deliveryEnabled) ? deliveryFee : 0;
+  const effectiveDeliveryFee = (isDelivery) ? deliveryFee : 0;
   const deliveryDiscountAmount = effectiveDeliveryFee * (discountPercentage / 100);
   const finalDeliveryCost = effectiveDeliveryFee - deliveryDiscountAmount;
   const finalTotal = subtotal + finalDeliveryCost;

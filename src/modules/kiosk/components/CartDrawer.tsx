@@ -46,8 +46,8 @@ export function CartDrawer({
   if (!mounted) return null;
 
   const subtotal = getTotal();
-  // Only show delivery fee if delivery is explicitly enabled in gerente settings
-  const showDeliveryFee = isDelivery && deliveryEnabled && deliveryFee > 0;
+  // Show delivery fee if it's a delivery order and fee > 0
+  const showDeliveryFee = isDelivery && deliveryFee > 0;
   const discountedDelivery = showDeliveryFee ? deliveryFee * (1 - discountPercentage / 100) : 0;
   const grandTotal = subtotal + discountedDelivery;
 
