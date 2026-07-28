@@ -92,7 +92,8 @@ export default function GlubbiMarketplace() {
 
   const filteredRestaurants = restaurants
     .filter(r => {
-      const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const search = searchQuery.toLowerCase();
+      const matchesSearch = r.name.toLowerCase().includes(search) || (r.glubbi_category?.toLowerCase() || '').includes(search);
       const matchesCategory = activeCategory === 'Todos' || r.glubbi_category === activeCategory;
       return matchesSearch && matchesCategory;
     })
@@ -150,7 +151,7 @@ export default function GlubbiMarketplace() {
       */}
 
       {/* Grid Categorías Estilo Rappi */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mt-4 mb-2">
         {/* Fila Principal: 2 columnas grandes */}
         <div className="grid grid-cols-2 gap-3 mb-3">
           {/* Restaurantes */}
@@ -167,10 +168,10 @@ export default function GlubbiMarketplace() {
             <span className="text-[#8e4a36] font-medium text-[15px] mt-2 tracking-tight">Restaurantes</span>
           </button>
 
-          {/* Turbo */}
+          {/* Tiendas */}
           <button 
             onClick={() => {
-              setActiveCategory('Turbo');
+              setActiveCategory('Tiendas');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
             className="bg-[#eaf5eb] rounded-[24px] pt-6 pb-4 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#d6ebd9] shadow-sm"
@@ -182,7 +183,7 @@ export default function GlubbiMarketplace() {
                 10 MIN
               </div>
             </div>
-            <span className="text-[#3c764a] font-medium text-[15px] mt-2 tracking-tight">Turbo</span>
+            <span className="text-[#3c764a] font-medium text-[15px] mt-2 tracking-tight">Tiendas</span>
           </button>
         </div>
 
@@ -275,10 +276,10 @@ export default function GlubbiMarketplace() {
       />
 
       {/* Restaurants List (Vertical Feed) */}
-      <div className="px-4 mt-8">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Award className="w-5 h-5 text-orange-500" />
-          {activeCategory === 'Todos' ? 'Todos los Restaurantes' : `Restaurantes de ${activeCategory}`}
+      <div className="px-4 mt-10">
+        <h2 className="text-xl font-black text-slate-800 mb-6 tracking-tight flex items-center gap-2">
+          {activeCategory === 'Todos' ? 'Todos los establecimientos' : activeCategory}
+          {searchQuery && <span className="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Buscando: {searchQuery}</span>}
         </h2>
         
         {isLoading ? (
