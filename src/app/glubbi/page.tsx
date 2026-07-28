@@ -149,50 +149,88 @@ export default function GlubbiMarketplace() {
       </div> 
       */}
 
-      {/* Promotional Banner -> Category Quick Links */}
+      {/* Grid Categorías Estilo Rappi */}
       <div className="px-4 mb-6">
-        <div className="w-full bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-5 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <h2 className="font-black text-lg mb-4 relative z-10 text-center">¿Qué vas a pedir hoy?</h2>
-          
-          <div className="grid grid-cols-3 gap-3 relative z-10">
-            {/* Restaurantes */}
-            <button 
-              onClick={() => {
-                setActiveCategory('Todos');
-                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
-            >
-              <div className="text-3xl drop-shadow-sm">🌟</div>
-              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Todos</span>
-            </button>
+        {/* Fila Principal: 2 columnas grandes */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {/* Restaurantes */}
+          <button 
+            onClick={() => {
+              setActiveCategory('Todos');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#fff3ec] rounded-[24px] pt-6 pb-4 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#ffe4d6] shadow-sm"
+          >
+            <div className="w-full flex justify-center mb-1">
+              <span className="text-[70px] drop-shadow-xl leading-none">🍔</span>
+            </div>
+            <span className="text-[#8e4a36] font-medium text-[15px] mt-2 tracking-tight">Restaurantes</span>
+          </button>
 
-            {/* Pizza */}
-            <button 
-              onClick={() => {
-                setActiveCategory('Pizza');
-                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
-            >
-              <div className="text-3xl drop-shadow-sm">🍕</div>
-              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Pizza</span>
-            </button>
+          {/* Turbo */}
+          <button 
+            onClick={() => {
+              setActiveCategory('Turbo');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#eaf5eb] rounded-[24px] pt-6 pb-4 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#d6ebd9] shadow-sm"
+          >
+            <div className="w-full flex justify-center mb-1 relative">
+              <span className="text-[70px] drop-shadow-xl leading-none">🛍️</span>
+              {/* Fake 10 min tag */}
+              <div className="absolute -bottom-2 -left-2 bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-lg transform -rotate-12 shadow-md">
+                10 MIN
+              </div>
+            </div>
+            <span className="text-[#3c764a] font-medium text-[15px] mt-2 tracking-tight">Turbo</span>
+          </button>
+        </div>
 
-            {/* Hamburguesas */}
-            <button 
-              onClick={() => {
-                setActiveCategory('Hamburguesas');
-                document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 shadow-sm hover:scale-105 active:scale-95 transition-transform border-b-4 border-gray-100"
-            >
-              <div className="text-3xl drop-shadow-sm">🍔</div>
-              <span className="text-slate-800 font-bold text-[10px] uppercase tracking-wider">Burgers</span>
-            </button>
-          </div>
+        {/* Fila Secundaria: scroll horizontal */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2 -mx-4 px-4">
+          <button 
+            onClick={() => {
+              setActiveCategory('Mercado');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#f8f9fb] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+          >
+            <span className="text-[40px] drop-shadow-md mb-2 leading-none">🛒</span>
+            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Mercado</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              setActiveCategory('Farmacia');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#f4f7fc] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+          >
+            <span className="text-[40px] drop-shadow-md mb-2 leading-none">💊</span>
+            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Farmacia</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              setActiveCategory('Postres');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#fff0f5] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+          >
+            <span className="text-[40px] drop-shadow-md mb-2 leading-none">🍩</span>
+            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Postres</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              setActiveCategory('Donaciones');
+              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-[#f0f8ff] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+          >
+            <span className="text-[40px] drop-shadow-md mb-2 leading-none">💙</span>
+            <span className="text-gray-700 font-medium text-[12px] tracking-tight">¡Dona aquí!</span>
+          </button>
         </div>
       </div>
       
