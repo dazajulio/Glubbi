@@ -325,17 +325,18 @@ export default function TenantsPage() {
                 </div>
                 <select 
                   disabled={isUpdating}
-                  value={selectedTenant.kyc_status || 'en_proceso'}
+                  value={selectedTenant.kyc_status || 'unverified'}
                   onChange={(e) => updateKycStatus(selectedTenant, e.target.value)}
                   className={`mt-2 block w-full rounded-xl text-sm font-semibold border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-orange-500 ${
-                    selectedTenant.kyc_status === 'aprobado' ? 'bg-green-50 text-green-700' :
-                    selectedTenant.kyc_status === 'rechazado' ? 'bg-red-50 text-red-700' :
+                    selectedTenant.kyc_status === 'verified' ? 'bg-green-50 text-green-700' :
+                    selectedTenant.kyc_status === 'rejected' ? 'bg-red-50 text-red-700' :
                     'bg-yellow-50 text-yellow-700'
                   }`}
                 >
-                  <option value="en_proceso">⏳ En Proceso</option>
-                  <option value="aprobado">✅ Aprobado</option>
-                  <option value="rechazado">❌ Rechazado</option>
+                  <option value="pending_review">⏳ En Proceso</option>
+                  <option value="verified">✅ Aprobado</option>
+                  <option value="rejected">❌ Rechazado</option>
+                  <option value="unverified">⚠️ No Verificado</option>
                 </select>
               </div>
 
