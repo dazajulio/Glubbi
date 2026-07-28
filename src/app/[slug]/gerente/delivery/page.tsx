@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import dynamic from 'next/dynamic';
-const DeliveryZonesMap = dynamic(() => import('@/modules/gerente/components/DeliveryZonesMap'), { ssr: false });
+import DeliveryZonesMap from '@/modules/gerente/components/DeliveryZonesMap';
 import { redirect } from 'next/navigation';
 
 export default async function DeliveryPage({ params }: { params: Promise<{ slug: string }> }) {
