@@ -7,7 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/utils';
-import { Loader2, Save, Trash2, PlusCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Save, Trash2, PlusCircle, AlertCircle, Map } from 'lucide-react';
 
 interface Zone {
   id: string;
@@ -218,7 +218,7 @@ export default function DeliveryZonesMap({ restaurantId }: DeliveryZonesMapProps
             <div className="space-y-3">
               {zones.length === 0 ? (
                 <div className="text-center p-6 border-2 border-dashed rounded-xl bg-slate-50 text-gray-400">
-                  <MapboxDraw className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <Map className="w-8 h-8 mx-auto mb-2 opacity-20" />
                   <p className="text-sm">No tienes zonas configuradas.</p>
                   <p className="text-xs mt-1">Usa la herramienta del mapa para empezar a dibujar.</p>
                 </div>
