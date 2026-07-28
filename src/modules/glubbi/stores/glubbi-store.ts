@@ -11,7 +11,9 @@ interface GlubbiCustomer {
 
 interface GlubbiState {
   customer: GlubbiCustomer | null;
+  location: { lat: number; lng: number } | null;
   setCustomer: (customer: GlubbiCustomer) => void;
+  setLocation: (location: { lat: number; lng: number } | null) => void;
   clearCustomer: () => void;
 }
 
@@ -19,7 +21,9 @@ export const useGlubbiStore = create<GlubbiState>()(
   persist(
     (set) => ({
       customer: null,
+      location: null,
       setCustomer: (customer) => set({ customer }),
+      setLocation: (location) => set({ location }),
       clearCustomer: () => set({ customer: null }),
     }),
     {

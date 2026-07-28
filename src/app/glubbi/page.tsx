@@ -25,25 +25,28 @@ import {
 
 export default function GlubbiMarketplace() {
   const router = useRouter();
-  const { customer } = useGlubbiStore();
+  const { customer, location, setLocation } = useGlubbiStore();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
-  const [locationName, setLocationName] = useState('Mi Ubicación Actual');
+  const [locationName, setLocationName] = useState(location ? 'Ubicación Obtenida' : 'Mi Ubicación Actual');
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       setLocationName('Ubicando...');
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Here we could store lat/lng in global state for future distance sorting
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
           setLocationName('Ubicación Obtenida');
         },
         (error) => {
           console.error('Error getting location:', error);
           setLocationName('Permiso Denegado');
-          setTimeout(() => setLocationName('Mi Ubicación Actual'), 3000);
+          setTimeout(() => setLocationName(location ? 'Ubicación Obtenida' : 'Mi Ubicación Actual'), 3000);
         }
       );
     } else {
