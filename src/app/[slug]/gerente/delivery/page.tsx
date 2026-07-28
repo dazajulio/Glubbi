@@ -2,12 +2,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import DeliveryZonesMap from '@/modules/gerente/components/DeliveryZonesMap';
 import { redirect } from 'next/navigation';
 
-export default async function DeliveryPage({ params }: { params: { slug: string } }) {
+export default async function DeliveryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = await createServerSupabaseClient();
   const { data: restaurant } = await supabase
     .from('restaurants')
     .select('id')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single();
 
   if (!restaurant) {
