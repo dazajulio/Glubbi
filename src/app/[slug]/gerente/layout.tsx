@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard } from 'lucide-react';
-import { WaiterNotificationBell } from './components/WaiterNotificationBell';
+import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText } from 'lucide-react';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
 
 export default function GerenteLayout({ 
@@ -58,7 +57,24 @@ export default function GerenteLayout({
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    // Inject dynamic manifest for KDS
+    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+    const originalManifest = manifestLink?.href;
+    
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+    }
+    manifestLink.href = `/api/manifest/kds?slug=${slug}`;
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (manifestLink && originalManifest) {
+        manifestLink.href = originalManifest;
+      }
+    };
   }, [slug]);
 
   const handleInstallPWA = async () => {
@@ -73,6 +89,8 @@ export default function GerenteLayout({
     { href: `/${slug}/gerente/menu`, label: 'Menú', icon: UtensilsCrossed },
     { href: `/${slug}/gerente/history`, label: 'Registro', icon: ClipboardList },
     { href: `/${slug}/gerente/settings`, label: 'Administrador', icon: BarChart3 },
+    { href: `/${slug}/gerente/reportes`, label: 'Reportes', icon: FileText },
+    { href: `/${slug}/gerente/horarios`, label: 'Horarios', icon: ClipboardList },
     { href: `/${slug}/gerente/qr`, label: 'Códigos QR', icon: QrCode },
     { href: `/${slug}/gerente/guia-visual`, label: 'Guía Visual', icon: Camera },
     { href: `/${slug}/gerente/ai`, label: 'Agente IA', icon: Brain },
@@ -147,7 +165,6 @@ export default function GerenteLayout({
 
       {/* Main Content */}
       <main className="flex-1 bg-white shadow-sm min-h-screen overflow-y-auto pb-20 md:pb-0 relative">
-        <WaiterNotificationBell />
         <GerentePinGuard restaurantId={restaurantId}>
           {children}
         </GerentePinGuard>

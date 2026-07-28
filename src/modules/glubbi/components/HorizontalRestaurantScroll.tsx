@@ -11,6 +11,7 @@ interface Restaurant {
   rating?: number;
   estimated_time?: string;
   glubbi_category?: string;
+  isOpen?: boolean;
 }
 
 interface HorizontalScrollProps {
@@ -72,16 +73,23 @@ export default function HorizontalRestaurantScroll({
                   {tagText}
                 </div>
               )}
+              
+              {/* Closed Overlay */}
+              {rest.isOpen === false && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                  <span className="bg-slate-900/80 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 shadow-lg">CERRADO</span>
+                </div>
+              )}
             </div>
 
             {/* Info */}
-            <div className="p-3">
+            <div className={`p-3 ${rest.isOpen === false ? 'opacity-60' : ''}`}>
               <h4 className="font-bold text-slate-800 text-sm mb-1 truncate">{rest.name}</h4>
               <p className="text-xs text-slate-500 truncate mb-2">{rest.glubbi_category || 'Comida'}</p>
               
               <div className="flex items-center justify-between text-xs font-semibold">
                 <div className="flex items-center text-slate-700">
-                  <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 mr-1" />
+                  <Star className={`w-3.5 h-3.5 mr-1 ${rest.isOpen === false ? 'text-gray-400 fill-gray-400' : 'text-yellow-500 fill-yellow-500'}`} />
                   {rest.rating?.toFixed(1) || '4.5'}
                 </div>
                 <div className="flex items-center text-slate-700">

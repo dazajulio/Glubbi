@@ -76,10 +76,19 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-bold text-white tracking-tight">4. Limitación de Responsabilidad</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">4. Limitación de Responsabilidad y Relación Comercial</h2>
             <p>
-              glubbi.app actúa exclusivamente como proveedor del canal tecnológico. Glubbi <strong>no cobra comisiones sobre las ventas</strong> realizadas por los establecimientos afiliados, <strong>no procesa directamente los fondos de pago de los comensales</strong> (los cuales son gestionados directamente por las pasarelas de pago configuradas de forma independiente por cada restaurante, como Stripe o terminales físicas) y <strong>no coordina entregas ni envíos a domicilio (delivery)</strong>. La logística de despacho, preparación de alimentos y cobro final es responsabilidad absoluta y exclusiva del Restaurante.
+              glubbi.app actúa exclusivamente como un proveedor de tecnología y canal de comunicación. Glubbi <strong>no comercializa productos, no cobra comisiones sobre las ventas</strong> realizadas por los establecimientos afiliados, <strong>no procesa directamente los fondos de pago de los comensales</strong> (los cuales son gestionados directamente por las pasarelas de pago configuradas de forma independiente por cada restaurante, como Stripe o terminales físicas) y <strong>no coordina entregas ni envíos a domicilio (delivery)</strong>. La logística de despacho, preparación de alimentos y cobro final es responsabilidad absoluta y exclusiva del Restaurante.
             </p>
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 mt-4">
+              <h3 className="text-orange-400 font-bold mb-2">Responsabilidad ante el Consumidor (Comensal)</h3>
+              <p className="text-sm">
+                Toda solicitud de <strong>derecho de retracto, devoluciones, reclamos o indemnizaciones</strong> originadas por un pedido, calidad del producto, o servicio de entrega, debe tratarse y resolverse de manera directa con el Restaurante que prestó el servicio. Glubbi no asume responsabilidad legal sobre las transacciones comerciales finales.
+              </p>
+              <p className="text-sm mt-2">
+                No obstante, para proteger a nuestra comunidad, Glubbi realiza un estricto proceso de <strong>Verificación de Identidad y Comercio (KYC - Know Your Customer)</strong> previo a la afiliación de cualquier restaurante, garantizando que todos los establecimientos presentes en la plataforma sean comercios reales, existentes y verificados.
+              </p>
+            </div>
           </section>
 
           <section className="space-y-3">

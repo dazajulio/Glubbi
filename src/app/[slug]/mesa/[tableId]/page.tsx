@@ -14,7 +14,7 @@ import { ProductCustomizationModal } from '@/modules/kiosk/components/ProductCus
 import { useCartStore } from '@/modules/kiosk/stores/cart-store';
 import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, isRestaurantOpen } from '@/lib/utils';
 import Link from 'next/link';
 
 type FlowStep = 'browse' | 'customer' | 'upsell' | 'checkout' | 'success' | 'order_status';
@@ -67,6 +67,7 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isFromGlubbi, setIsFromGlubbi] = useState(false);
   const [kycStatus, setKycStatus] = useState<string>('verified');
+  const [isClosed, setIsClosed] = useState(false);
   
   const { addItem, getItemCount, getTotal, setContext, items, clearCart, restaurantId, updateItemModifiers } = useCartStore();
   
@@ -157,6 +158,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       setDeliveryFee(restaurant.delivery_fee || 0);
       setDeliveryEnabled(restaurant.delivery_enabled || false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
+      setIsClosed(!isRestaurantOpen(restaurant.schedule, restaurant.timezone));
       
       // Load categories
       const { data: catsData } = await supabase
@@ -729,51 +731,25 @@ export default function KioskPage({ params }: KioskPageProps) {
           selectedTableId={selectedTableId}
           onTableChange={setSelectedTableId}
         />
+        {/* Floating Buttons */}
+        <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3">
+          {isDelivery && (
+            <a
+              href={`https://wa.me/?text=Hola`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white hover:scale-105 transition-transform"
+            >
+              <span className="text-xl">💬</span>
+            </a>
+          )}
+        </div>
       </div>
     );
   }
 
-  const handleCallWaiter = async () => {
-    setIsCallingWaiter(true);
-    const supabase = createClient();
-    
-    // Check if valid tableId
-    const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    
-    if (tableId && tableId !== 'takeaway' && isValidUUID(tableId) && restaurantId) {
-      const { error } = await supabase.from('waiter_calls').insert({
-        restaurant_id: restaurantId,
-        table_id: tableId,
-        status: 'pending'
-      } as any);
-      
-      if (!error) {
-         alert('El mesero ha sido notificado y va en camino a su mesa.');
-      } else {
-         alert('Hubo un error al notificar al mesero. Por favor intente de nuevo.');
-      }
-    } else {
-      alert('No se pudo identificar la mesa para llamar al mesero.');
-    }
-    
-    setIsCallingWaiter(false);
-  };
-
   return (
     <>
-      {/* Call Waiter Button */}
-      {!isDelivery && !isWaiter && (
-        <div className="fixed top-4 right-4 z-[60]">
-          <button 
-            onClick={handleCallWaiter}
-            disabled={isCallingWaiter}
-            className="text-sm font-bold text-white brand-bg rounded-full px-4 py-3 flex items-center shadow-lg shadow-orange-500/30 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            <span className="mr-2 text-lg">🔔</span> {isCallingWaiter ? 'Llamando...' : 'Mesero'}
-          </button>
-        </div>
-      )}
-
       <div className="pb-8">
         <div className="sticky top-0 bg-slate-50/95 backdrop-blur-md z-50 border-b border-gray-200/60 shadow-md">
           <ElegantHeader />
@@ -816,6 +792,7 @@ export default function KioskPage({ params }: KioskPageProps) {
                       product={product} 
                       onAdd={handleAddToCart}
                       currency={currency}
+                      disabled={isClosed}
                     />
                   ))}
                 </div>
@@ -826,6 +803,27 @@ export default function KioskPage({ params }: KioskPageProps) {
       </div>
 
       </div>
+
+      {/* Closed Overlay */}
+      {isClosed && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-scale-in">
+            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-slate-200">
+              <span className="text-4xl">😴</span>
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">Estamos Cerrados</h3>
+            <p className="text-slate-500 mb-6">
+              El restaurante se encuentra fuera de su horario de atención. Vuelve más tarde para disfrutar de nuestro menú.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              Actualizar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Cart Button */}
       {getItemCount() > 0 && step === 'browse' && (

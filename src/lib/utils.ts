@@ -98,5 +98,53 @@ export function getStatusColor(status: string): {
     delivered: { bg: 'bg-gray-500/10', text: 'text-gray-500', border: 'border-gray-500/30' },
     cancelled: { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/30' },
   };
-  return colors[status] ?? colors.pending;
+  return colors[status.toLowerCase()] || colors.pending;
+}
+
+/**
+ * Evalúa si el restaurante está abierto según su horario y hora local
+ */
+export function isRestaurantOpen(schedule: any, timezone: string = 'America/Caracas'): boolean {
+  if (!schedule) return true; // Si no hay horario configurado, asumimos abierto
+
+  const now = new Date();
+  
+  // Obtener el día de la semana actual (0 = Sunday, 1 = Monday, etc.)
+  const options = { timeZone: timezone, weekday: 'long' as const };
+  let dayName = new Intl.DateTimeFormat('en-US', options).format(now).toLowerCase();
+  
+  const dayMap: Record<string, string> = {
+    'monday': 'monday',
+    'tuesday': 'tuesday',
+    'wednesday': 'wednesday',
+    'thursday': 'thursday',
+    'friday': 'friday',
+    'saturday': 'saturday',
+    'sunday': 'sunday',
+  };
+
+  const currentDayKey = dayMap[dayName];
+  if (!currentDayKey) return true;
+
+  const daySchedule = schedule[currentDayKey];
+  
+  // Si el día está marcado como cerrado
+  if (!daySchedule || !daySchedule.isOpen) {
+    return false;
+  }
+
+  // Obtener hora actual en HH:MM
+  const timeOptions = { timeZone: timezone, hour: '2-digit' as const, minute: '2-digit' as const, hour12: false };
+  const currentTime = new Intl.DateTimeFormat('en-US', timeOptions).format(now);
+  
+  const openTime = daySchedule.open;
+  const closeTime = daySchedule.close;
+
+  // Manejo de horarios que cruzan la medianoche (ej. 20:00 a 02:00)
+  if (closeTime < openTime) {
+    return currentTime >= openTime || currentTime <= closeTime;
+  }
+
+  // Horario normal (ej. 09:00 a 22:00)
+  return currentTime >= openTime && currentTime <= closeTime;
 }
