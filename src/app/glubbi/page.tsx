@@ -134,25 +134,25 @@ export default function GlubbiMarketplace() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       {/* Sticky Header with Background */}
-      <div className="relative bg-white pt-5 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden border-t-[8px] border-orange-500">
+      <div className="relative bg-white pt-5 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden">
         
         {/* The Giant Burger Background */}
         <img 
           src="/burger-header.png" 
           alt="" 
-          className="absolute -right-4 -top-2 w-48 h-auto object-contain pointer-events-none z-0" 
+          className="absolute -right-8 top-0 h-full w-auto object-contain pointer-events-none z-0 scale-125 origin-right" 
         />
 
         <div className="relative z-10 px-4">
           {/* Logo */}
-          <div className="mb-3">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="h-10 sm:h-12 w-auto object-contain" />
+          <div className="mb-2">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="h-16 sm:h-20 w-auto object-contain" />
           </div>
 
           {/* Location button */}
           <button 
             onClick={handleGetLocation}
-            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform mb-4"
+            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform mb-5"
           >
             <div className="flex items-center text-[15px] font-medium text-slate-700">
               <MapPin className="w-4 h-4 mr-1.5 text-[#00c950]" />
@@ -169,7 +169,7 @@ export default function GlubbiMarketplace() {
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3.5 border-none rounded-[20px] leading-5 bg-slate-50/70 backdrop-blur-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors sm:text-sm shadow-sm"
+              className="block w-full pl-11 pr-4 py-3.5 border-none rounded-[20px] leading-5 bg-slate-50/85 backdrop-blur-[2px] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors sm:text-sm shadow-sm"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
