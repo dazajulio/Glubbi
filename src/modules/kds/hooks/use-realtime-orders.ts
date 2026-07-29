@@ -255,18 +255,16 @@ export function useRealtimeOrders({
         knownOrderIds.current.delete(orderId);
       }
 
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus } as any)
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('[KDS] Error updating order status:', error.message);
+      const { updateOrderStatusAction, updateOrderPaymentStatusAction } = await import('@/modules/kds/actions');
+      try {
+        await updateOrderStatusAction(orderId, newStatus);
+      } catch (error) {
+        console.error('[KDS] Error updating order status:', error);
         // Revert: re-fetch all
         await fetchInitialOrders();
       }
     },
-    [supabase, fetchInitialOrders]
+    [fetchInitialOrders]
   );
 
   // ------------------------------------------------------------------
@@ -278,22 +276,30 @@ export function useRealtimeOrders({
       setOrders((prev) =>
         prev.map((o) =>
           o.id === orderId
-            ? { ...o, payment_status: 'paid', stripe_payment_intent_id: reference, updated_at: new Date().toISOString() }
+            ? {
+                ...o,
+                payment_status: 'paid',
+                updated_at: new Date().toISOString(),
+                // Simplificamos la nota de validación para evitar duplicados visuales masivos
+                notes: o.notes ? `${o.notes} | ✅ Pago Validado: ${reference}` : `✅ Pago Validado: ${reference}`
+              }
             : o
         )
       );
 
-      const { error } = await supabase
-        .from('orders')
-        .update({ payment_status: 'paid', stripe_payment_intent_id: `manual_${reference}` } as any)
-        .eq('id', orderId);
-
-      if (error) {
-        console.error('[KDS] Error updating payment status:', error.message);
+      const { updateOrderPaymentStatusAction } = await import('@/modules/kds/actions');
+      const orderToUpdate = orders.find(o => o.id === orderId);
+      const currentNotes = orderToUpdate?.notes || '';
+      const newNotes = currentNotes ? `${currentNotes} | ✅ Pago Validado: ${reference}` : `✅ Pago Validado: ${reference}`;
+      
+      try {
+        await updateOrderPaymentStatusAction(orderId, newNotes);
+      } catch (error) {
+        console.error('[KDS] Error updating payment status:', error);
         await fetchInitialOrders();
       }
     },
-    [supabase, fetchInitialOrders]
+    [orders, fetchInitialOrders]
   );
 
   // ------------------------------------------------------------------

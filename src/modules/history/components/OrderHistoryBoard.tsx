@@ -38,11 +38,11 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
   }, [restaurantId, supabase]);
 
   const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
-    pending:   { label: 'Pendiente',    classes: 'bg-yellow-100 text-yellow-800' },
-    preparing: { label: 'En cocina',    classes: 'bg-blue-100 text-blue-800' },
-    ready:     { label: 'Listo',        classes: 'bg-green-100 text-green-800' },
-    delivered: { label: 'Entregado',    classes: 'bg-slate-100 text-slate-600' },
-    cancelled: { label: 'Cancelado',    classes: 'bg-red-100 text-red-700' },
+    pending:   { label: 'Nuevo (Cocina)', classes: 'bg-yellow-100 text-yellow-800' },
+    preparing: { label: 'En cocina',      classes: 'bg-blue-100 text-blue-800' },
+    ready:     { label: 'Listo',          classes: 'bg-green-100 text-green-800' },
+    delivered: { label: 'Entregado',      classes: 'bg-slate-100 text-slate-600' },
+    cancelled: { label: 'Cancelado',      classes: 'bg-red-100 text-red-700' },
   };
 
   const filteredOrders = orders.filter(o => {
@@ -174,19 +174,12 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
 
                     {order.notes && order.notes.includes('[Origen: Delivery]') && (
                       <div className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
+                        {order.customer?.name && (
+                          <div><strong className="text-blue-600">Cliente:</strong> {order.customer.name}</div>
+                        )}
                         <div><strong className="text-blue-600">Dirección:</strong> {order.notes.match(/Dirección:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
                         <div><strong className="text-blue-600">Teléfono:</strong> {order.notes.match(/Teléfono:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
                         <div><strong className="text-blue-600">Referencia:</strong> {order.notes.match(/Referencia:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                      </div>
-                    )}
-                    {order.notes && order.notes.includes('Validación:') && (
-                      <div className="text-xs bg-purple-500/10 border border-purple-500/20 text-purple-600 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
-                        <div><strong className="text-purple-700">Pago Móvil (Validado):</strong></div>
-                        <div>Ref: {order.notes.match(/Ref:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div>Monto: {order.notes.match(/Monto:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div>Banco: {order.notes.match(/Banco:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div>Fecha: {order.notes.match(/Fecha:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div>CI/RIF: {order.notes.match(/CI\/RIF:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
                       </div>
                     )}
                   </div>

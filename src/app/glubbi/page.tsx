@@ -25,23 +25,19 @@ import {
 
 export default function GlubbiMarketplace() {
   const router = useRouter();
-  const { customer, location, setLocation } = useGlubbiStore();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const { customer, location, locationName: storedLocationName, setLocation } = useGlubbiStore();
+  
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
-  const [locationName, setLocationName] = useState(location ? 'Ubicación Obtenida' : 'Mi Ubicación Actual');
+  const [locationName, setLocationName] = useState(storedLocationName || (location ? 'Ubicación Obtenida' : 'Mi Ubicación Actual'));
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       setLocationName('Ubicando...');
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          
           try {
             const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
             if (!mapboxToken) throw new Error('No Mapbox token');
@@ -50,14 +46,25 @@ export default function GlubbiMarketplace() {
             const data = await res.json();
             
             if (data.features && data.features.length > 0) {
-              // Extract a short meaningful name like the street or neighborhood
-              setLocationName(data.features[0].text);
+              // Format place_name from "La Hechicera, Mérida, Venezuela" to "La Hechicera, Mérida"
+              let nameToSet = data.features[0].place_name;
+              if (nameToSet) {
+                 const parts = nameToSet.split(',');
+                 if(parts.length > 2) {
+                    nameToSet = parts.slice(0, 2).join(',').trim();
+                 }
+              }
+              const finalName = nameToSet || 'Ubicación Obtenida';
+              setLocationName(finalName);
+              setLocation({ lat: position.coords.latitude, lng: position.coords.longitude }, finalName);
             } else {
               setLocationName('Ubicación Obtenida');
+              setLocation({ lat: position.coords.latitude, lng: position.coords.longitude }, 'Ubicación Obtenida');
             }
           } catch (error) {
             console.error('Error fetching location name:', error);
             setLocationName('Ubicación Obtenida');
+            setLocation({ lat: position.coords.latitude, lng: position.coords.longitude }, 'Ubicación Obtenida');
           }
         },
         (error) => {
@@ -141,8 +148,8 @@ export default function GlubbiMarketplace() {
             <p className="text-xs text-slate-500 ml-5">Toca para actualizar</p>
           </button>
           <div className="flex-1" />
-          <div className="h-10 shrink-0 mr-1 flex items-center justify-end">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="h-full w-auto object-contain" />
+          <div className="h-20 w-40 shrink-0 mr-2 flex items-center justify-end">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="w-full h-full object-right object-contain scale-[1.3] origin-right" />
           </div>
         </div>
 

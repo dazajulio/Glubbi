@@ -9,6 +9,8 @@ export async function GET(request: Request) {
   }
 
   const manifest = {
+    id: `/${slug}/cocina`,
+    scope: `/${slug}/cocina`,
     name: `KDS - ${slug}`,
     short_name: "KDS",
     description: "Kitchen Display System",
