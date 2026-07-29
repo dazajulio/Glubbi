@@ -134,19 +134,17 @@ export default function GlubbiMarketplace() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       {/* Sticky Header - High Impact Compact Mobile Design */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-        <div className="px-4 pt-3 pb-3 flex flex-col gap-2.5">
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="px-4 pt-3 pb-2.5 flex flex-col gap-2">
           
-          {/* Row 1: Logo Glubbi (Left) + Active Location Pill (Right) */}
+          {/* Row 1: Glubbi Logo directly on canvas (Left) + Active Location Pill (Right) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Glubbi Logo */}
-            <div className="flex items-center shrink-0">
-              <img 
-                src="/logo-glubbi.png" 
-                alt="Glubbi" 
-                className="h-9 sm:h-10 w-auto object-contain drop-shadow-sm" 
-              />
-            </div>
+            {/* Glubbi Logo - Clean directly on canvas with high brand prominence */}
+            <img 
+              src="/logo-glubbi.png" 
+              alt="Glubbi" 
+              className="h-11 sm:h-12 w-auto object-contain shrink-0" 
+            />
 
             {/* Active Location Pill Button */}
             <button 
@@ -192,29 +190,22 @@ export default function GlubbiMarketplace() {
         </div>
       </div>
 
-      {/* Categories Grid (Rappi Style) - Hidden for now to give impact to feed */}
-      {/* 
-      <div className="px-4 py-6">
-        ...
-      </div> 
-      */}
-
-      {/* Grid Categorías Estilo Rappi */}
-      <div className="px-4 mt-4 mb-2">
+      {/* Grid Categorías Estilo Rappi con Colores Más Intensos */}
+      <div className="px-4 mt-3 mb-1">
         {/* Fila Principal: 2 columnas grandes */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-2 gap-3 mb-2.5">
           {/* Restaurantes */}
           <button 
             onClick={() => {
               setActiveCategory('Todos');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-[#fff3ec] rounded-[24px] pt-6 pb-4 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#ffe4d6] shadow-sm"
+            className="bg-[#ffe8dc] rounded-[24px] pt-5 pb-3.5 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#ffd1ba] shadow-sm"
           >
             <div className="w-full flex justify-center mb-1">
-              <span className="text-[70px] drop-shadow-xl leading-none">🍔</span>
+              <span className="text-[68px] drop-shadow-xl leading-none">🍔</span>
             </div>
-            <span className="text-[#8e4a36] font-medium text-[15px] mt-2 tracking-tight">Restaurantes</span>
+            <span className="text-[#9c3e23] font-bold text-[15px] mt-1 tracking-tight">Restaurantes</span>
           </button>
 
           {/* Tiendas */}
@@ -223,26 +214,26 @@ export default function GlubbiMarketplace() {
               setActiveCategory('Tiendas');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-[#eaf5eb] rounded-[24px] pt-6 pb-4 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#d6ebd9] shadow-sm"
+            className="bg-[#def2e1] rounded-[24px] pt-5 pb-3.5 px-4 flex flex-col items-center justify-center relative active:scale-95 transition-transform border border-[#bce4c3] shadow-sm"
           >
             <div className="w-full flex justify-center mb-1 relative">
-              <span className="text-[70px] drop-shadow-xl leading-none">🛍️</span>
+              <span className="text-[68px] drop-shadow-xl leading-none">🛍️</span>
             </div>
-            <span className="text-[#3c764a] font-medium text-[15px] mt-2 tracking-tight">Tiendas</span>
+            <span className="text-[#296838] font-bold text-[15px] mt-1 tracking-tight">Tiendas</span>
           </button>
         </div>
 
         {/* Fila Secundaria: scroll horizontal centrado */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2 -mx-4 px-4 justify-center">
+        <div className="flex overflow-x-auto hide-scrollbar gap-2.5 pb-0 -mx-4 px-4 justify-center">
           <button 
             onClick={() => {
               setActiveCategory('Mercado');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-[#f8f9fb] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+            className="bg-[#e6edf7] border border-[#cad7eb] rounded-[20px] py-3 px-3.5 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
           >
-            <span className="text-[40px] drop-shadow-md mb-2 leading-none">🛒</span>
-            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Mercado</span>
+            <span className="text-[38px] drop-shadow-md mb-1 leading-none">🛒</span>
+            <span className="text-[#2b4263] font-bold text-[12px] tracking-tight">Mercado</span>
           </button>
 
           <button 
@@ -250,10 +241,10 @@ export default function GlubbiMarketplace() {
               setActiveCategory('Farmacia');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-[#f4f7fc] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+            className="bg-[#e2edff] border border-[#b8d2fe] rounded-[20px] py-3 px-3.5 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
           >
-            <span className="text-[40px] drop-shadow-md mb-2 leading-none">💊</span>
-            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Farmacia</span>
+            <span className="text-[38px] drop-shadow-md mb-1 leading-none">💊</span>
+            <span className="text-[#1a478a] font-bold text-[12px] tracking-tight">Farmacia</span>
           </button>
 
           <button 
@@ -261,15 +252,15 @@ export default function GlubbiMarketplace() {
               setActiveCategory('Postres');
               document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-[#fff0f5] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
+            className="bg-[#ffdbe8] border border-[#fcaecb] rounded-[20px] py-3 px-3.5 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
           >
-            <span className="text-[40px] drop-shadow-md mb-2 leading-none">🍩</span>
-            <span className="text-gray-700 font-medium text-[12px] tracking-tight">Postres</span>
+            <span className="text-[38px] drop-shadow-md mb-1 leading-none">🍩</span>
+            <span className="text-[#872347] font-bold text-[12px] tracking-tight">Postres</span>
           </button>
         </div>
       </div>
       
-      <div id="feed-section" className="pt-2">
+      <div id="feed-section" className="pt-0 mt-1">
 
       {/* Envío Gratis */}
       <HorizontalRestaurantScroll 
