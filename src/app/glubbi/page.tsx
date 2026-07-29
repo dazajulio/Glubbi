@@ -140,13 +140,13 @@ export default function GlubbiMarketplace() {
         <img 
           src="/burger-header.png" 
           alt="" 
-          className="absolute -right-8 top-0 h-full w-auto object-contain pointer-events-none z-0 scale-125 origin-right" 
+          className="absolute right-0 top-0 h-full w-auto object-contain pointer-events-none z-0 scale-110 translate-x-[25%]" 
         />
 
         <div className="relative z-10 px-4">
           {/* Logo */}
-          <div className="mb-2">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="h-16 sm:h-20 w-auto object-contain" />
+          <div className="mb-2 ml-5">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="h-20 sm:h-24 w-auto object-contain" />
           </div>
 
           {/* Location button */}
