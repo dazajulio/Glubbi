@@ -43,7 +43,7 @@ export default function GlubbiOfertas() {
           .from('products')
           .select(`
             id, name, base_price, discount_percentage, image_url,
-            restaurants(id, name, slug, logo_url, is_active)
+            restaurants!products_restaurant_id_fkey(id, name, slug, logo_url, is_active)
           `)
           .gt('discount_percentage', 0)
           .eq('is_available', true);

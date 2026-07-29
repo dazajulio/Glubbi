@@ -422,12 +422,35 @@ export default function KioskPage({ params }: KioskPageProps) {
     // Check if they exist in glubbi_customers (App)
     const { data: glubbiExisting } = await supabase
       .from('glubbi_customers')
-      .select('id')
+      .select('id, addresses')
       .eq('email', data.email.trim().toLowerCase())
       .maybeSingle();
 
     if (glubbiExisting) {
        setIsFromGlubbi(true); // Don't show invite
+       // Update addresses if a new address was provided
+       if (data.address) {
+         let currentAddresses = [];
+         if (Array.isArray(glubbiExisting.addresses)) {
+           currentAddresses = glubbiExisting.addresses;
+         }
+         // check if address already exists
+         const exists = currentAddresses.some((a: any) => a.address === data.address);
+         if (!exists) {
+           const newAddress = {
+             id: Math.random().toString(36).substring(7),
+             label: 'Dirección Reciente',
+             address: data.address,
+             reference: data.reference,
+             phone: data.phone,
+             is_default: currentAddresses.length === 0
+           };
+           await supabase
+             .from('glubbi_customers')
+             .update({ addresses: [...currentAddresses, newAddress] })
+             .eq('id', glubbiExisting.id);
+         }
+       }
     } else {
        // Create Shadow Account
        const nameParts = data.name.trim().split(' ');

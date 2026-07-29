@@ -227,7 +227,7 @@ export default function GlubbiMarketplace() {
         title="Envío Gratis" 
         subtitle="Ahorra en tu domicilio"
         icon={<Bike className="w-5 h-5 text-emerald-500" />}
-        restaurants={filteredRestaurants.slice(0, 4)}
+        restaurants={filteredRestaurants.filter((r: any) => r.has_free_delivery).slice(0, 4)}
         tagText="ENVÍO $0"
         tagColor="bg-emerald-500 text-white"
       />
@@ -237,7 +237,7 @@ export default function GlubbiMarketplace() {
         title="Mejores Ofertas" 
         subtitle="Descuentos que no puedes dejar pasar"
         icon={<Sparkles className="w-5 h-5 text-purple-500" />}
-        restaurants={filteredRestaurants.slice().reverse().slice(0, 4)}
+        restaurants={filteredRestaurants.filter((r: any) => r.discount_percentage > 0).slice(0, 4)}
         tagText="TENDENCIA"
         tagColor="bg-blue-500 text-white"
       />
@@ -296,11 +296,18 @@ export default function GlubbiMarketplace() {
                       </div>
                     )}
                     
-                    {/* Top Left Badges (Rappi Style) */}
+                    {/* Top Left Badges (Glubbi Tags) */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
-                      <div className="bg-green-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider">⚡ Turbo</span>
-                      </div>
+                      {restaurant.glubbi_category && (
+                        <div className="bg-blue-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
+                        </div>
+                      )}
+                      {restaurant.has_free_delivery && (
+                        <div className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Envío $0</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -320,7 +327,9 @@ export default function GlubbiMarketplace() {
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-gray-400">•</span>
-                        <span>🏍️ Envío $3.500</span>
+                        <span>
+                          🏍️ {restaurant.has_free_delivery ? 'Envío Gratis' : (restaurant.delivery_fee > 0 ? `Envío $${restaurant.delivery_fee.toLocaleString('es-CO')}` : 'Consultar envío')}
+                        </span>
                       </div>
                     </div>
                   </div>
