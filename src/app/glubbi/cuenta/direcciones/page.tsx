@@ -62,6 +62,9 @@ export default function MisDirecciones() {
       
     if (!error) {
       setAddresses(updatedAddresses);
+    } else {
+      console.error('Error saving address:', error);
+      alert('Hubo un error al guardar tu dirección. Inténtalo nuevamente.');
     }
     setIsSaving(false);
   };

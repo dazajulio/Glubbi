@@ -36,12 +36,29 @@ export default function GlubbiMarketplace() {
     if (navigator.geolocation) {
       setLocationName('Ubicando...');
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           setLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          setLocationName('Ubicación Obtenida');
+          
+          try {
+            const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+            if (!mapboxToken) throw new Error('No Mapbox token');
+            
+            const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${mapboxToken}&types=address,poi,neighborhood&limit=1`);
+            const data = await res.json();
+            
+            if (data.features && data.features.length > 0) {
+              // Extract a short meaningful name like the street or neighborhood
+              setLocationName(data.features[0].text);
+            } else {
+              setLocationName('Ubicación Obtenida');
+            }
+          } catch (error) {
+            console.error('Error fetching location name:', error);
+            setLocationName('Ubicación Obtenida');
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -123,8 +140,9 @@ export default function GlubbiMarketplace() {
             </div>
             <p className="text-xs text-slate-500 ml-5">Toca para actualizar</p>
           </button>
-          <div className="w-12 h-12 mr-2 rounded-full flex items-center justify-center relative bg-white shadow-sm border border-gray-100 overflow-hidden shrink-0">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="w-full h-full object-cover scale-110" />
+          <div className="flex-1" />
+          <div className="h-10 shrink-0 mr-1 flex items-center justify-end">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="h-full w-auto object-contain" />
           </div>
         </div>
 
@@ -227,7 +245,7 @@ export default function GlubbiMarketplace() {
         title="Envío Gratis" 
         subtitle="Ahorra en tu domicilio"
         icon={<Bike className="w-5 h-5 text-emerald-500" />}
-        restaurants={filteredRestaurants.filter((r: any) => r.has_free_delivery).slice(0, 4)}
+        restaurants={filteredRestaurants.filter((r: any) => r.delivery_fee === 0).slice(0, 4)}
         tagText="ENVÍO $0"
         tagColor="bg-emerald-500 text-white"
       />
@@ -303,7 +321,7 @@ export default function GlubbiMarketplace() {
                           <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
                         </div>
                       )}
-                      {restaurant.has_free_delivery && (
+                      {restaurant.delivery_fee === 0 && (
                         <div className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
                           <span className="text-[10px] font-black text-white uppercase tracking-wider">Envío $0</span>
                         </div>
@@ -328,7 +346,7 @@ export default function GlubbiMarketplace() {
                       <div className="flex items-center gap-1">
                         <span className="text-gray-400">•</span>
                         <span>
-                          🏍️ {restaurant.has_free_delivery ? 'Envío Gratis' : (restaurant.delivery_fee > 0 ? `Envío $${restaurant.delivery_fee.toLocaleString('es-CO')}` : 'Consultar envío')}
+                          🏍️ {restaurant.delivery_fee === 0 ? 'Envío Gratis' : `Envío $${(restaurant.delivery_fee || 0).toLocaleString('es-CO')}`}
                         </span>
                       </div>
                     </div>
