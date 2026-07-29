@@ -133,49 +133,62 @@ export default function GlubbiMarketplace() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      {/* Sticky Header */}
-      <div className="relative bg-white sticky top-0 z-50 shadow-sm overflow-hidden" style={{ minHeight: '120px' }}>
-        
-        {/* Burger image — shows 60%, 40% bleeds off right edge */}
-        <img 
-          src="/burger-header.png" 
-          alt="" 
-          className="absolute right-0 top-0 max-h-[120px] w-auto object-contain pointer-events-none z-0"
-          style={{ transform: 'translateX(40%)' }}
-        />
-
-        {/* Real interactive content */}
-        <div className="relative z-20 px-4 pt-5 pb-4 flex flex-col gap-2">
+      {/* Sticky Header - High Impact Compact Mobile Design */}
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <div className="px-4 pt-3 pb-3 flex flex-col gap-2.5">
           
-          {/* Logo */}
-          <img src="/logo-glubbi.png" alt="Glubbi" className="h-28 w-auto object-contain object-left" />
-
-          {/* Location button — real Mapbox text */}
-          <button 
-            onClick={handleGetLocation}
-            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
-          >
-            <div className="flex items-center text-[15px] font-medium text-[#333333]">
-              <MapPin className="w-4 h-4 mr-1.5 shrink-0 text-[#5D6B22]" />
-              <span className="truncate max-w-[180px]">{locationName}</span>
-              <ChevronRight className="w-4 h-4 ml-0.5 shrink-0 text-[#333333]" />
+          {/* Row 1: Logo Glubbi (Left) + Active Location Pill (Right) */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Glubbi Logo */}
+            <div className="flex items-center shrink-0">
+              <img 
+                src="/logo-glubbi.png" 
+                alt="Glubbi" 
+                className="h-9 sm:h-10 w-auto object-contain drop-shadow-sm" 
+              />
             </div>
-            <p className="text-[13px] text-[#888888] font-light ml-5">Toca para actualizar</p>
-          </button>
 
-          {/* Search bar — fully functional filter */}
-          <div className="relative mt-1">
+            {/* Active Location Pill Button */}
+            <button 
+              onClick={handleGetLocation}
+              className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200/80 active:scale-95 px-3 py-1.5 rounded-full transition-all border border-gray-200/80 max-w-[220px]"
+              title="Actualizar ubicación"
+            >
+              <MapPin className="w-4 h-4 shrink-0 text-[#5D6B22]" />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="text-[13px] font-semibold text-[#333333] truncate w-full leading-tight">
+                  {locationName}
+                </span>
+                <span className="text-[10px] font-medium text-orange-600 leading-none">
+                  Toca para actualizar
+                </span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-gray-500" />
+            </button>
+          </div>
+
+          {/* Row 2: Search Bar ("¿Qué se te antoja hoy?") */}
+          <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-[#333333]" />
+              <Search className="h-4.5 w-4.5 text-orange-500" />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-white/60 placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white/90 transition-colors text-sm shadow-sm"
+              className="block w-full pl-10 pr-8 py-2.5 rounded-full text-xs sm:text-sm bg-gray-100 hover:bg-gray-100/80 placeholder-gray-400 text-gray-800 border border-transparent focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all shadow-inner"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-bold text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
           </div>
+
         </div>
       </div>
 
