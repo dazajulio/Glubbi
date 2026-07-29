@@ -144,16 +144,16 @@ export default function GlubbiMarketplace() {
           style={{ transform: 'translateX(40%) translateY(-7%)', transformOrigin: 'right center' }}
         />
 
-        {/* White gradient fade protecting left column text */}
+        {/* White gradient fade — sharp cutoff to keep burger crisp */}
         <div className="absolute inset-0 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to right, #ffffff 50%, rgba(255,255,255,0.3) 75%, transparent 100%)' }}
+          style={{ background: 'linear-gradient(to right, #ffffff 52%, transparent 62%)' }}
         />
 
         {/* Real interactive content */}
         <div className="relative z-20 px-4 pt-5 pb-4 flex flex-col gap-2">
           
           {/* Logo */}
-          <img src="/logo-glubbi.png" alt="Glubbi" className="h-12 w-auto object-contain object-left" />
+          <img src="/logo-glubbi.png" alt="Glubbi" className="h-20 w-auto object-contain object-left" />
 
           {/* Location button — real Mapbox text */}
           <button 
@@ -175,7 +175,7 @@ export default function GlubbiMarketplace() {
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-[#F0F0F0]/80 backdrop-blur-sm placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors text-sm shadow-sm"
+              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-white/60 placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white/90 transition-colors text-sm shadow-sm"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
