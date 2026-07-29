@@ -134,26 +134,21 @@ export default function GlubbiMarketplace() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       {/* Sticky Header */}
-      <div className="relative bg-white sticky top-0 z-50 shadow-sm overflow-hidden" style={{ minHeight: '160px' }}>
+      <div className="relative bg-white sticky top-0 z-50 shadow-sm overflow-hidden" style={{ minHeight: '120px' }}>
         
         {/* Burger image — shows 60%, 40% bleeds off right edge */}
         <img 
           src="/burger-header.png" 
           alt="" 
-          className="absolute right-0 top-0 h-[115%] w-auto pointer-events-none z-0"
-          style={{ transform: 'translateX(40%) translateY(-7%)', transformOrigin: 'right center' }}
-        />
-
-        {/* White gradient fade — sharp cutoff to keep burger crisp */}
-        <div className="absolute inset-0 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to right, #ffffff 52%, transparent 62%)' }}
+          className="absolute right-0 top-0 max-h-[120px] w-auto object-contain pointer-events-none z-0"
+          style={{ transform: 'translateX(40%)' }}
         />
 
         {/* Real interactive content */}
         <div className="relative z-20 px-4 pt-5 pb-4 flex flex-col gap-2">
           
           {/* Logo */}
-          <img src="/logo-glubbi.png" alt="Glubbi" className="h-20 w-auto object-contain object-left" />
+          <img src="/logo-glubbi.png" alt="Glubbi" className="h-28 w-auto object-contain object-left" />
 
           {/* Location button — real Mapbox text */}
           <button 
@@ -171,7 +166,7 @@ export default function GlubbiMarketplace() {
           {/* Search bar — fully functional filter */}
           <div className="relative mt-1">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-[#666666]" />
+              <Search className="h-5 w-5 text-[#333333]" />
             </div>
             <input
               type="text"
