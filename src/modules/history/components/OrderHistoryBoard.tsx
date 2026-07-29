@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { OrderWithItems } from '@/types/database';
 import { formatPrice, formatElapsedTime } from '@/lib/utils';
 import { Search, MapPin, User, Hash, Clock } from 'lucide-react';
+import { getCustomerName } from '@/modules/kds/components/OrderCard';
 
 interface OrderHistoryBoardProps {
   restaurantId: string;
@@ -47,9 +48,10 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
 
   const filteredOrders = orders.filter(o => {
     const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+    const custName = getCustomerName(o);
     const matchesSearch =
       o.order_number.toString().includes(search) ||
-      (o.customer?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (custName || '').toLowerCase().includes(search.toLowerCase()) ||
       (o.table?.label || '').toLowerCase().includes(search.toLowerCase()) ||
       (o.notes || '').toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
@@ -164,18 +166,18 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                           {order.table.label || `Mesa ${order.table.table_number}`}
                         </span>
                       )}
-                      {order.customer && (
-                        <span className="flex items-center">
-                          <User className="w-3.5 h-3.5 mr-1" />
-                          {order.customer.name}
+                      {getCustomerName(order) && (
+                        <span className="flex items-center font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded text-xs border border-gray-200">
+                          <User className="w-3.5 h-3.5 mr-1 text-orange-500" />
+                          {getCustomerName(order)}
                         </span>
                       )}
                     </div>
 
                     {order.notes && order.notes.includes('[Origen: Delivery]') && (
                       <div className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
-                        {order.customer?.name && (
-                          <div><strong className="text-blue-600">Cliente:</strong> {order.customer.name}</div>
+                        {getCustomerName(order) && (
+                          <div><strong className="text-blue-600">Cliente:</strong> {getCustomerName(order)}</div>
                         )}
                         <div><strong className="text-blue-600">Dirección:</strong> {order.notes.match(/Dirección:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
                         <div><strong className="text-blue-600">Teléfono:</strong> {order.notes.match(/Teléfono:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>

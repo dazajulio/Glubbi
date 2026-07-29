@@ -177,6 +177,26 @@ export function getValidationDetails(notes: string | null): { ref?: string; mont
 }
 
 // ----------------------------------------------------------------------------
+// Helper: Get Customer Name (Join or Notes Fallback)
+// ----------------------------------------------------------------------------
+export function getCustomerName(order: OrderWithItems): string | null {
+  if (order.customer?.name && typeof order.customer.name === 'string' && order.customer.name.trim() !== '') {
+    return order.customer.name.trim();
+  }
+
+  if (order.notes && typeof order.notes === 'string') {
+    const notes = order.notes;
+    const match = notes.match(/\[?(?:Cliente|Nombre):\s*([^\]|\n]+)\]?/i);
+    if (match && match[1]) {
+      const cleanName = match[1].split('|')[0].replace(/\]$/, '').trim();
+      if (cleanName && cleanName !== 'N/A') return cleanName;
+    }
+  }
+
+  return null;
+}
+
+// ----------------------------------------------------------------------------
 // Helper: Print Ticket (Comanda duplicada)
 // ----------------------------------------------------------------------------
 export function printOrder(order: OrderWithItems) {
@@ -184,7 +204,8 @@ export function printOrder(order: OrderWithItems) {
   printDiv.id = 'print-container';
 
   const tableLabel = order.table?.label ?? (order.table ? `Mesa ${order.table.table_number}` : 'N/A');
-  const customerLabel = order.customer?.name ? `Cliente: ${order.customer.name}` : '';
+  const customerName = getCustomerName(order);
+  const customerLabel = customerName ? `Cliente: ${customerName}` : '';
   const orderDate = new Date(order.created_at).toLocaleString();
   const rawNotes = order.notes || '';
   
@@ -193,6 +214,8 @@ export function printOrder(order: OrderWithItems) {
   // Clean notes from delivery metadata and validation
   const cleanNotes = rawNotes
     .replace(/\[Origen:\s*[^\]]+\]/g, '')
+    .replace(/\[Cliente:\s*[^\]]+\]/g, '')
+    .replace(/Cliente:\s*[^|]+/gi, '')
     .replace(/\|\s*Dirección:\s*[^|]+/g, '')
     .replace(/\|\s*Teléfono:\s*[^|]+/g, '')
     .replace(/\|\s*Referencia:\s*[^|]+/g, '')
@@ -233,7 +256,7 @@ export function printOrder(order: OrderWithItems) {
       <div style="text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 8px;">Orden #${order.order_number}</div>
       <div><strong>Origen:</strong> ${originLabel}</div>
       <div><strong>Mesa/Pedido:</strong> ${tableLabel}</div>
-      ${customerLabel ? `<div><strong>Cliente:</strong> ${order.customer?.name}</div>` : ''}
+      ${customerName ? `<div><strong>Cliente:</strong> ${customerName}</div>` : ''}
       <div><strong>Fecha:</strong> ${orderDate}</div>
       <div><strong>Método Pago:</strong> ${order.payment_method?.toUpperCase() || 'N/A'}</div>
       <div><strong>Estado Pago:</strong> ${order.payment_status?.toUpperCase() || 'PENDIENTE'}</div>
@@ -320,7 +343,7 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
   const action = NEXT_STATUS[order.status];
   const tableLabel =
     order.table?.label ?? (order.table ? `Mesa ${order.table.table_number}` : null);
-  const customerName = order.customer?.name ?? null;
+  const customerName = getCustomerName(order);
 
   const origin = getOrderOrigin(order);
   const delivery = getDeliveryDetails(order.notes);
@@ -329,6 +352,8 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
   const rawNotes = order.notes || '';
   const cleanNotes = rawNotes
     .replace(/\[Origen:\s*[^\]]+\]/g, '')
+    .replace(/\[Cliente:\s*[^\]]+\]/g, '')
+    .replace(/Cliente:\s*[^|]+/gi, '')
     .replace(/\|\s*Dirección:\s*[^|]+/g, '')
     .replace(/\|\s*Teléfono:\s*[^|]+/g, '')
     .replace(/\|\s*Referencia:\s*[^|]+/g, '')
@@ -393,8 +418,8 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
         </span>
 
         {customerName && (
-          <span className="flex items-center gap-1 text-gray-800 ml-auto truncate max-w-[140px]">
-            <User className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+          <span className="flex items-center gap-1.5 text-gray-800 ml-auto truncate max-w-[170px] font-bold bg-gray-100 px-2.5 py-1 rounded-md text-xs border border-gray-200">
+            <User className="h-3.5 w-3.5 text-orange-500 shrink-0" />
             <span className="truncate">{customerName}</span>
           </span>
         )}

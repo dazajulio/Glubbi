@@ -44,7 +44,8 @@ export async function POST(request: Request) {
         status: 'pending',
         total_amount: total,
         payment_status: paymentMethod === 'cash' ? 'pending' : 'paid',
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        notes: customer && customer.name ? `[Cliente: ${customer.name}]` : null
       } as any)
       .select('id, order_number')
       .single() as any;

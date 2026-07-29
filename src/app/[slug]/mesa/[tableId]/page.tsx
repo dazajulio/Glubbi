@@ -59,6 +59,7 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [paymentMethod, setPaymentMethod] = useState<any | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState<string>('');
   const [customizingProduct, setCustomizingProduct] = useState<ProductWithModifiers | null>(null);
   const [editingCartItemId, setEditingCartItemId] = useState<string | null>(null);
   const [editingInitialSelections, setEditingInitialSelections] = useState<any[]>([]);
@@ -387,6 +388,8 @@ export default function KioskPage({ params }: KioskPageProps) {
     setIsProcessing(true);
     const supabase = createClient();
     
+    if (data.name) setCustomerName(data.name.trim());
+
     // Save delivery details to states
     if (data.address) setDeliveryAddress(data.address);
     if (data.phone) setDeliveryPhone(data.phone);
@@ -529,12 +532,15 @@ export default function KioskPage({ params }: KioskPageProps) {
     const methodType = (method.type === 'cash' || method.id === 'cash') ? 'cash' : 
                        (method.type === 'stripe' || method.id === 'stripe') ? 'stripe' : 'terminal';
 
-    // Append origin tags to notes
+    // Append origin & customer tags to notes
     let notesPrefix = '';
+    const custTag = customerName ? `[Cliente: ${customerName}]` : '';
     if (isDelivery) {
-      notesPrefix = `[Origen: Delivery] | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone} | Referencia: ${deliveryReference}`;
+      notesPrefix = `[Origen: Delivery]${custTag ? ` | ${custTag}` : ''} | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone} | Referencia: ${deliveryReference}`;
     } else if (isWaiter) {
-      notesPrefix = `[Origen: Mesero: ${waiterName}]`;
+      notesPrefix = `[Origen: Mesero: ${waiterName}]${custTag ? ` | ${custTag}` : ''}`;
+    } else if (custTag) {
+      notesPrefix = custTag;
     }
 
     if (verificationNotes) {
@@ -598,9 +604,10 @@ export default function KioskPage({ params }: KioskPageProps) {
     const supabase = createClient();
     const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const targetTableId = isWaiter ? selectedTableId : tableId;
+    const custTag = customerName ? `[Cliente: ${customerName}]` : '';
     const notesPrefix = isWaiter
-      ? `[Origen: Mesero: ${waiterName}] | [Pagar al final]`
-      : `[Pagar al final]`;
+      ? `[Origen: Mesero: ${waiterName}] | [Pagar al final]${custTag ? ` | ${custTag}` : ''}`
+      : `[Pagar al final]${custTag ? ` | ${custTag}` : ''}`;
 
     setLastTotal(finalTotal);
 
