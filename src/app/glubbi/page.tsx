@@ -143,7 +143,7 @@ export default function GlubbiMarketplace() {
             <img 
               src="/logo-glubbi.png" 
               alt="Glubbi" 
-              className="h-11 sm:h-12 w-auto object-contain shrink-0" 
+              className="h-16 sm:h-20 w-auto object-contain object-left shrink-0" 
             />
 
             {/* Active Location Pill Button */}
