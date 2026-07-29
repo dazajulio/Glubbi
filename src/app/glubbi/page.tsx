@@ -140,7 +140,7 @@ export default function GlubbiMarketplace() {
         <img 
           src="/burger-header.png" 
           alt="" 
-          className="absolute right-0 top-0 h-full w-auto object-contain pointer-events-none z-0 scale-[1.15] translate-x-[10%]" 
+          className="absolute right-0 top-0 h-full w-auto object-cover pointer-events-none z-0 scale-[1.35] origin-right translate-x-[10%]" 
         />
 
         <div className="relative z-10 px-4">
