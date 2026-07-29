@@ -55,14 +55,11 @@ export default function MisDirecciones() {
 
   const saveAddressesToDB = async (updatedAddresses: Address[]) => {
     setIsSaving(true);
-    const { error } = await supabase
-      .from('glubbi_customers')
-      .update({ addresses: updatedAddresses })
-      .eq('id', customer!.id);
-      
-    if (!error) {
+    try {
+      const { saveCustomerAddressesAction } = await import('@/modules/glubbi/actions');
+      await saveCustomerAddressesAction(customer!.id, updatedAddresses);
       setAddresses(updatedAddresses);
-    } else {
+    } catch (error) {
       console.error('Error saving address:', error);
       alert('Hubo un error al guardar tu dirección. Inténtalo nuevamente.');
     }

@@ -445,10 +445,12 @@ export default function KioskPage({ params }: KioskPageProps) {
              phone: data.phone,
              is_default: currentAddresses.length === 0
            };
-           await supabase
-             .from('glubbi_customers')
-             .update({ addresses: [...currentAddresses, newAddress] })
-             .eq('id', glubbiExisting.id);
+           try {
+             const { saveCustomerAddressesAction } = await import('@/modules/glubbi/actions');
+             await saveCustomerAddressesAction(glubbiExisting.id, [...currentAddresses, newAddress]);
+           } catch (e) {
+             console.error('Failed to save address in mesa:', e);
+           }
          }
        }
     } else {

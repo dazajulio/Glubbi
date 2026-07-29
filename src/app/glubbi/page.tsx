@@ -42,7 +42,7 @@ export default function GlubbiMarketplace() {
             const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
             if (!mapboxToken) throw new Error('No Mapbox token');
             
-            const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${mapboxToken}&types=address,poi,neighborhood&limit=1`);
+            const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${mapboxToken}&types=address,poi,neighborhood,locality,place&limit=1`);
             const data = await res.json();
             
             if (data.features && data.features.length > 0) {
@@ -133,38 +133,48 @@ export default function GlubbiMarketplace() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      {/* App Header */}
-      <div className="bg-white px-4 pt-6 pb-4 sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      {/* Sticky Header with Background */}
+      <div className="relative bg-white pt-5 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden border-t-[8px] border-orange-500">
+        
+        {/* The Giant Burger Background */}
+        <img 
+          src="/burger-header.png" 
+          alt="" 
+          className="absolute -right-4 -top-2 w-48 h-auto object-contain pointer-events-none z-0" 
+        />
+
+        <div className="relative z-10 px-4">
+          {/* Logo */}
+          <div className="mb-3">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="h-10 sm:h-12 w-auto object-contain" />
+          </div>
+
+          {/* Location button */}
           <button 
             onClick={handleGetLocation}
-            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
+            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform mb-4"
           >
-            <div className="flex items-center text-sm font-bold text-slate-800">
-              <MapPin className="w-4 h-4 mr-1 text-orange-500" />
+            <div className="flex items-center text-[15px] font-medium text-slate-700">
+              <MapPin className="w-4 h-4 mr-1.5 text-[#00c950]" />
               <span>{locationName}</span>
               <ChevronRight className="w-4 h-4 ml-0.5 text-slate-400" />
             </div>
-            <p className="text-xs text-slate-500 ml-5">Toca para actualizar</p>
+            <p className="text-[13px] text-slate-400 font-light ml-5">Toca para actualizar</p>
           </button>
-          <div className="flex-1" />
-          <div className="h-20 w-40 shrink-0 mr-2 flex items-center justify-end">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="w-full h-full object-right object-contain scale-[1.3] origin-right" />
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-11 pr-4 py-3.5 border-none rounded-[20px] leading-5 bg-slate-50/70 backdrop-blur-md placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors sm:text-sm shadow-sm"
+              placeholder="¿Qué se te antoja hoy?"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-3 border-none rounded-2xl leading-5 bg-slate-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors sm:text-sm shadow-inner"
-            placeholder="¿Qué se te antoja hoy?"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
         </div>
       </div>
 
