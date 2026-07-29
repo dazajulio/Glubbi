@@ -134,19 +134,19 @@ export default function GlubbiMarketplace() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       {/* Sticky Header with Background */}
-      <div className="relative bg-white pt-5 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden">
+      <div className="relative bg-white pt-6 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden">
         
         {/* The Giant Burger Background */}
         <img 
           src="/burger-header.png" 
           alt="" 
-          className="absolute right-0 top-0 h-full w-auto object-cover pointer-events-none z-0 scale-[1.35] origin-right translate-x-[10%]" 
+          className="absolute -right-[15%] top-[-10%] h-[120%] w-auto object-contain pointer-events-none z-0" 
         />
 
         <div className="relative z-10 px-4">
           {/* Logo */}
-          <div className="mb-2 ml-5">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="w-[180px] sm:w-[220px] h-auto object-contain" />
+          <div className="mb-2">
+            <img src="/logo-glubbi.png" alt="Glubbi" className="h-12 w-auto object-contain" />
           </div>
 
           {/* Location button */}
@@ -154,22 +154,22 @@ export default function GlubbiMarketplace() {
             onClick={handleGetLocation}
             className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform mb-5"
           >
-            <div className="flex items-center text-[15px] font-medium text-slate-700">
-              <MapPin className="w-4 h-4 mr-1.5 text-[#00c950]" />
+            <div className="flex items-center text-[15px] font-medium text-[#333333]">
+              <MapPin className="w-4 h-4 mr-1.5 text-[#5D6B22]" />
               <span>{locationName}</span>
-              <ChevronRight className="w-4 h-4 ml-0.5 text-slate-400" />
+              <ChevronRight className="w-4 h-4 ml-0.5 text-[#333333]" />
             </div>
-            <p className="text-[13px] text-slate-400 font-light ml-5">Toca para actualizar</p>
+            <p className="text-[13px] text-[#888888] font-light ml-5">Toca para actualizar</p>
           </button>
           
           {/* Search Bar */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
+              <Search className="h-5 w-5 text-[#666666]" />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3.5 border-none rounded-[20px] leading-5 bg-slate-50/85 backdrop-blur-[2px] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors sm:text-sm shadow-sm"
+              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-[#F0F0F0]/85 backdrop-blur-sm placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors text-sm shadow-sm"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
