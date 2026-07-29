@@ -133,60 +133,55 @@ export default function GlubbiMarketplace() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      {/* Sticky Header with Banner Background */}
-      <div className="relative sticky top-0 z-50 shadow-sm overflow-hidden">
+      {/* Sticky Header */}
+      <div className="relative bg-white sticky top-0 z-50 shadow-sm overflow-hidden" style={{ minHeight: '160px' }}>
         
-        {/* The full pre-composed banner as background */}
+        {/* Burger image — shows 60%, 40% bleeds off right edge */}
         <img 
-          src="/glubbi-header-banner.jpg" 
-          alt="Glubbi Header" 
-          className="w-full h-auto object-cover block"
-          style={{ minHeight: '140px' }}
+          src="/burger-header.png" 
+          alt="" 
+          className="absolute right-0 top-0 h-[115%] w-auto pointer-events-none z-0"
+          style={{ transform: 'translateX(40%) translateY(-7%)', transformOrigin: 'right center' }}
         />
 
-        {/* Transparent interactive overlays */}
-        <div className="absolute inset-0 flex flex-col justify-between px-4 pt-4 pb-3">
-          {/* Invisible location button overlaid on the logo/location area */}
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="h-[45%]" /> {/* spacer for logo */}
-            <button 
-              onClick={handleGetLocation}
-              className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
-              aria-label="Actualizar ubicación"
-            >
-              {/* Invisible tap area over location text */}
-              <div className="h-10 w-48 opacity-0" />
-            </button>
-          </div>
+        {/* White gradient fade protecting left column text */}
+        <div className="absolute inset-0 pointer-events-none z-10"
+          style={{ background: 'linear-gradient(to right, #ffffff 50%, rgba(255,255,255,0.3) 75%, transparent 100%)' }}
+        />
 
-          {/* Functional Search Bar overlaid at bottom */}
-          <div className="relative">
+        {/* Real interactive content */}
+        <div className="relative z-20 px-4 pt-5 pb-4 flex flex-col gap-2">
+          
+          {/* Logo */}
+          <img src="/logo-glubbi.png" alt="Glubbi" className="h-12 w-auto object-contain object-left" />
+
+          {/* Location button — real Mapbox text */}
+          <button 
+            onClick={handleGetLocation}
+            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
+          >
+            <div className="flex items-center text-[15px] font-medium text-[#333333]">
+              <MapPin className="w-4 h-4 mr-1.5 shrink-0 text-[#5D6B22]" />
+              <span className="truncate max-w-[180px]">{locationName}</span>
+              <ChevronRight className="w-4 h-4 ml-0.5 shrink-0 text-[#333333]" />
+            </div>
+            <p className="text-[13px] text-[#888888] font-light ml-5">Toca para actualizar</p>
+          </button>
+
+          {/* Search bar — fully functional filter */}
+          <div className="relative mt-1">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-[#666666]" />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-transparent placeholder-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white/90 transition-colors text-sm"
+              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-[#F0F0F0]/80 backdrop-blur-sm placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors text-sm shadow-sm"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
-
-        {/* Actual clickable location button on top of image */}
-        <button 
-          onClick={handleGetLocation}
-          className="absolute left-4 bottom-14 flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
-          aria-label="Actualizar ubicación"
-        >
-          <div className="flex items-center text-[15px] font-medium text-[#333333] opacity-0">
-            <MapPin className="w-4 h-4 mr-1.5 text-[#5D6B22]" />
-            <span>{locationName}</span>
-            <ChevronRight className="w-4 h-4 ml-0.5 text-[#333333]" />
-          </div>
-          <div className="w-48 h-8 absolute inset-0" />
-        </button>
       </div>
 
       {/* Categories Grid (Rappi Style) - Hidden for now to give impact to feed */}
