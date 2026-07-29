@@ -12,9 +12,11 @@ interface GlubbiCustomer {
 interface GlubbiState {
   customer: GlubbiCustomer | null;
   location: { lat: number; lng: number } | null;
+  favoriteRestaurants: string[];
   setCustomer: (customer: GlubbiCustomer) => void;
   setLocation: (location: { lat: number; lng: number } | null) => void;
   clearCustomer: () => void;
+  toggleFavorite: (restaurantId: string) => void;
 }
 
 export const useGlubbiStore = create<GlubbiState>()(
@@ -22,9 +24,18 @@ export const useGlubbiStore = create<GlubbiState>()(
     (set) => ({
       customer: null,
       location: null,
+      favoriteRestaurants: [],
       setCustomer: (customer) => set({ customer }),
       setLocation: (location) => set({ location }),
       clearCustomer: () => set({ customer: null }),
+      toggleFavorite: (restaurantId) => set((state) => {
+        const isFavorite = state.favoriteRestaurants.includes(restaurantId);
+        if (isFavorite) {
+          return { favoriteRestaurants: state.favoriteRestaurants.filter(id => id !== restaurantId) };
+        } else {
+          return { favoriteRestaurants: [...state.favoriteRestaurants, restaurantId] };
+        }
+      }),
     }),
     {
       name: 'glubbi-session',

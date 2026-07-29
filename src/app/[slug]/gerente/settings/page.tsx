@@ -44,6 +44,7 @@ export default function SettingsAdminPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodItem[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [hasFreeDelivery, setHasFreeDelivery] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
 
   // --- Admin Password State ---
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -111,6 +112,7 @@ export default function SettingsAdminPage() {
         }
         setDiscountPercentage(restData.discount_percentage || 0);
         setHasFreeDelivery(restData.has_free_delivery || false);
+        setWhatsappNumber(restData.whatsapp_number || '');
       }
       
       // Products for upsell selection
@@ -161,7 +163,8 @@ export default function SettingsAdminPage() {
         glubbi_category: glubbiCategory,
         payment_methods: paymentMethods,
         discount_percentage: discountPercentage,
-        has_free_delivery: hasFreeDelivery
+        has_free_delivery: hasFreeDelivery,
+        whatsapp_number: whatsappNumber
       } as any)
       .eq('id', restaurantId);
       
@@ -553,6 +556,39 @@ export default function SettingsAdminPage() {
               >
                 <Save className="w-5 h-5" />
                 {isSaving ? 'Guardando...' : 'Guardar Glubbi'}
+              </button>
+            </div>
+          </div>
+
+          {/* Contacto WhatsApp */}
+          <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 shadow-xl h-fit">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <span className="text-emerald-500">💬</span> Contacto WhatsApp
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Ingresa el número de WhatsApp para que tus clientes puedan contactarte directamente desde la App.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-2">Número de WhatsApp</label>
+                <input 
+                  type="text"
+                  value={whatsappNumber} 
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="Ej. +584141234567"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-2">Asegúrate de incluir el código de país (Ej: +58 o +57).</p>
+              </div>
+
+              <button 
+                onClick={saveSettings}
+                disabled={isSaving}
+                className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-5 h-5" />
+                {isSaving ? 'Guardando...' : 'Guardar WhatsApp'}
               </button>
             </div>
           </div>

@@ -178,17 +178,13 @@ export default function GlubbiMarketplace() {
           >
             <div className="w-full flex justify-center mb-1 relative">
               <span className="text-[70px] drop-shadow-xl leading-none">🛍️</span>
-              {/* Fake 10 min tag */}
-              <div className="absolute -bottom-2 -left-2 bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-lg transform -rotate-12 shadow-md">
-                10 MIN
-              </div>
             </div>
             <span className="text-[#3c764a] font-medium text-[15px] mt-2 tracking-tight">Tiendas</span>
           </button>
         </div>
 
-        {/* Fila Secundaria: scroll horizontal */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2 -mx-4 px-4">
+        {/* Fila Secundaria: scroll horizontal centrado */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2 -mx-4 px-4 justify-center">
           <button 
             onClick={() => {
               setActiveCategory('Mercado');
@@ -220,17 +216,6 @@ export default function GlubbiMarketplace() {
           >
             <span className="text-[40px] drop-shadow-md mb-2 leading-none">🍩</span>
             <span className="text-gray-700 font-medium text-[12px] tracking-tight">Postres</span>
-          </button>
-
-          <button 
-            onClick={() => {
-              setActiveCategory('Donaciones');
-              document.getElementById('feed-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="bg-[#f0f8ff] border border-gray-100 rounded-[20px] p-4 min-w-[95px] flex flex-col items-center justify-center active:scale-95 transition-transform shrink-0 shadow-sm"
-          >
-            <span className="text-[40px] drop-shadow-md mb-2 leading-none">💙</span>
-            <span className="text-gray-700 font-medium text-[12px] tracking-tight">¡Dona aquí!</span>
           </button>
         </div>
       </div>

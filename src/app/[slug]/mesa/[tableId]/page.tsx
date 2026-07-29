@@ -13,7 +13,7 @@ import { OrderStatus } from '@/modules/kiosk/components/OrderStatus';
 import { ProductCustomizationModal } from '@/modules/kiosk/components/ProductCustomizationModal';
 import { useCartStore } from '@/modules/kiosk/stores/cart-store';
 import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
-import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck, Heart } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { formatPrice, isRestaurantOpen } from '@/lib/utils';
 import Link from 'next/link';
@@ -67,10 +67,13 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [upsellProducts, setUpsellProducts] = useState<ProductWithModifiers[]>([]);
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isFromGlubbi, setIsFromGlubbi] = useState(false);
-  const [kycStatus, setKycStatus] = useState<string>('verified');
+  const [kycStatus, setKycStatus] = useState('unverified');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [restaurantId, setRestaurantId] = useState('');
+  const { favoriteRestaurants, toggleFavorite } = useGlubbiStore();
   const [isClosed, setIsClosed] = useState(false);
   
-  const { addItem, getItemCount, getTotal, setContext, items, clearCart, restaurantId, updateItemModifiers } = useCartStore();
+  const { addItem, getItemCount, getTotal, setContext, items, clearCart, restaurantId: cartStoreRestaurantId, updateItemModifiers } = useCartStore();
   
   // Currency from restaurant (hardcoded USD for now, could be fetched)
   const currency = 'USD';
@@ -152,6 +155,8 @@ export default function KioskPage({ params }: KioskPageProps) {
       setRestaurantName(restaurant.name || 'Burger Palace');
       setRestaurantLogo(restaurant.logo_url);
       setKycStatus(restaurant.kyc_status || 'unverified');
+      setWhatsappNumber(restaurant.whatsapp_number || '');
+      setRestaurantId(restaurant.id);
       
       if (restaurant.payment_methods) {
         try {
@@ -330,15 +335,29 @@ export default function KioskPage({ params }: KioskPageProps) {
         </Link>
       ) : null}
       
-      {/* Top Right: WhatsApp Button */}
-      <a 
-        href="https://wa.me/" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="absolute top-4 right-4 z-20 w-10 h-10 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-md transition-colors text-white"
-      >
-        <MessageCircle className="w-5 h-5" />
-      </a>
+      {/* Top Right: WhatsApp and Favorites Buttons */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col gap-3">
+        <a 
+          href={whatsappNumber ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=Hola!%20Vengo%20de%20la%20App%20Glubbi` : "#"}
+          target={whatsappNumber ? "_blank" : undefined}
+          rel="noopener noreferrer" 
+          onClick={(e) => {
+            if (!whatsappNumber) {
+              e.preventDefault();
+              alert('Este restaurante no tiene WhatsApp configurado.');
+            }
+          }}
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-colors text-white ${whatsappNumber ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300'}`}
+        >
+          <MessageCircle className="w-5 h-5" />
+        </a>
+        <button 
+          onClick={() => toggleFavorite(restaurantId)}
+          className="w-10 h-10 bg-white hover:bg-slate-50 rounded-full flex items-center justify-center shadow-md transition-colors text-slate-700 border border-gray-100"
+        >
+          <Heart className={`w-5 h-5 ${favoriteRestaurants.includes(restaurantId) ? 'fill-red-500 text-red-500' : ''}`} />
+        </button>
+      </div>
 
       <div className="relative z-10 flex flex-col items-center mt-2">
         {restaurantLogo ? (
