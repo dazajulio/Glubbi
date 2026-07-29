@@ -139,12 +139,14 @@ export default function GlubbiMarketplace() {
           
           {/* Row 1: Glubbi Logo directly on canvas (Left) + Active Location Pill (Right) */}
           <div className="flex items-center justify-between gap-2">
-            {/* Glubbi Logo - Clean transparent logo directly on canvas */}
-            <img 
-              src="/logo-glubbi.png" 
-              alt="Glubbi" 
-              className="h-10 sm:h-11 w-auto object-contain object-left shrink-0 drop-shadow-sm" 
-            />
+            {/* Glubbi Logo - Enlarge ~4x without increasing header row height */}
+            <div className="relative h-9 flex items-center shrink-0 overflow-visible">
+              <img 
+                src="/logo-glubbi.png" 
+                alt="Glubbi" 
+                className="h-16 sm:h-20 w-auto object-contain object-left drop-shadow-sm origin-left transition-transform" 
+              />
+            </div>
 
             {/* Active Location Pill Button */}
             <button 
