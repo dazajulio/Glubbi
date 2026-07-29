@@ -133,49 +133,60 @@ export default function GlubbiMarketplace() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
-      {/* Sticky Header with Background */}
-      <div className="relative bg-white pt-6 pb-4 sticky top-0 z-50 shadow-sm overflow-hidden">
+      {/* Sticky Header with Banner Background */}
+      <div className="relative sticky top-0 z-50 shadow-sm overflow-hidden">
         
-        {/* The Giant Burger Background */}
+        {/* The full pre-composed banner as background */}
         <img 
-          src="/burger-header.png" 
-          alt="" 
-          className="absolute -right-[15%] top-[-10%] h-[120%] w-auto object-contain pointer-events-none z-0" 
+          src="/glubbi-header-banner.jpg" 
+          alt="Glubbi Header" 
+          className="w-full h-auto object-cover block"
+          style={{ minHeight: '140px' }}
         />
 
-        <div className="relative z-10 px-4">
-          {/* Logo */}
-          <div className="mb-2">
-            <img src="/logo-glubbi.png" alt="Glubbi" className="h-12 w-auto object-contain" />
+        {/* Transparent interactive overlays */}
+        <div className="absolute inset-0 flex flex-col justify-between px-4 pt-4 pb-3">
+          {/* Invisible location button overlaid on the logo/location area */}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="h-[45%]" /> {/* spacer for logo */}
+            <button 
+              onClick={handleGetLocation}
+              className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
+              aria-label="Actualizar ubicación"
+            >
+              {/* Invisible tap area over location text */}
+              <div className="h-10 w-48 opacity-0" />
+            </button>
           </div>
 
-          {/* Location button */}
-          <button 
-            onClick={handleGetLocation}
-            className="flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform mb-5"
-          >
-            <div className="flex items-center text-[15px] font-medium text-[#333333]">
-              <MapPin className="w-4 h-4 mr-1.5 text-[#5D6B22]" />
-              <span>{locationName}</span>
-              <ChevronRight className="w-4 h-4 ml-0.5 text-[#333333]" />
-            </div>
-            <p className="text-[13px] text-[#888888] font-light ml-5">Toca para actualizar</p>
-          </button>
-          
-          {/* Search Bar */}
+          {/* Functional Search Bar overlaid at bottom */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-[#666666]" />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-[#F0F0F0]/85 backdrop-blur-sm placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors text-sm shadow-sm"
+              className="block w-full pl-11 pr-4 py-3 border-none rounded-full leading-5 bg-transparent placeholder-transparent focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white/90 transition-colors text-sm"
               placeholder="¿Qué se te antoja hoy?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
+
+        {/* Actual clickable location button on top of image */}
+        <button 
+          onClick={handleGetLocation}
+          className="absolute left-4 bottom-14 flex flex-col items-start text-left bg-transparent border-none p-0 outline-none active:scale-95 transition-transform"
+          aria-label="Actualizar ubicación"
+        >
+          <div className="flex items-center text-[15px] font-medium text-[#333333] opacity-0">
+            <MapPin className="w-4 h-4 mr-1.5 text-[#5D6B22]" />
+            <span>{locationName}</span>
+            <ChevronRight className="w-4 h-4 ml-0.5 text-[#333333]" />
+          </div>
+          <div className="w-48 h-8 absolute inset-0" />
+        </button>
       </div>
 
       {/* Categories Grid (Rappi Style) - Hidden for now to give impact to feed */}
