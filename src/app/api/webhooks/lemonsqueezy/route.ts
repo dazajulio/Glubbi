@@ -56,6 +56,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ received: true, warning: 'No restaurant_id in custom_data.' });
       }
 
+      // Verificar si ya fue procesado (Idempotencia para evitar correos duplicados por reintentos de Lemon Squeezy)
+      const { data: existingRest } = await supabaseAdmin
+        .from('restaurants')
+        .select('subscription_status')
+        .eq('id', restaurantId)
+        .single() as any;
+
+      if (existingRest?.subscription_status === 'active') {
+        console.log(`[LS Webhook] Restaurante ${restaurantId} ya estaba activo. Ignorando evento duplicado para no repetir correos.`);
+        return NextResponse.json({ received: true, message: 'Already active.' });
+      }
+
       // Activar el restaurante en Supabase
       const { error: updateError } = await supabaseAdmin
         .from('restaurants')

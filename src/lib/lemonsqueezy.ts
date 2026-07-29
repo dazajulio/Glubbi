@@ -6,7 +6,10 @@ import crypto from 'crypto';
 
 const CHECKOUT_BASE_URL = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL ?? '';
 const WEBHOOK_SECRET = process.env.LEMONSQUEEZY_WEBHOOK_SECRET ?? '';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://glubbi.app';
+// Forzar el dominio real en producción para evitar redirecciones a deployments antiguos de Vercel (DEPLOYMENT_NOT_FOUND 404)
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('vercel.app')) 
+  ? process.env.NEXT_PUBLIC_APP_URL 
+  : 'https://www.glubbi.app';
 
 // ----------------------------------------------------------------------------
 // buildCheckoutUrl
