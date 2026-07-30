@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin } from 'lucide-react';
+import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles } from 'lucide-react';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
 
 export default function GerenteLayout({ 
@@ -89,6 +89,7 @@ export default function GerenteLayout({
     { href: `/${slug}/gerente/menu`, label: 'Menú', icon: UtensilsCrossed },
     { href: `/${slug}/gerente/history`, label: 'Registro', icon: ClipboardList },
     { href: `/${slug}/gerente/settings`, label: 'Administrador', icon: BarChart3 },
+    { href: `/${slug}/gerente/promocionar`, label: 'Impulsar Negocio (Ads)', icon: Sparkles },
     { href: `/${slug}/gerente/delivery`, label: 'Zonas de Envío', icon: MapPin },
     { href: `/${slug}/gerente/reportes`, label: 'Reportes', icon: FileText },
     { href: `/${slug}/gerente/horarios`, label: 'Horarios', icon: ClipboardList },

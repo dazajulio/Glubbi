@@ -122,6 +122,19 @@ export default function GlubbiMarketplace() {
       return matchesSearch && matchesCategory;
     })
     .sort((a: any, b: any) => {
+      // Priorizar patrocinados VIP activos (featured_tier > 0 y featured_until vigente)
+      const now = new Date();
+      const aFeatured = (a.featured_tier || 0) > 0 && a.featured_until && new Date(a.featured_until) > now;
+      const bFeatured = (b.featured_tier || 0) > 0 && b.featured_until && new Date(b.featured_until) > now;
+
+      if (aFeatured && !bFeatured) return -1;
+      if (!aFeatured && bFeatured) return 1;
+      if (aFeatured && bFeatured) {
+        if (a.featured_tier !== b.featured_tier) {
+          return (b.featured_tier || 0) - (a.featured_tier || 0);
+        }
+      }
+
       // Priorizar los que están abiertos
       if (a.isOpen && !b.isOpen) return -1;
       if (!a.isOpen && b.isOpen) return 1;
@@ -323,35 +336,48 @@ export default function GlubbiMarketplace() {
           </div>
         ) : (
           <div className="space-y-5">
-            {filteredRestaurants.map(restaurant => (
-              <Link 
-                href={`/${restaurant.slug}/mesa/delivery?glubbi=true`}
-                key={restaurant.id}
-              >
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform">
-                  <div className="relative h-48 w-full bg-slate-100">
-                    {restaurant.cover_image_url ? (
-                      <img src={restaurant.cover_image_url} alt={restaurant.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex items-center justify-center">
-                        <span className="text-slate-400 font-medium text-lg">{restaurant.name}</span>
+            {filteredRestaurants.map(restaurant => {
+              const isFeatured = (restaurant.featured_tier || 0) > 0 && restaurant.featured_until && new Date(restaurant.featured_until) > new Date();
+
+              return (
+                <Link 
+                  href={`/${restaurant.slug}/mesa/delivery?glubbi=true`}
+                  key={restaurant.id}
+                >
+                  <div className={`bg-white rounded-3xl shadow-sm border overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${
+                    isFeatured ? 'border-2 border-amber-400 shadow-md shadow-amber-500/10' : 'border-gray-100'
+                  }`}>
+                    <div className="relative h-48 w-full bg-slate-100">
+                      {restaurant.cover_image_url ? (
+                        <img src={restaurant.cover_image_url} alt={restaurant.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex items-center justify-center">
+                          <span className="text-slate-400 font-medium text-lg">{restaurant.name}</span>
+                        </div>
+                      )}
+                      
+                      {/* Top Left Badges (Glubbi Tags) */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        {isFeatured && (
+                          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full shadow-lg flex items-center gap-1 w-fit animate-pulse">
+                            <Sparkles className="w-3 h-3" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">
+                              {restaurant.featured_badge || 'PATROCINADO'}
+                            </span>
+                          </div>
+                        )}
+                        {restaurant.glubbi_category && (
+                          <div className="bg-blue-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
+                            <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
+                          </div>
+                        )}
+                        {restaurant.delivery_fee === 0 && (
+                          <div className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
+                            <span className="text-[10px] font-black text-white uppercase tracking-wider">Envío $0</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    {/* Top Left Badges (Glubbi Tags) */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-2">
-                      {restaurant.glubbi_category && (
-                        <div className="bg-blue-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
-                        </div>
-                      )}
-                      {restaurant.delivery_fee === 0 && (
-                        <div className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Envío $0</span>
-                        </div>
-                      )}
                     </div>
-                  </div>
                   
                   <div className="p-4 pt-3 relative">
                     <div className="flex justify-between items-start mb-1">
@@ -377,7 +403,7 @@ export default function GlubbiMarketplace() {
                   </div>
                 </div>
               </Link>
-            ))}
+            )})}
           </div>
         )}
       </div>
