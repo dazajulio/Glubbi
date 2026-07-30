@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles } from 'lucide-react';
+import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles, Plus } from 'lucide-react';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
 
 export default function GerenteLayout({ 
@@ -101,11 +101,11 @@ export default function GerenteLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row gerente-light-theme">
-      {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-slate-50 p-6">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 overflow-hidden shrink-0">
+    <div className="min-h-screen bg-[#F4F5F8] flex flex-col md:flex-row text-slate-900 font-sans">
+      {/* Sidebar (Desktop Dark Charcoal Graphite) */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-[#1E222A] p-6 text-slate-300 shrink-0">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30 overflow-hidden shrink-0">
             {restaurantLogo ? (
               <img src={restaurantLogo} alt="Logo" className="w-full h-full object-cover" />
             ) : (
@@ -113,12 +113,12 @@ export default function GerenteLayout({
             )}
           </div>
           <div className="min-w-0">
-            <h1 className="font-bold text-gray-900 text-lg leading-tight truncate">{restaurantName}</h1>
-            <span className="text-xs text-gray-400 truncate block">Dashboard</span>
+            <h1 className="font-extrabold text-white text-base leading-tight truncate">{restaurantName}</h1>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Panel de Gerente</span>
           </div>
         </div>
         
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-1.5 flex-1 overflow-y-auto pr-1">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname.startsWith(link.href);
@@ -126,25 +126,25 @@ export default function GerenteLayout({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   isActive 
-                    ? 'bg-orange-500/10 text-orange-500 font-medium' 
-                    : 'text-gray-500 hover:text-white hover:bg-white shadow-sm'
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30 font-extrabold' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 {link.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto pt-4 space-y-2">
+        <div className="mt-auto pt-4 space-y-2 border-t border-slate-800">
           {/* PWA Install Button — bottom of sidebar */}
           {deferredPrompt && (
             <button
               onClick={handleInstallPWA}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all text-sm font-semibold shadow-sm"
+              className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all text-xs font-bold shadow-sm"
             >
               <Download className="w-4 h-4 shrink-0" />
               <span>Descargar KDS</span>
@@ -157,7 +157,7 @@ export default function GerenteLayout({
               sessionStorage.removeItem(`gerente_auth_${restaurantId}`);
               window.location.href = `/${slug}/welcome`;
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent transition-all text-sm font-semibold"
+            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-xs font-bold"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Cerrar Sesión</span>
@@ -165,16 +165,25 @@ export default function GerenteLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-white shadow-sm min-h-screen overflow-y-auto pb-20 md:pb-0 relative">
+      {/* Main Content Canvas */}
+      <main className="flex-1 bg-[#F4F5F8] min-h-screen overflow-y-auto pb-20 md:pb-0 relative">
         <GerentePinGuard restaurantId={restaurantId}>
           {children}
         </GerentePinGuard>
+
+        {/* Floating Action Button (FAB +) - Quick Action shortcut */}
+        <Link 
+          href={`/${slug}/gerente/promocionar`}
+          className="hidden md:flex fixed bottom-8 right-8 z-40 w-14 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full items-center justify-center shadow-xl shadow-orange-500/40 hover:scale-110 active:scale-95 transition-all group"
+          title="Impulsar Negocio con Glubbi Ads"
+        >
+          <Sparkles className="w-6 h-6 animate-pulse" />
+        </Link>
       </main>
 
-      {/* Bottom Nav (Mobile) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-slate-50 pb-safe z-50">
-        <nav className="flex justify-around p-2">
+      {/* Bottom Nav (Mobile Dark Theme) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-slate-800 bg-[#1E222A] text-slate-300 pb-safe z-50">
+        <nav className="flex justify-around p-2 overflow-x-auto">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname.startsWith(link.href);
@@ -182,12 +191,12 @@ export default function GerenteLayout({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex flex-col items-center p-2 rounded-lg min-w-[72px] ${
-                  isActive ? 'text-orange-500' : 'text-gray-500'
+                className={`flex flex-col items-center p-2 rounded-lg min-w-[64px] ${
+                  isActive ? 'text-orange-500 font-bold' : 'text-slate-400'
                 }`}
               >
-                <Icon className="w-6 h-6 mb-1" />
-                <span className="text-[10px] font-medium">{link.label}</span>
+                <Icon className="w-5 h-5 mb-1" />
+                <span className="text-[10px] truncate max-w-[60px]">{link.label}</span>
               </Link>
             );
           })}

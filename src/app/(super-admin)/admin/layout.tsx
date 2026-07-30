@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Cpu, Users, CreditCard, Settings, LayoutDashboard, Building2, Mail, LogOut, Smartphone, Tag, ShieldCheck, UserCheck, Sparkles } from 'lucide-react';
+import { Cpu, Users, CreditCard, Settings, LayoutDashboard, Building2, Mail, LogOut, Smartphone, Tag, ShieldCheck, UserCheck, Sparkles, Search, Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,16 +31,18 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900 font-sans flex flex-col md:flex-row">
-      {/* ── SIDEBAR ── */}
-      <aside className="w-full md:w-64 border-r border-gray-200 bg-white p-6 flex flex-col shrink-0">
-        <div className="flex items-center gap-2 mb-12">
-          <Cpu className="w-6 h-6 text-orange-500" />
-          <span className="text-xl font-bold tracking-tight text-gray-900">Glubbi<span className="text-orange-500">.app</span></span>
-          <span className="text-[10px] bg-orange-500/10 text-orange-600 px-2 py-0.5 rounded-full ml-auto uppercase tracking-wider font-bold">Admin</span>
+    <div className="min-h-screen bg-[#F4F5F8] text-slate-900 font-sans flex flex-col md:flex-row">
+      {/* ── DARK CHARCOAL GRAPHITE SIDEBAR ── */}
+      <aside className="w-full md:w-64 border-r border-slate-800 bg-[#1E222A] p-6 flex flex-col shrink-0 text-slate-300">
+        <div className="flex items-center gap-2.5 mb-10">
+          <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-orange-500/30">
+            G
+          </div>
+          <span className="text-xl font-black tracking-tight text-white">Glubbi<span className="text-orange-500">.app</span></span>
+          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full ml-auto uppercase tracking-wider font-bold">Admin</span>
         </div>
 
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-1.5 flex-1 overflow-y-auto pr-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -48,47 +50,52 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
               <Link 
                 key={item.href}
                 href={item.href} 
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   isActive 
-                    ? 'bg-orange-500/10 text-orange-600 font-bold' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30 font-extrabold' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
         
-        <div className="pt-6 border-t border-gray-200 space-y-4">
+        <div className="pt-5 border-t border-slate-800 space-y-4 mt-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white font-black text-xs shadow-md">
               JD
             </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">Julio Daza</p>
-              <p className="text-xs text-gray-500">Super Admin</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-white truncate">Julio Daza</p>
+              <p className="text-[10px] text-slate-400 truncate">Super Admin</p>
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 transition-all active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/20 transition-all active:scale-[0.98]"
           >
-            <LogOut className="w-4 h-4" /> Cerrar sesión
+            <LogOut className="w-3.5 h-3.5" /> Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ── */}
-      <main className="flex-1 min-h-screen overflow-y-auto">
-        <header className="h-16 border-b border-gray-200 bg-white px-8 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-lg font-semibold text-gray-900">Centro de Comando</h1>
+      {/* ── MAIN CONTENT CANVAS ── */}
+      <main className="flex-1 min-h-screen overflow-y-auto bg-[#F4F5F8]">
+        <header className="h-16 border-b border-slate-200/80 bg-white/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-black text-slate-900">Centro de Comando</h1>
+          </div>
           <div className="flex items-center gap-4">
-            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" title="Sistemas Operativos"></span>
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Sistemas Operativos 100%
+            </div>
           </div>
         </header>
-        <div className="p-8">
+        <div className="p-6 md:p-10 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
