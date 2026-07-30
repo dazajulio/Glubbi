@@ -359,10 +359,10 @@ export default function GlubbiMarketplace() {
                       {/* Top Left Badges (Glubbi Tags) */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {isFeatured && (
-                          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full shadow-lg flex items-center gap-1 w-fit animate-pulse">
-                            <Sparkles className="w-3 h-3" />
+                          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 w-fit">
+                            <Sparkles className="w-3 h-3 text-white" />
                             <span className="text-[10px] font-black uppercase tracking-wider">
-                              {restaurant.featured_badge || 'PATROCINADO'}
+                              DESTACADO
                             </span>
                           </div>
                         )}
