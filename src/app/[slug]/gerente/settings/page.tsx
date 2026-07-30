@@ -57,40 +57,23 @@ export default function SettingsAdminPage() {
 
   const [restaurantId, setRestaurantId] = useState('');
 
-  useEffect(() => {
-    // Prefer loading by slug from URL for reliability
-    if (slugFromUrl) {
-      supabase
-        .from('restaurants')
-        .select('id')
-        .eq('slug', slugFromUrl)
-        .single()
-        .then(({ data }) => {
-          if (data?.id) {
-            setRestaurantId(data.id);
-            localStorage.setItem('active_restaurant_id', data.id);
-          }
-        });
-    } else {
-      setRestaurantId(localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '');
-    }
-  }, [slugFromUrl]);
-
   // --- Load Data ---
   useEffect(() => {
-    if (!restaurantId) return;
+    if (!slugFromUrl) return;
 
     async function loadAll() {
       setIsLoading(true);
       
-      // Restaurant settings
+      // Restaurant settings by slug
       const { data: restData } = await supabase
         .from('restaurants')
         .select('*')
-        .eq('id', restaurantId)
+        .eq('slug', slugFromUrl)
         .single();
         
       if (restData) {
+        setRestaurantId(restData.id);
+        localStorage.setItem('active_restaurant_id', restData.id);
         setRestaurant(restData);
         setUpsell1(restData.upsell_item_1_id || '');
         setUpsell2(restData.upsell_item_2_id || '');
@@ -104,46 +87,50 @@ export default function SettingsAdminPage() {
         setGlubbiCategory(restData.glubbi_category || '');
         if (restData.payment_methods) {
           try {
-            // Supabase JSON returns as any, we cast or parse it
             setPaymentMethods(restData.payment_methods as any || []);
           } catch (e) {
             console.error('Error parsing payment methods', e);
+            setPaymentMethods([]);
           }
+        } else {
+          setPaymentMethods([]);
         }
         setDiscountPercentage(restData.discount_percentage || 0);
         setHasFreeDelivery(restData.has_free_delivery || false);
         setWhatsappNumber(restData.whatsapp_number || '');
-      }
-      
-      // Products for upsell selection
-      const { data: prodData } = await supabase
-        .from('products')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .eq('is_available', true);
-        
-      if (prodData) {
-        setProducts(prodData as Product[]);
-      }
 
-      // Orders for reports
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select(`*, order_items (*)`)
-        .eq('status', 'delivered');
-        
-      const { data: customersData } = await supabase
-        .from('customers')
-        .select('*');
+        // Products for upsell selection
+        const { data: prodData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('restaurant_id', restData.id)
+          .eq('is_available', true);
+          
+        if (prodData) {
+          setProducts(prodData as Product[]);
+        }
 
-      if (ordersData) setOrders(ordersData as OrderWithItems[]);
-      if (customersData) setCustomers(customersData as Customer[]);
+        // Orders for reports scoped by restaurant_id
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select(`*, order_items (*)`)
+          .eq('restaurant_id', restData.id)
+          .eq('status', 'delivered');
+          
+        const { data: customersData } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('restaurant_id', restData.id);
+
+        if (ordersData) setOrders(ordersData as OrderWithItems[]);
+        if (customersData) setCustomers(customersData as Customer[]);
+      }
       
       setIsLoading(false);
     }
     
     loadAll();
-  }, [restaurantId]);
+  }, [slugFromUrl]);
 
   const saveSettings = async () => {
     setIsSaving(true);

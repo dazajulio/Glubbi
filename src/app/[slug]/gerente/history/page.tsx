@@ -13,12 +13,7 @@ export default function HistoryAdminPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!slugFromUrl) {
-      const id = localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '';
-      setRestaurantId(id);
-      setLoading(false);
-      return;
-    }
+    if (!slugFromUrl) return;
     const supabase = createClient();
     supabase
       .from('restaurants')
@@ -26,7 +21,10 @@ export default function HistoryAdminPage() {
       .eq('slug', slugFromUrl)
       .single()
       .then(({ data }) => {
-        if (data?.id) setRestaurantId(data.id);
+        if (data?.id) {
+          setRestaurantId(data.id);
+          localStorage.setItem('active_restaurant_id', data.id);
+        }
         setLoading(false);
       });
   }, [slugFromUrl]);

@@ -21,8 +21,19 @@ export function WaiterNotificationBell() {
   const [restaurantId, setRestaurantId] = useState<string>('');
 
   useEffect(() => {
-    const targetId = process.env.NEXT_PUBLIC_RESTAURANT_ID || 'a12bc706-ffc2-4959-ba03-58ebecada86a';
-    setRestaurantId(targetId);
+    if (typeof window === 'undefined') return;
+    const slugFromUrl = window.location.pathname.split('/')[1];
+    if (slugFromUrl) {
+      const supabase = createClient();
+      supabase
+        .from('restaurants')
+        .select('id')
+        .eq('slug', slugFromUrl)
+        .single()
+        .then(({ data }) => {
+          if (data?.id) setRestaurantId(data.id);
+        });
+    }
   }, []);
 
   const playSound = useCallback(() => {

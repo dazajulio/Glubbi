@@ -1,11 +1,17 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { MenuToggle } from '@/modules/menu/components/MenuToggle';
 import { UtensilsCrossed, Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Papa from 'papaparse';
 
 export default function MenuAdminPage() {
+  const pathname = usePathname();
+  const slugFromUrl = pathname?.split('/')?.[1] || '';
+  const supabase = createClient();
+
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -13,10 +19,22 @@ export default function MenuAdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const id = localStorage.getItem('active_restaurant_id') || process.env.NEXT_PUBLIC_RESTAURANT_ID || '';
-    setRestaurantId(id);
-    setLoading(false);
-  }, []);
+    if (!slugFromUrl) return;
+    async function loadTenant() {
+      const { data } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('slug', slugFromUrl)
+        .single();
+        
+      if (data?.id) {
+        setRestaurantId(data.id);
+        localStorage.setItem('active_restaurant_id', data.id);
+      }
+      setLoading(false);
+    }
+    loadTenant();
+  }, [slugFromUrl]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
