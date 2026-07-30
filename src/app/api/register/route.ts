@@ -63,6 +63,8 @@ export async function POST(request: Request) {
       manualPayment,
       paymentReference,
       couponId,
+      referral_source,
+      team_code,
     } = body;
 
     // Validation
@@ -263,11 +265,46 @@ export async function POST(request: Request) {
             discount_applied: discountApplied
           });
           // Increment uses
-          await supabaseAdmin.from('coupons').update({ current_uses: couponData.current_uses + 1 }).eq('id', couponId);
         }
       } catch (err) {
         console.error('Error redeeming coupon:', err);
       }
+    }
+
+    // 4.6 Record Team Sale / Referral Tracking
+    try {
+      let teamMemberName = null;
+      let teamMemberId = null;
+
+      const codeUpper = (team_code || '').trim().toUpperCase();
+      if (codeUpper) {
+        const { data: member } = await supabaseAdmin
+          .from('team_members')
+          .select('id, name')
+          .eq('code', codeUpper)
+          .maybeSingle();
+
+        if (member) {
+          teamMemberId = member.id;
+          teamMemberName = member.name;
+        }
+      }
+
+      await supabaseAdmin.from('team_sales').insert({
+        team_member_id: teamMemberId,
+        team_member_name: teamMemberName || (codeUpper ? `Agente (${codeUpper})` : null),
+        code_used: codeUpper || null,
+        restaurant_name: restaurantName,
+        restaurant_slug: slug,
+        contact_name: contactName,
+        email,
+        payment_method: manualPayment ? 'PAGO MOVIL' : 'LEMON',
+        amount: 29.00,
+        referral_source: referral_source || 'Desconocido',
+        status: 'completed'
+      } as any);
+    } catch (teamSaleErr) {
+      console.error('Error inserting team sale:', teamSaleErr);
     }
 
     // 5. Construir URL de checkout de Lemon Squeezy con datos del restaurante

@@ -24,7 +24,10 @@ import {
   Printer,
   ShieldCheck,
   ExternalLink,
-  Store
+  Store,
+  Tag,
+  CreditCard,
+  Smartphone
 } from 'lucide-react';
 
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -41,6 +44,16 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const REFERRAL_OPTIONS = [
+  { id: 'Google', label: 'Google', icon: '🔍' },
+  { id: 'YouTube', label: 'YouTube', icon: '📺' },
+  { id: 'LinkedIn', label: 'LinkedIn', icon: '💼' },
+  { id: 'Instagram', label: 'Instagram', icon: '📸' },
+  { id: 'Me comentó otro restaurante', label: 'Me comentó otro restaurante', icon: '🤝' },
+  { id: 'Miembro del equipo Glubbi', label: 'Miembro del equipo Glubbi', icon: '👥' },
+  { id: 'Otros', label: 'Otros', icon: '🌐' },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   
@@ -50,6 +63,10 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [checkoutUrl, setCheckoutUrl] = useState('');
   const [bcvRate, setBcvRate] = useState<number>(0);
+
+  // Referral Source & Team Code State
+  const [referralSource, setReferralSource] = useState<string>('Google');
+  const [teamMemberCode, setTeamMemberCode] = useState<string>('');
 
   // Pago Movil Form State
   const [pmReference, setPmReference] = useState('');
@@ -135,6 +152,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (referralSource === 'Miembro del equipo Glubbi' && !teamMemberCode.trim()) {
+      setErrorMsg('Por favor ingresa el código del miembro o agente del equipo Glubbi.');
+      return;
+    }
+
     if (formData.password.length < 6) {
       setErrorMsg('La contraseña debe tener al menos 6 caracteres.');
       return;
@@ -153,7 +175,13 @@ export default function RegisterPage() {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, manualPayment: false, couponId: appliedCoupon?.id }),
+        body: JSON.stringify({ 
+          ...formData, 
+          manualPayment: false, 
+          couponId: appliedCoupon?.id,
+          referral_source: referralSource,
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+        }),
       });
 
       const result = await response.json();
@@ -201,7 +229,14 @@ export default function RegisterPage() {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, manualPayment: true, paymentReference, couponId: appliedCoupon?.id }),
+        body: JSON.stringify({ 
+          ...formData, 
+          manualPayment: true, 
+          paymentReference, 
+          couponId: appliedCoupon?.id,
+          referral_source: referralSource,
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+        }),
       });
 
       const result = await response.json();
@@ -246,104 +281,83 @@ export default function RegisterPage() {
       title: 'Kitchen Display System (KDS)',
       description: 'Pantalla digital de cocina reactiva que organiza pedidos por tiempos y prioridades.',
       color: 'text-amber-500 bg-amber-500/10 border-amber-500/20'
-    },
-    {
-      icon: Bell,
-      title: 'Llamador de Mesero Digital',
-      description: 'Botón de llamada física en mesa notificado de forma instantánea al personal de servicio.',
-      color: 'text-rose-500 bg-rose-500/10 border-rose-500/20'
-    },
-    {
-      icon: Printer,
-      title: 'Comanda Duplicada Directa',
-      description: 'Impresión inteligente por separado: ticket limpio para cocina y ticket detallado para caja.',
-      color: 'text-blue-500 bg-blue-500/10 border-blue-500/20'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-600 font-sans flex flex-col justify-between relative overflow-hidden selection:bg-orange-500/10">
+    <div className="min-h-screen bg-gradient-to-br from-[#080d1a] via-[#0f1627] to-[#030610] text-slate-300 font-sans flex flex-col justify-between relative overflow-hidden selection:bg-orange-500/20">
       
-      {/* Background Liquid Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[150px] pointer-events-none" />
+      {/* Background Liquid Glows (Hero Style) */}
+      <div className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-orange-500/15 rounded-full blur-[140px] pointer-events-none mix-blend-screen" />
+      <div className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
       
       {/* Header / Logo */}
-      <header className="relative z-20 max-w-7xl mx-auto px-6 w-full py-6 flex items-center justify-between border-b border-slate-200/60">
-        <Link href="/" className="flex items-center gap-2 bg-white border border-slate-200 rounded-full pl-3 pr-4 py-1.5 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all select-none">
+      <header className="relative z-20 max-w-7xl mx-auto px-6 w-full py-3.5 flex items-center justify-between border-b border-white/10">
+        <Link href="/" className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full pl-3 pr-4 py-1.5 shadow-sm hover:bg-white/20 transition-all select-none">
           <img src="/logo-glubbi.png" alt="Glubbi Logo" className="w-5 h-5 object-contain" />
-          <span className="text-sm font-black tracking-tight text-slate-900">
+          <span className="text-sm font-black tracking-tight text-white">
             Glubbi<span className="text-orange-500">.app</span>
           </span>
         </Link>
-        <span className="text-xs text-slate-400 font-medium">SaaS Multi-tenant v1.1</span>
+        <span className="text-xs text-orange-400 bg-orange-500/20 border border-orange-500/30 font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5" /> Afiliación B2B Oficial
+        </span>
       </header>
 
       {/* Main Grid */}
-      <main className="relative z-10 max-w-7xl mx-auto px-6 w-full py-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-stretch flex-1">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 w-full py-8 flex-1 flex flex-col justify-center">
         
-        {/* LEFT COLUMN: Registration & Multi-step Form */}
-        <div className="bg-white border border-slate-200/80 p-6 md:p-10 rounded-3xl flex flex-col justify-start gap-y-6 shadow-xl shadow-slate-200/40 relative overflow-hidden">
-          
-          {/* Progress Indicators */}
-          <div className="flex items-center gap-2 mb-2 select-none">
-            <span className={`text-xs font-bold px-3 py-1 rounded-full border transition-all ${
-              step === 'details' 
-                ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' 
-                : 'bg-slate-100 text-slate-400 border-slate-200'
-            }`}>
-              1. Datos del local
-            </span>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
-            <span className={`text-xs font-bold px-3 py-1 rounded-full border transition-all ${
-              step === 'redirecting' 
-                ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' 
-                : 'bg-slate-100 text-slate-400 border-slate-200'
-            }`}>
-              2. Pago seguro
-            </span>
-            <ChevronRight className="w-4 h-4 text-slate-300" />
-            <span className="text-xs font-bold px-3 py-1 rounded-full border bg-slate-100 text-slate-400 border-slate-200">
-              3. Activación
-            </span>
-          </div>
+        {step === 'details' ? (
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-stretch w-full">
+            {/* LEFT COLUMN: Registration Form */}
+            <div className="bg-white border border-slate-200/80 p-6 md:p-8 rounded-3xl flex flex-col justify-start gap-y-6 shadow-xl shadow-slate-200/40 relative overflow-hidden">
+              
+              {/* Referral Source Selector ("¿Cómo te enteraste de Glubbi?") */}
+              <div className="bg-gradient-to-r from-orange-50/60 via-white to-purple-50/60 p-4.5 rounded-2xl border border-orange-200/80 space-y-3 shadow-sm select-none">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-orange-500" /> ¿Cómo te enteraste de Glubbi? *
+                  </label>
+                  <span className="text-[10px] font-extrabold text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">Requerido</span>
+                </div>
 
-          {/* Visual Process Flow (Steps Graphics) */}
-          {step !== 'success' && (
-            <div className="grid grid-cols-3 gap-3 bg-gradient-to-r from-orange-50/40 via-white to-purple-50/40 p-4 rounded-2xl border border-orange-100/60 text-center select-none animate-fade-in shadow-sm">
-              <div className="space-y-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto text-xs font-bold transition-all ${
-                  step === 'details' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'bg-slate-100 text-slate-400 border border-slate-200/80'
-                }`}>
-                  🏢
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {REFERRAL_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setReferralSource(opt.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all text-left ${
+                        referralSource === opt.id
+                          ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/30'
+                      }`}
+                    >
+                      <span className="text-sm">{opt.icon}</span>
+                      <span className="truncate">{opt.label}</span>
+                    </button>
+                  ))}
                 </div>
-                <span className={`block text-[10px] font-bold uppercase tracking-wider ${step === 'details' ? 'text-slate-800' : 'text-slate-400'}`}>1. Configura</span>
-                <span className="block text-[8.5px] text-slate-400 leading-tight">Nombre y contacto</span>
-              </div>
-              <div className="space-y-1 border-x border-orange-100/50">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto text-xs font-bold transition-all ${
-                  step === 'redirecting' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'bg-slate-100 text-slate-400 border border-slate-200/80'
-                }`}>
-                  💳
-                </div>
-                <span className={`block text-[10px] font-bold uppercase tracking-wider ${step === 'redirecting' ? 'text-slate-800' : 'text-slate-400'}`}>2. Activa</span>
-                <span className="block text-[8.5px] text-slate-400 leading-tight">$29/mes cancelable</span>
-              </div>
-              <div className="space-y-1">
-                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 border border-slate-200/80 flex items-center justify-center mx-auto text-xs font-bold">
-                  🚀
-                </div>
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">3. Despega</span>
-                <span className="block text-[8.5px] text-slate-400 leading-tight">Accede al Dashboard</span>
-              </div>
-            </div>
-          )}
 
-          {/* Form Content */}
-          <div className="w-full">
-            
-            {/* STEP 1: Details */}
-            {step === 'details' && (
+                {/* Fluid Code Input when "Miembro del equipo Glubbi" is selected */}
+                {referralSource === 'Miembro del equipo Glubbi' && (
+                  <div className="pt-2 animate-fade-in space-y-1.5">
+                    <label className="text-xs font-bold text-orange-600 flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-orange-500" /> Código del Agente / Miembro de Glubbi *
+                    </label>
+                    <input
+                      type="text"
+                      value={teamMemberCode}
+                      onChange={(e) => setTeamMemberCode(e.target.value.toUpperCase())}
+                      placeholder="Ej: CARLOS10 (Ingresa el código)"
+                      required={referralSource === 'Miembro del equipo Glubbi'}
+                      className="w-full bg-white border-2 border-orange-500 rounded-xl px-4 py-3 text-slate-900 font-mono font-black text-sm uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* STEP 1: Details Form */}
               <form onSubmit={handleSubmitDetails} className="space-y-5">
                 <div className="space-y-2">
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Crea tu cuenta de Restaurante</h1>
@@ -546,39 +560,116 @@ export default function RegisterPage() {
                   )}
                 </button>
               </form>
-            )}
+            </div>
 
+            {/* RIGHT COLUMN: Ecosystem Checklist & Benefits */}
+            <div className="bg-white border border-slate-200/80 p-6 md:p-8 rounded-3xl flex flex-col justify-between shadow-xl shadow-slate-200/40 relative overflow-hidden">
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-600 border border-orange-500/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                    <Sparkles className="w-3.5 h-3.5" /> Todo incluido
+                  </div>
+                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                    Accede al Ecosistema Completo de Crecimiento
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-2">
+                    Con tu suscripción mensual, tu negocio se impulsa con herramientas avanzadas sin comisiones ocultas.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {benefits.map((benefit, index) => {
+                    const Icon = benefit.icon;
+                    return (
+                      <div key={index} className="flex gap-4 p-4 bg-white border border-slate-200/60 rounded-2xl shadow-sm hover:shadow hover:border-slate-300 transition-all duration-150 group">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${benefit.color} group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-bold text-slate-900">{benefit.title}</h3>
+                          <p className="text-xs text-slate-500 leading-relaxed">{benefit.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-8 p-5 bg-gradient-to-br from-white via-orange-50/40 to-purple-50/20 rounded-2xl border border-orange-200/80 shadow-md flex items-start gap-4 select-none">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-orange-600 text-white flex items-center justify-center font-black text-xl shrink-0 shadow-lg shadow-orange-500/20">
+                  $29
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black text-slate-900">Suscripción $29/mes</span>
+                    <span className="text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-2 py-0.5 rounded-full">Sin Contrato</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Máxima transparencia y libertad. Sin contratos de permanencia ni comisiones ocultas por tus ventas. Cancela o suspende cuando quieras.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        ) : (
+          /* SINGLE CENTERED COLUMN LAYOUT FOR PAYMENT & SUCCESS STEPS */
+          <div className="max-w-2xl mx-auto w-full animate-fade-in py-4">
+            
             {/* STEP 1.5: Payment Selection */}
             {step === 'payment_selection' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="space-y-2 mb-6">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Elige cómo pagar</h1>
-                  <p className="text-slate-400 text-sm">Selecciona tu método de pago preferido para activar tu suscripción de $29/mes.</p>
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-6 animate-fade-in relative overflow-hidden">
+                
+                {/* Header */}
+                <div className="text-center space-y-2 pb-2 border-b border-slate-100">
+                  <span className="text-xs font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-3.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5" /> Paso Final de Afiliación
+                  </span>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Elige cómo activar tu cuenta</h1>
+                  <p className="text-slate-500 text-sm">Selecciona tu método de pago preferido. Acceso inmediato a Glubbi.</p>
+                </div>
+
+                {/* Subscription Summary Badge */}
+                <div className="bg-gradient-to-r from-orange-50/70 via-white to-purple-50/60 p-5 rounded-2xl border border-orange-200/80 flex items-center justify-between shadow-sm">
+                  <div>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Plan Suscripción Restaurante</span>
+                    <span className="text-lg font-black text-slate-900 block">Glubbi SaaS Profesional</span>
+                    <span className="text-[11px] text-emerald-600 font-bold block mt-0.5">✓ Cancela en cualquier momento sin contrato</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-orange-600 block">
+                      {appliedCoupon ? `$${(29 * (1 - appliedCoupon.discount_percentage / 100)).toFixed(2)}` : '$29 USD'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold block">/ mes</span>
+                  </div>
                 </div>
 
                 {/* Coupon Section */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-4">
-                  <label className="text-sm font-bold text-slate-700 block mb-2">¿Tienes un código de descuento?</label>
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-orange-500" /> ¿Tienes un código de descuento o cupón B2B?
+                  </label>
                   <div className="flex gap-2">
                     <input 
                       value={couponCode}
                       onChange={e => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="Ingresa tu cupón"
-                      className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm uppercase focus:border-orange-500 outline-none"
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono font-bold uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                     />
                     <button 
                       onClick={handleApplyCoupon}
                       type="button"
                       disabled={couponLoading || !couponCode}
-                      className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 disabled:opacity-50"
+                      className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-all shadow-sm"
                     >
-                      {couponLoading ? '...' : 'Aplicar'}
+                      {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Aplicar'}
                     </button>
                   </div>
-                  {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+                  {couponError && <p className="text-red-500 text-xs font-semibold mt-1">{couponError}</p>}
                   {appliedCoupon && (
-                    <p className="text-green-600 text-xs mt-2 font-bold">
-                      ¡Cupón {appliedCoupon.code} aplicado! Tienes un {appliedCoupon.discount_percentage}% de descuento.
+                    <p className="text-emerald-600 text-xs font-bold mt-1 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Cupón {appliedCoupon.code} aplicado: {appliedCoupon.discount_percentage}% de descuento otorgado.
                     </p>
                   )}
                 </div>
@@ -589,63 +680,102 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                <div className="space-y-4">
+                {/* Payment Methods Options */}
+                <div className="space-y-3 pt-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Métodos de pago disponibles</label>
+
+                  {/* Lemon Squeezy Option */}
                   <button
                     onClick={handleSelectLemonSqueezy}
                     disabled={isLoading}
-                    className="w-full bg-white border-2 border-slate-200 hover:border-orange-500 rounded-2xl p-6 text-left transition-all active:scale-[0.99] group relative overflow-hidden flex items-center justify-between"
+                    className="w-full bg-white border-2 border-slate-200 hover:border-orange-500 rounded-2xl p-5 text-left transition-all active:scale-[0.99] group shadow-sm hover:shadow-md flex items-center justify-between"
                   >
-                    <div>
-                      <h3 className="font-black text-slate-800 text-lg group-hover:text-orange-600 transition-colors">Con Cualquier Tarjeta (Lemon Squeezy)</h3>
-                      <p className="text-slate-500 text-sm mt-1">La forma inteligente de pagar. Tan simple como un clic.</p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                        <CreditCard className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-extrabold text-slate-900 text-base group-hover:text-orange-600 transition-colors">
+                            Con Cualquier Tarjeta Débito / Crédito
+                          </h3>
+                          <span className="text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">
+                            Lemon Squeezy
+                          </span>
+                        </div>
+                        <p className="text-slate-500 text-xs mt-1">Visa, Mastercard, AMEX, Apple Pay. Cobro seguro automático en USD.</p>
+                      </div>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-orange-500 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
                   </button>
 
+                  {/* Pago Movil Option */}
                   <button
                     onClick={handleSelectPagoMovil}
                     disabled={isLoading}
-                    className="w-full bg-white border-2 border-slate-200 hover:border-orange-500 rounded-2xl p-6 text-left transition-all active:scale-[0.99] group relative overflow-hidden flex items-center justify-between"
+                    className="w-full bg-white border-2 border-slate-200 hover:border-orange-500 rounded-2xl p-5 text-left transition-all active:scale-[0.99] group shadow-sm hover:shadow-md flex items-center justify-between"
                   >
-                    <div>
-                      <h3 className="font-black text-slate-800 text-lg group-hover:text-orange-600 transition-colors">Pago Móvil (Bolívares)</h3>
-                      <p className="text-slate-500 text-sm mt-1">Pagos para VENEZUELA (Tasa BCV).</p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                        <Smartphone className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-extrabold text-slate-900 text-base group-hover:text-emerald-600 transition-colors">
+                            Pago Móvil (Bolívares Bs)
+                          </h3>
+                          <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            Venezuela (Tasa BCV)
+                          </span>
+                        </div>
+                        <p className="text-slate-500 text-xs mt-1">Reporta tu transferencia en bolívares al tipo de cambio oficial del día.</p>
+                      </div>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-orange-500 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                   </button>
                 </div>
 
-                <button 
-                  onClick={() => setStep('details')}
-                  disabled={isLoading}
-                  className="w-full text-center text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors mt-4"
-                >
-                  Volver atrás
-                </button>
+                {/* Trust & Guarantee Badge */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 select-none">
+                  <span className="flex items-center gap-1.5 font-semibold text-slate-600">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" /> Encriptación SSL 256-bit
+                  </span>
+                  <button 
+                    onClick={() => setStep('details')}
+                    disabled={isLoading}
+                    className="text-xs font-bold text-slate-400 hover:text-orange-500 transition-colors"
+                  >
+                    ← Modificar datos del registro
+                  </button>
+                </div>
+
               </div>
             )}
 
             {/* STEP 1.7: Pago Movil Form */}
             {step === 'pago_movil' && (
-              <form onSubmit={handleSubmitPagoMovil} className="space-y-6 animate-fade-in">
-                <div className="space-y-2 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Pago Móvil</h1>
-                  <p className="text-slate-400 text-sm">Realiza el pago y registra los datos abajo para activar tu cuenta.</p>
+              <form onSubmit={handleSubmitPagoMovil} className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-10 shadow-2xl space-y-6 animate-fade-in relative overflow-hidden">
+                <div className="space-y-2 mb-2 border-b border-slate-100 pb-3">
+                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5" /> Pago Móvil Venezuela
+                  </span>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Reporta tu Pago Móvil</h1>
+                  <p className="text-slate-500 text-sm">Realiza el pago a los datos indicados y registra la referencia para activar tu cuenta.</p>
                 </div>
 
-                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 space-y-3">
-                  <div className="flex justify-between items-center border-b border-orange-200/50 pb-3">
-                    <span className="text-slate-600 text-sm font-bold">Monto a pagar ({appliedCoupon ? `Con ${appliedCoupon.discount_percentage}% desc.` : '$29 USD'}):</span>
-                    <span className="text-xl font-black text-orange-600">
+                <div className="bg-gradient-to-r from-orange-50/70 via-white to-amber-50/70 border border-orange-200 rounded-2xl p-5 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-center border-b border-orange-200/60 pb-3">
+                    <span className="text-slate-700 text-sm font-bold">Monto exacto a pagar ({appliedCoupon ? `Con ${appliedCoupon.discount_percentage}% desc.` : '$29 USD'}):</span>
+                    <span className="text-2xl font-black text-orange-600">
                       Bs. {bcvRate ? (bcvRate * (appliedCoupon ? 29 * (1 - appliedCoupon.discount_percentage / 100) : 29)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Calculando...'}
                     </span>
                   </div>
-                  <div className="text-sm text-slate-700 space-y-1 pt-1">
-                    <p><strong>Banco:</strong> Banco de Venezuela</p>
-                    <p><strong>Identificación:</strong> J-12517086 (Glubbi)</p>
-                    <p><strong>Teléfono:</strong> 0414-8817137</p>
+                  <div className="text-sm text-slate-800 space-y-1 pt-1 font-medium">
+                    <p><strong>Banco Destino:</strong> Banco de Venezuela (0102)</p>
+                    <p><strong>Identificación / RIF:</strong> J-12517086 (Glubbi)</p>
+                    <p><strong>Teléfono Destino:</strong> 0414-8817137</p>
                   </div>
-                  <div className="text-xs text-orange-600/80 font-semibold pt-2 text-center">
+                  <div className="text-xs text-orange-600 font-bold pt-2 text-center border-t border-orange-200/40">
                     Tasa oficial BCV referencial: Bs. {bcvRate ? bcvRate.toLocaleString('es-VE', { minimumFractionDigits: 4 }) : '...'} / USD
                   </div>
                 </div>
@@ -664,7 +794,7 @@ export default function RegisterPage() {
                       onChange={e => setPmReference(e.target.value)}
                       required 
                       placeholder="Ej: 849201" 
-                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors text-sm font-mono font-bold"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -675,7 +805,7 @@ export default function RegisterPage() {
                         onChange={e => setPmAmount(e.target.value)}
                         required 
                         placeholder="Ej: 1058.50" 
-                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors text-sm font-semibold"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -685,7 +815,7 @@ export default function RegisterPage() {
                         value={pmDate}
                         onChange={e => setPmDate(e.target.value)}
                         required 
-                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors text-sm"
                       />
                     </div>
                   </div>
@@ -697,7 +827,7 @@ export default function RegisterPage() {
                         onChange={e => setPmBank(e.target.value)}
                         required 
                         placeholder="Ej: Banesco" 
-                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors text-sm"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -707,7 +837,7 @@ export default function RegisterPage() {
                         onChange={e => setPmCedula(e.target.value)}
                         required 
                         placeholder="Ej: V-12345678" 
-                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
+                        className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-colors text-sm"
                       />
                     </div>
                   </div>
@@ -717,7 +847,7 @@ export default function RegisterPage() {
                   <button 
                     type="submit"
                     disabled={isLoading || !pmReference || !pmAmount || !pmDate || !pmBank || !pmCedula}
-                    className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl h-14 text-base transition-all shadow-[0_4px_20px_rgba(249,115,22,0.2)] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
+                    className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl h-14 text-base transition-all shadow-[0_4px_20px_rgba(249,115,22,0.25)] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
                   >
                     {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Verificando...</> : 'YA REALICÉ EL PAGO'}
                   </button>
@@ -727,7 +857,7 @@ export default function RegisterPage() {
                     disabled={isLoading}
                     className="w-full text-center text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    Volver atrás
+                    ← Cambiar método de pago
                   </button>
                 </div>
               </form>
@@ -735,7 +865,7 @@ export default function RegisterPage() {
 
             {/* STEP 2: Redirecting to Lemon Squeezy */}
             {step === 'redirecting' && (
-              <div className="text-center space-y-8 py-8 animate-fade-in">
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-12 shadow-2xl text-center space-y-8 animate-fade-in relative overflow-hidden">
                 <div className="w-20 h-20 bg-orange-500/10 border border-orange-500/20 rounded-full flex items-center justify-center mx-auto">
                   <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
                 </div>
@@ -767,9 +897,9 @@ export default function RegisterPage() {
 
             {/* STEP 3: Manual Success (Pago Movil) */}
             {step === 'success' && (
-              <div className="text-center space-y-6 py-8 animate-fade-in">
-                <div className="w-20 h-20 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-12 shadow-2xl text-center space-y-6 animate-fade-in relative overflow-hidden">
+                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">¡Pago confirmado!</h1>
@@ -779,7 +909,7 @@ export default function RegisterPage() {
                 </div>
                 <Link
                   href={`/${registeredSlug}/gerente`}
-                  className="inline-flex w-full mt-4 items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl h-14 text-base transition-all shadow-lg active:scale-[0.99]"
+                  className="inline-flex w-full mt-4 items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl h-14 text-base transition-all shadow-lg active:scale-[0.99]"
                 >
                   Ir al Panel de Control <ChevronRight className="w-5 h-5" />
                 </Link>
@@ -787,61 +917,12 @@ export default function RegisterPage() {
             )}
 
           </div>
-
-          <div className="mt-8 pt-4 border-t border-slate-200/60 flex justify-between items-center text-xs text-slate-400 select-none">
-            <span>Glubbi Secure Checkout</span>
-            <span>Garantía de Cancelación 24/7</span>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: Ecosystem Checklist & Benefits */}
-        <div className="bg-slate-50/40 border border-slate-200/80 p-6 md:p-10 rounded-3xl flex flex-col justify-between shadow-lg relative overflow-hidden">
-          
-          <div className="space-y-6">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-600 border border-orange-500/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                <Sparkles className="w-3.5 h-3.5" /> Todo incluido
-              </div>
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                Accede al Ecosistema Completo de Crecimiento
-              </h2>
-              <p className="text-sm text-slate-500 mt-2">
-                Con tu suscripción mensual, tu negocio se impulsa con herramientas avanzadas sin comisiones ocultas.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {benefits.map((benefit, index) => {
-                const Icon = benefit.icon;
-                return (
-                  <div key={index} className="flex gap-4 p-4 bg-white border border-slate-200/60 rounded-2xl shadow-sm hover:shadow hover:border-slate-300 transition-all duration-150 group">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${benefit.color} group-hover:scale-105 transition-transform`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <h3 className="text-sm font-bold text-slate-900">{benefit.title}</h3>
-                      <p className="text-xs text-slate-500 leading-relaxed">{benefit.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-8 p-4 bg-white rounded-2xl border border-orange-200/60 shadow-sm select-none">
-            <span className="text-lg font-black text-slate-800 block mb-1">Monto único de $29/mes</span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              No es contrato obligatorio. Puedes no renovar el mes si así lo decides. Tienes total flexibilidad y control sobre tu suscripción.
-            </p>
-          </div>
-
-        </div>
+        )}
 
       </main>
 
       {/* Footer */}
-      <footer className="relative z-20 py-6 border-t border-slate-200/60 text-center text-xs text-slate-400 w-full select-none">
+      <footer className="relative z-20 py-6 border-t border-white/10 text-center text-xs text-slate-400 w-full select-none">
         &copy; {new Date().getFullYear()} glubbi.app. Todos los derechos reservados.
       </footer>
     </div>
