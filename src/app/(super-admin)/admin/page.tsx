@@ -18,7 +18,9 @@ import {
   Database, 
   Zap, 
   Clock, 
-  BarChart3 
+  BarChart3,
+  Filter,
+  Calendar
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -39,6 +41,7 @@ export default function SuperAdminDashboard() {
   const [tablesCount, setTablesCount] = useState(0);
   const [customersCount, setCustomersCount] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const [dateRangeFilter, setDateRangeFilter] = useState<'7_days' | '15_days' | 'this_month' | '60_days' | '90_days' | 'all'>('all');
 
   const restaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
@@ -221,29 +224,58 @@ export default function SuperAdminDashboard() {
     );
   }
 
-  // --- Global Analytics Calculations ---
+  // --- Global Analytics Calculations & Date Range Filtering ---
   const activeRestaurants = restaurants.filter(r => r.is_active);
-  const totalMRR = activeRestaurants.length * 29;
-  const totalARR = totalMRR * 12;
 
-  // GMV Global (volume transacted by paid/completed orders)
-  // Instead of strictly filtering by payment_status === 'paid', we count orders that are delivered/ready 
-  // or explicitly paid, since manual payments might remain in 'pending' status.
-  const paidOrders = orders.filter(o => 
+  const getFilterStartDate = () => {
+    if (dateRangeFilter === 'all') return null;
+    const now = new Date();
+    let days = 30;
+    if (dateRangeFilter === '7_days') days = 7;
+    if (dateRangeFilter === '15_days') days = 15;
+    if (dateRangeFilter === 'this_month') days = 30;
+    if (dateRangeFilter === '60_days') days = 60;
+    if (dateRangeFilter === '90_days') days = 90;
+    return new Date(now.getTime() - days * 24 * 3600 * 1000);
+  };
+
+  const filterStartDate = getFilterStartDate();
+
+  // Filtered Orders by Date Range
+  const filteredOrders = orders.filter(o => {
+    if (!filterStartDate) return true;
+    return new Date(o.created_at) >= filterStartDate;
+  });
+
+  // Filtered Paid Orders
+  const paidOrders = filteredOrders.filter(o => 
     o.status !== 'cancelled' && 
     (o.payment_status === 'paid' || o.status === 'delivered' || o.status === 'ready')
   );
   const gmvGlobal = paidOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
 
   // Orders count
-  const totalOrders = orders.length;
+  const totalOrders = filteredOrders.length;
 
   // Average ticket
   const averageTicketGlobal = paidOrders.length > 0 ? gmvGlobal / paidOrders.length : 0;
 
+  // Filtered MRR
+  const filteredActiveRestaurants = restaurants.filter(r => {
+    if (!r.is_active) return false;
+    if (!filterStartDate) return true;
+    return new Date(r.created_at) >= filterStartDate;
+  });
+
+  const totalMRR = (dateRangeFilter !== 'all' && filteredActiveRestaurants.length > 0)
+    ? filteredActiveRestaurants.length * 29
+    : activeRestaurants.length * 29;
+    
+  const totalARR = totalMRR * 12;
+
   // Real database-backed metrics
   const realViews = Math.max(customersCount, totalOrders);
-  const realAdds = Math.max(orders.filter(o => o.status !== 'cancelled').length, paidOrders.length);
+  const realAdds = Math.max(filteredOrders.filter(o => o.status !== 'cancelled').length, paidOrders.length);
   const conversionRate = realViews > 0 ? (paidOrders.length / realViews) * 100 : 0;
 
   // Group sales (GMV) by restaurant
@@ -368,71 +400,128 @@ export default function SuperAdminDashboard() {
         </button>
       </div>
 
-      {/* ── FILA 1: FINANCIAL AND OPERATIONAL KPIS ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ── FILA 1: RECUADRO AGRUPADO CON FILTRO DE FECHAS PARA KPIS PRINCIPALES ── */}
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 relative overflow-hidden">
         
-        {/* MRR Card */}
-        <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 relative overflow-hidden group shadow-lg backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 text-orange-500">
-              <CreditCard className="w-5 h-5" />
+        {/* Header con Título & Selector de Filtros por Rango de Fecha */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-orange-500" /> Filtro por Rango de Fechas
+              </span>
             </div>
-            <span className="flex items-center text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              MoM +15%
-            </span>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mt-1.5">
+              Rendimiento Financiero y Operativo
+            </h3>
+            <p className="text-slate-500 text-xs mt-0.5">
+              Visualiza el Ingreso Recurrente, Ventas Globales y Órdenes Totales filtrados en tiempo real.
+            </p>
           </div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Ingreso Recurrente (MRR)</h3>
-          <p className="text-3xl font-black text-gray-900">${totalMRR.toLocaleString()}<span className="text-xs font-normal text-gray-400">/mes</span></p>
-          <span className="text-[10px] text-gray-600 block mt-2 font-mono">ARR Proyectado: ${totalARR.toLocaleString()}/año</span>
+
+          {/* Selector de Rango de Fechas (Pills) */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 overflow-x-auto shrink-0 select-none">
+            {[
+              { id: '7_days', label: '7 Días' },
+              { id: '15_days', label: '15 Días' },
+              { id: 'this_month', label: 'Último Mes' },
+              { id: '60_days', label: '60 Días' },
+              { id: '90_days', label: '90 Días' },
+              { id: 'all', label: 'Todo Acumulado' },
+            ].map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setDateRangeFilter(option.id as any)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  dateRangeFilter === option.id
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* GMV Global Card */}
-        <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 relative overflow-hidden group shadow-lg backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 text-orange-400">
-              <TrendingUp className="w-5 h-5" />
+        {/* Grid de 4 Recuadros (3 Métricas Principales + Salud del Sistema) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          {/* Card 1: INGRESO RECURRENTE (MRR) */}
+          <div className="bg-gradient-to-br from-orange-50/70 via-white to-amber-50/30 border border-orange-200/80 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 text-orange-600">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <span className="flex items-center gap-1 text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                <Calendar className="w-3 h-3" /> {
+                  dateRangeFilter === '7_days' ? 'Últimos 7 días' :
+                  dateRangeFilter === '15_days' ? 'Últimos 15 días' :
+                  dateRangeFilter === 'this_month' ? 'Último Mes' :
+                  dateRangeFilter === '60_days' ? 'Últimos 60 días' :
+                  dateRangeFilter === '90_days' ? 'Últimos 90 días' : 'Todo Acumulado'
+                }
+              </span>
             </div>
-            <span className="flex items-center text-[10px] font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Transaccionado
+            <h4 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Ingreso Recurrente (MRR)</h4>
+            <p className="text-3xl font-black text-slate-900">${totalMRR.toLocaleString()}<span className="text-xs font-normal text-slate-400">/mes</span></p>
+            <span className="text-[10px] text-slate-500 block mt-2 font-mono">
+              ARR Proyectado: ${totalARR.toLocaleString()}/año
             </span>
           </div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Ventas Globales (GMV)</h3>
-          <p className="text-3xl font-black text-gray-900">${gmvGlobal.toLocaleString()}</p>
-          <span className="text-[10px] text-gray-600 block mt-2 font-mono">Ticket Promedio: ${averageTicketGlobal.toFixed(2)} USD</span>
-        </div>
 
-        {/* Volumen de Órdenes Card */}
-        <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 relative overflow-hidden group shadow-lg backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20 text-cyan-400">
-              <BarChart3 className="w-5 h-5" />
+          {/* Card 2: VENTAS GLOBALES (GMV) */}
+          <div className="bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/30 border border-emerald-200/80 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-600">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Transaccionado
+              </span>
             </div>
-            <span className="flex items-center text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Conversión {conversionRate.toFixed(1)}%
+            <h4 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Ventas Globales (GMV)</h4>
+            <p className="text-3xl font-black text-slate-900">${gmvGlobal.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <span className="text-[10px] text-slate-500 block mt-2 font-mono">
+              Ticket Promedio: ${averageTicketGlobal.toFixed(2)} USD
             </span>
           </div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Órdenes Totales</h3>
-          <p className="text-3xl font-black text-gray-900">{totalOrders.toLocaleString()}</p>
-          <span className="text-[10px] text-gray-600 block mt-2 font-mono">Conversiones Exitosas: {paidOrders.length}</span>
-        </div>
 
-        {/* Carga del Sistema / Uptime Card */}
-        <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 relative overflow-hidden group shadow-lg backdrop-blur-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
-              <Activity className="w-5 h-5" />
+          {/* Card 3: ÓRDENES TOTALES */}
+          <div className="bg-gradient-to-br from-blue-50/70 via-white to-indigo-50/30 border border-blue-200/80 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-600">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <span className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Conversión {conversionRate.toFixed(1)}%
+              </span>
             </div>
-            <span className="flex items-center text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Estable
+            <h4 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Órdenes Totales</h4>
+            <p className="text-3xl font-black text-slate-900">{totalOrders.toLocaleString()}</p>
+            <span className="text-[10px] text-slate-500 block mt-2 font-mono">
+              Completadas / Pagadas: {paidOrders.length}
             </span>
           </div>
-          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Salud del Sistema</h3>
-          <p className="text-3xl font-black text-gray-900">99.99%</p>
-          <span className="text-[10px] text-gray-600 block mt-2 font-mono">Uptime en vivo | Latencia: {dbLatency}ms</span>
+
+          {/* Card 4: Carga del Sistema / Uptime */}
+          <div className="bg-gradient-to-br from-slate-50 via-white to-slate-100 border border-slate-200/80 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-600">
+                <Activity className="w-5 h-5" />
+              </div>
+              <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Estable
+              </span>
+            </div>
+            <h4 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Salud del Sistema</h4>
+            <p className="text-3xl font-black text-slate-900">99.99%</p>
+            <span className="text-[10px] text-slate-500 block mt-2 font-mono">
+              Uptime en vivo | Latencia: {dbLatency}ms
+            </span>
+          </div>
+
         </div>
 
       </div>
