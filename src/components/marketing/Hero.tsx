@@ -267,8 +267,8 @@ export function Hero() {
 
               {/* Pantalla del teléfono */}
               <div className="h-full flex flex-col justify-between bg-slate-50 relative">
-                {/* Barra de estado mock */}
-                <div className="h-6 bg-orange-500 text-white flex items-center justify-between px-5 text-[8.5px] pt-1.5 font-bold select-none shrink-0">
+                {/* Barra de estado */}
+                <div className="h-5 bg-orange-500 text-white flex items-center justify-between px-4 text-[8px] pt-1 font-bold select-none shrink-0">
                   <span>9:41</span>
                   <div className="flex items-center gap-1">
                     <span>📶</span>
@@ -276,109 +276,119 @@ export function Hero() {
                   </div>
                 </div>
 
-                {/* Cabecera del restaurante */}
-                <div className="bg-orange-500 p-3 pt-2.5 text-white flex flex-col gap-1 shrink-0 select-none">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black tracking-wide">BURGER GRILL</span>
-                    <QrCode className="w-3.5 h-3.5 text-orange-200" />
+                {/* Header curvo oficial Glubbi */}
+                <div className="bg-orange-500 px-3 pt-1 pb-3 text-white rounded-b-2xl shadow-sm shrink-0 select-none">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black tracking-tight flex items-center gap-1">
+                      glubbi<span className="text-orange-200">.app</span>
+                    </span>
+                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[9px]">
+                      🔔
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[7.5px] text-orange-100">
-                    <span>⚡ Pedidos desde Mesa 05</span>
-                    <span className="font-semibold text-white">Menú Digital</span>
-                  </div>
-                </div>
-
-                {/* Barra de búsqueda y categorías */}
-                <div className="shrink-0 bg-white shadow-sm select-none">
-                  {/* Caja de búsqueda mockup */}
-                  <div className="mx-2.5 mt-2 mb-1 bg-slate-100 border border-slate-200 rounded-lg py-1 px-2 flex items-center gap-1.5">
-                    <Search className="w-3 h-3 text-slate-400" />
-                    <span className="text-[7.5px] text-slate-400">¿Qué te provoca comer hoy?</span>
-                  </div>
-                  {/* Categorías */}
-                  <div className="flex gap-1.5 px-2.5 py-1.5 overflow-x-auto scrollbar-none">
-                    <span className="bg-orange-500 text-white text-[7.5px] font-bold px-2 py-0.5 rounded-full shrink-0">🍔 Burgers</span>
-                    <span className="bg-slate-100 text-slate-600 text-[7.5px] font-medium px-2 py-0.5 rounded-full shrink-0">🍟 Acompañantes</span>
-                    <span className="bg-slate-100 text-slate-600 text-[7.5px] font-medium px-2 py-0.5 rounded-full shrink-0">🥤 Bebidas</span>
+                  <div className="bg-orange-600/60 rounded-xl px-2.5 py-1 text-[7.5px] flex items-center justify-between text-orange-50">
+                    <span className="truncate">📍 Entregar en: <strong>Mérida Central</strong></span>
+                    <span className="text-[9px]">▾</span>
                   </div>
                 </div>
 
-                {/* Lista de productos */}
-                <div className="flex-1 p-2 overflow-y-auto space-y-2 select-none">
-                  {/* Producto 1 */}
-                  <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex gap-2 shadow-sm relative hover:border-orange-500/30 transition-colors">
+                {/* Lista de productos gourmet de alto impacto */}
+                <div className="flex-1 p-2.5 overflow-y-auto space-y-2.5 select-none">
+                  {/* Banner Oferta / Promo del día */}
+                  <div className="relative h-16 rounded-xl overflow-hidden shadow-sm group">
+                    <img
+                      src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&auto=format&fit=crop&q=80"
+                      alt="Promoción Especial"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent p-2 flex flex-col justify-center text-white">
+                      <span className="bg-orange-500 text-[5.5px] font-extrabold px-1.5 py-0.5 rounded-full w-fit uppercase tracking-wider mb-0.5">2x1 HOY</span>
+                      <h4 className="text-[9px] font-black leading-tight">Pizza Pepperoni Suprema</h4>
+                      <p className="text-[6.5px] text-orange-200 font-semibold">$8.99 <span className="line-through text-slate-400">$14.00</span></p>
+                    </div>
+                  </div>
+
+                  {/* Producto 1: Hamburguesa Gourmet */}
+                  <div className="bg-white border border-slate-150 rounded-xl p-2 flex gap-2 shadow-sm relative hover:border-orange-500/30 transition-colors">
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <span className="bg-orange-500 text-white text-[5.5px] font-extrabold px-1 py-0.2 rounded uppercase w-fit block mb-0.5">MÁS VENDIDO</span>
-                        <h4 className="text-[9px] font-bold text-slate-800 leading-tight">Burger Master</h4>
-                        <p className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Doble carne, cheddar, tocino ahumado y salsa secreta.</p>
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-[6px] font-extrabold bg-orange-50 text-orange-600 border border-orange-100 px-1 py-0.2 rounded">🔥 TOP VENDIDO</span>
+                        </div>
+                        <h4 className="text-[9.5px] font-extrabold text-slate-900 leading-tight">Burger Master Glubbi</h4>
+                        <p className="text-[6.5px] text-slate-500 leading-tight mt-0.5">Double smash beef, queso cheddar derretido, tocino crujiente.</p>
                       </div>
-                      <span className="text-[9px] font-extrabold text-orange-500 mt-1">$12.99</span>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-[9.5px] font-black text-slate-900">$9.50</span>
+                        <button className="bg-orange-500 hover:bg-orange-600 text-white text-[7.5px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
+                          <span>+</span> Agregar
+                        </button>
+                      </div>
                     </div>
-                    <div className="relative shrink-0">
+                    <div className="relative shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-slate-100">
                       <img
                         src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=80"
-                        alt="Burger Master"
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        alt="Burger Master Glubbi"
+                        className="w-full h-full object-cover"
                       />
-                      <button className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold shadow-md hover:bg-orange-600 transition-colors active:scale-90">
-                        <Plus className="w-2.5 h-2.5" />
-                      </button>
                     </div>
                   </div>
 
-                  {/* Producto 2 */}
-                  <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex gap-2 shadow-sm relative">
+                  {/* Producto 2: Sushi Roll Premium */}
+                  <div className="bg-white border border-slate-150 rounded-xl p-2 flex gap-2 shadow-sm relative">
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <h4 className="text-[9px] font-bold text-slate-800 leading-tight">Papas Trufadas</h4>
-                        <p className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Papas fritas con queso parmesano rallado y aceite de trufa blanca.</p>
+                        <h4 className="text-[9.5px] font-extrabold text-slate-900 leading-tight">Fresh Salmon Roll</h4>
+                        <p className="text-[6.5px] text-slate-500 leading-tight mt-0.5">Salmón fresco, aguacate, queso crema y lluvia de sésamo.</p>
                       </div>
-                      <span className="text-[9px] font-extrabold text-orange-500 mt-1">$5.99</span>
-                    </div>
-                    <div className="relative shrink-0">
-                      <img
-                        src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=150&auto=format&fit=crop&q=80"
-                        alt="Papas Trufadas"
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
-                      />
-                      <button className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold shadow-md">
-                        <Plus className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Producto 3 */}
-                  <div className="bg-white border border-slate-100 rounded-xl p-1.5 flex gap-2 shadow-sm relative">
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h4 className="text-[9px] font-bold text-slate-800 leading-tight">Limonada Rosa</h4>
-                        <p className="text-[6.5px] text-slate-400 leading-tight mt-0.5">Limonada fresca natural endulzada e infundida con frutos rojos.</p>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-[9.5px] font-black text-slate-900">$11.00</span>
+                        <button className="bg-orange-500 hover:bg-orange-600 text-white text-[7.5px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
+                          <span>+</span> Agregar
+                        </button>
                       </div>
-                      <span className="text-[9px] font-extrabold text-orange-500 mt-1">$3.50</span>
                     </div>
-                    <div className="relative shrink-0">
+                    <div className="relative shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-slate-100">
                       <img
-                        src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=150&auto=format&fit=crop&q=80"
-                        alt="Limonada Rosa"
-                        className="w-12 h-12 rounded-lg object-cover shrink-0"
+                        src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=150&auto=format&fit=crop&q=80"
+                        alt="Fresh Salmon Roll"
+                        className="w-full h-full object-cover"
                       />
-                      <button className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold shadow-md">
-                        <Plus className="w-2.5 h-2.5" />
-                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Botón ver carrito de compra */}
-                <div className="p-2 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 shadow-md select-none">
-                  <div className="flex items-center gap-1 text-slate-500">
-                    <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
-                    <span className="text-[7px] font-semibold">1 artículo</span>
+                {/* Bottom Bar Oficial con Botón Flotante Naranja de Carrito */}
+                <div className="bg-white border-t border-slate-150 px-3 py-1.5 relative flex items-center justify-between shrink-0 shadow-lg select-none">
+                  {/* Íconos laterales de navegación */}
+                  <div className="flex items-center gap-4 text-slate-400">
+                    <div className="flex flex-col items-center gap-0.5 text-orange-500 font-bold">
+                      <span className="text-[10px]">🏠</span>
+                      <span className="text-[5.5px]">Inicio</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[10px]">📋</span>
+                      <span className="text-[5.5px]">Pedidos</span>
+                    </div>
                   </div>
-                  <div className="bg-orange-500 text-white font-extrabold rounded-lg text-[8px] px-3 py-1.5 flex items-center gap-1 cursor-pointer hover:bg-orange-600 transition-colors shadow">
-                    Ver Pedido • $12.99
-                    <ArrowRight className="w-2 h-2" />
+
+                  {/* BOTÓN FLOTANTE CENTRAL CIRCULAR DE CARRITO GLUBBI */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 border-2 border-white flex items-center justify-center text-white shadow-lg shadow-orange-500/40 cursor-pointer active:scale-90 transition-transform">
+                    <ShoppingBag className="w-4 h-4" />
+                    <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[6.5px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
+                      2
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-slate-400">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[10px]">❤️</span>
+                      <span className="text-[5.5px]">Favoritos</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[10px]">👤</span>
+                      <span className="text-[5.5px]">Perfil</span>
+                    </div>
                   </div>
                 </div>
               </div>

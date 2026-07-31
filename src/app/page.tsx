@@ -1,3 +1,5 @@
+import { Ecosystem } from '@/components/marketing/Ecosystem';
+import { UseCases } from '@/components/marketing/UseCases';
 import { MtriqRewards } from '@/components/marketing/MtriqRewards';
 import { WhatsAppComparison } from '@/components/marketing/WhatsAppComparison';
 import { GrowthAgentAI } from '@/components/marketing/GrowthAgentAI';
@@ -16,7 +18,9 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <MtriqRewards />
+      <Ecosystem />
       <WhatsAppComparison />
+      <UseCases />
       <GrowthAgentAI />
       <FeaturesKDS />
       <TechArchitecture />
