@@ -237,8 +237,8 @@ export function Hero() {
               </div>
             </div>
 
-            {/* MÓVIL MENU (ESTILO EXACTO A LA MUESTRA PERO FONDO BLANCO LIMPIO) */}
-            <div className="absolute -bottom-20 -left-12 w-[245px] h-[450px] rounded-[2.2rem] border-[6px] border-slate-800 bg-slate-950 shadow-[0_0_60px_-15px_rgba(249,115,22,0.4)] z-30 animate-float-phone overflow-hidden">
+            {/* MÓVIL APP CONSUMIDOR REAL GLUBBI */}
+            <div className="absolute -bottom-20 -left-12 w-[245px] h-[460px] rounded-[2.2rem] border-[6px] border-slate-800 bg-slate-950 shadow-[0_0_60px_-15px_rgba(249,115,22,0.4)] z-30 animate-float-phone overflow-hidden">
               
               {/* Dynamic Island / Notch */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4.5 bg-slate-950 rounded-full z-30 flex items-center justify-center pointer-events-none">
@@ -246,120 +246,160 @@ export function Hero() {
                 <span className="absolute right-8 w-1.5 h-1.5 rounded-full bg-blue-950/40" />
               </div>
 
-              {/* Pantalla del teléfono */}
-              <div className="h-full flex flex-col justify-between bg-white relative">
-                {/* Status Bar Naranja */}
-                <div className="h-5 bg-orange-500 text-white flex items-center justify-between px-4 text-[8px] pt-1 font-bold select-none shrink-0">
-                  <span>9:31</span>
-                  <div className="flex items-center gap-1">
-                    <span>📶</span>
-                    <span>🔋</span>
+              {/* Pantalla de la App Real Glubbi */}
+              <div className="h-full flex flex-col justify-between bg-white relative font-sans text-slate-800">
+                
+                {/* Header Naranja Glubbi Oficial */}
+                <div className="bg-orange-500 p-2.5 pt-2 text-white shrink-0 select-none shadow-sm">
+                  {/* Fila 1: Ubicación */}
+                  <div className="bg-white/20 backdrop-blur-md rounded-full px-2 py-0.5 w-fit flex items-center gap-1 text-[6.5px] font-semibold text-white mb-2">
+                    <span className="text-[7.5px]">📍</span>
+                    <span className="truncate max-w-[120px]">Santa Ana, Libertador ›</span>
                   </div>
-                </div>
 
-                {/* Header Curvo Naranja Glubbi Exacto a la Muestra */}
-                <div className="bg-orange-500 px-3 pt-1 pb-3 text-white rounded-b-2xl shadow-sm shrink-0 select-none">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs">≡</span>
-                      <span className="text-sm font-black tracking-tight">Glubbi</span>
-                    </div>
+                  {/* Fila 2: Logo y Acciones */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-black tracking-tight text-white flex items-center gap-1">
+                      <span className="text-base">≡</span> Glubbi
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs">🔔</span>
+                      <div className="relative">
+                        <span className="text-xs">🔔</span>
+                        <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[5px] font-extrabold w-2.5 h-2.5 rounded-full flex items-center justify-center">1</span>
+                      </div>
                       <span className="text-xs">🛒</span>
                     </div>
                   </div>
-                  <div className="bg-slate-900/90 text-slate-200 rounded-xl px-2.5 py-1 text-[7.5px] flex items-center justify-between">
-                    <span className="truncate">📍 Buscar dirección / Delivery address...</span>
-                    <span className="text-[9px]">▾</span>
+
+                  {/* Fila 3: Buscador blanco redondeado */}
+                  <div className="bg-white rounded-full px-2.5 py-1.5 flex items-center gap-1.5 shadow-inner">
+                    <span className="text-slate-400 text-[8px]">🔍</span>
+                    <span className="text-[7.5px] text-slate-400 font-medium">¿Qué se te antoja hoy?</span>
                   </div>
                 </div>
 
-                {/* Contenido en Fondo Blanco con Tarjetas Oscuras Elegantes como la Muestra */}
-                <div className="flex-1 p-2.5 overflow-y-auto space-y-2.5 select-none bg-slate-50">
+                {/* Cuerpo principal con Categorías y Tiendas (Scrollable) */}
+                <div className="flex-1 p-2.5 overflow-y-auto space-y-3 select-none bg-white">
                   
-                  {/* Tarjeta de Banner Superior (Pizza) */}
-                  <div className="relative h-24 rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-                    <img
-                      src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&auto=format&fit=crop&q=80"
-                      alt="Fresh Pizza"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-2.5 flex flex-col justify-end text-white">
-                      <h4 className="text-[11px] font-black leading-tight">Fresh Pizza</h4>
-                      <p className="text-[7px] text-slate-300">Crujiente con abundante queso fundido</p>
-                      <span className="text-[9.5px] font-extrabold text-orange-400 mt-0.5">$8.99</span>
+                  {/* Grid 1: Categorías Grandes Pasteles */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Card Restaurantes */}
+                    <div className="bg-[#FDF0ED] border border-[#FADBD3] rounded-2xl p-2 flex flex-col items-center justify-center text-center shadow-2xs group cursor-pointer">
+                      <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">🍔</div>
+                      <span className="text-[8.5px] font-extrabold text-[#7A2E1E]">Restaurantes</span>
+                    </div>
+
+                    {/* Card Tiendas */}
+                    <div className="bg-[#EAF6F0] border border-[#CDEBDD] rounded-2xl p-2 flex flex-col items-center justify-center text-center shadow-2xs group cursor-pointer">
+                      <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">🛍️</div>
+                      <span className="text-[8.5px] font-extrabold text-[#1B5E3F]">Tiendas</span>
                     </div>
                   </div>
 
-                  {/* Tarjeta de Oferta 2x1 (Hamburguesa) - Estilo Oscuro de Impacto sobre fondo claro */}
-                  <div className="bg-slate-900 text-white rounded-2xl p-2.5 shadow-md relative overflow-hidden border border-slate-800">
-                    <div className="flex gap-2">
-                      <div className="flex-1 flex flex-col justify-between z-10">
-                        <div>
-                          <span className="bg-orange-500 text-white text-[6px] font-black px-1.5 py-0.2 rounded uppercase w-fit block mb-1">
-                            NEW! PROMO
-                          </span>
-                          <h4 className="text-[11px] font-black leading-tight text-white">Martes de 2x1</h4>
-                          <p className="text-[6.5px] text-slate-400 mt-0.5">Doble smash burger con cheddar y papas gratis.</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <span className="text-[10px] font-black text-orange-400">$8.99</span>
-                          <span className="text-[7px] text-slate-500 line-through">$14.00</span>
-                        </div>
-                      </div>
-
-                      <div className="relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-slate-700">
-                        <img
-                          src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&auto=format&fit=crop&q=80"
-                          alt="Martes de 2x1 Burger"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                  {/* Grid 2: Categorías Pequeñas Pasteles */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {/* Mercado */}
+                    <div className="bg-[#EAF2FA] border border-[#D2E4F5] rounded-xl p-1.5 flex flex-col items-center text-center">
+                      <span className="text-base mb-0.5">🛒</span>
+                      <span className="text-[7.5px] font-bold text-[#1C426B]">Mercado</span>
                     </div>
 
-                    <div className="flex gap-1.5 mt-2 pt-2 border-t border-slate-800">
-                      <button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black text-[7.5px] py-1 rounded-lg shadow-sm">
-                        Ver
-                      </button>
-                      <button className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[7.5px] py-1 rounded-lg">
-                        Ordenar
-                      </button>
+                    {/* Farmacia */}
+                    <div className="bg-[#EBF3FE] border border-[#CBDDFD] rounded-xl p-1.5 flex flex-col items-center text-center">
+                      <span className="text-base mb-0.5">💊</span>
+                      <span className="text-[7.5px] font-bold text-[#1D3E75]">Farmacia</span>
+                    </div>
+
+                    {/* Postres */}
+                    <div className="bg-[#FCEBF2] border border-[#F6C9DE] rounded-xl p-1.5 flex flex-col items-center text-center">
+                      <span className="text-base mb-0.5">🍩</span>
+                      <span className="text-[7.5px] font-bold text-[#721F47]">Postres</span>
+                    </div>
+                  </div>
+
+                  {/* Sección Envío Gratis */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-emerald-500 text-[9px]">🛵</span>
+                        <div>
+                          <h4 className="text-[9px] font-extrabold text-slate-900 leading-none">Envío Gratis</h4>
+                          <p className="text-[6.5px] text-slate-400 mt-0.5">Ahorra en tu domicilio</p>
+                        </div>
+                      </div>
+                      <span className="text-[7.5px] font-extrabold text-orange-500 cursor-pointer">Ver más</span>
+                    </div>
+
+                    {/* Slider / Tarjetas de locales */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Local 1: Star Food */}
+                      <div className="bg-white border border-slate-150 rounded-xl overflow-hidden shadow-sm">
+                        <div className="relative h-14 bg-slate-100">
+                          <img
+                            src="https://images.unsplash.com/photo-1561651823-34feb02250e4?w=200&auto=format&fit=crop&q=80"
+                            alt="Star Food"
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute top-1 left-1 bg-emerald-500 text-white font-black text-[5.5px] px-1 py-0.2 rounded uppercase">
+                            ENVÍO $0
+                          </span>
+                        </div>
+                        <div className="p-1.5">
+                          <h5 className="text-[8.5px] font-bold text-slate-900 leading-tight">Star Food</h5>
+                          <p className="text-[6.5px] text-slate-400">Saludable</p>
+                          <div className="flex items-center justify-between text-[6.5px] text-slate-500 mt-1 font-semibold">
+                            <span className="text-amber-500">★ 5.0</span>
+                            <span>⏱️ 30-45 min</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Local 2: Merida Grill */}
+                      <div className="bg-white border border-slate-150 rounded-xl overflow-hidden shadow-sm">
+                        <div className="relative h-14 bg-slate-100">
+                          <img
+                            src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&auto=format&fit=crop&q=80"
+                            alt="Merida Grill"
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute top-1 left-1 bg-blue-600 text-white font-black text-[5.5px] px-1 py-0.2 rounded uppercase">
+                            TENDENCIA
+                          </span>
+                        </div>
+                        <div className="p-1.5">
+                          <h5 className="text-[8.5px] font-bold text-slate-900 leading-tight">Merida Grill</h5>
+                          <p className="text-[6.5px] text-slate-400">Hamburguesas</p>
+                          <div className="flex items-center text-[6.5px] text-amber-500 mt-1 font-semibold">
+                            <span>★ 5.0</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                 </div>
 
-                {/* Bottom Bar con el Botón Flotante Central Naranja Oficial */}
-                <div className="bg-white border-t border-slate-200 px-3 py-1.5 relative flex items-center justify-between shrink-0 shadow-lg select-none">
-                  <div className="flex items-center gap-4 text-slate-400">
-                    <div className="flex flex-col items-center gap-0.5 text-orange-500 font-bold">
-                      <span className="text-[10px]">🏠</span>
-                      <span className="text-[5.5px]">Inicio</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[10px]">📋</span>
-                      <span className="text-[5.5px]">Pedidos</span>
-                    </div>
+                {/* Bottom Navigation Bar Oficial Glubbi */}
+                <div className="bg-white border-t border-slate-150 px-3 py-1.5 flex items-center justify-around shrink-0 select-none shadow-sm">
+                  {/* Tab 1: Inicio */}
+                  <div className="flex flex-col items-center gap-0.5 text-orange-500">
+                    <span className="text-[10px]">🏠</span>
+                    <span className="text-[6px] font-black">Inicio</span>
                   </div>
-
-                  {/* BOTÓN FLOTANTE CENTRAL CIRCULAR DE CARRITO GLUBBI */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-gradient-to-tr from-orange-600 to-orange-400 border-2 border-white flex items-center justify-center text-white shadow-lg shadow-orange-500/40 cursor-pointer active:scale-90 transition-transform">
-                    <ShoppingBag className="w-4 h-4" />
-                    <span className="absolute -top-1 -right-1 bg-slate-900 text-white text-[6.5px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
-                      1
-                    </span>
+                  {/* Tab 2: Ofertas */}
+                  <div className="flex flex-col items-center gap-0.5 text-slate-400">
+                    <span className="text-[10px]">🏷️</span>
+                    <span className="text-[6px] font-medium">Ofertas</span>
                   </div>
-
-                  <div className="flex items-center gap-4 text-slate-400">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[10px]">❤️</span>
-                      <span className="text-[5.5px]">Favoritos</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[10px]">👤</span>
-                      <span className="text-[5.5px]">Perfil</span>
-                    </div>
+                  {/* Tab 3: Favoritos */}
+                  <div className="flex flex-col items-center gap-0.5 text-slate-400">
+                    <span className="text-[10px]">❤️</span>
+                    <span className="text-[6px] font-medium">Favoritos</span>
+                  </div>
+                  {/* Tab 4: Cuenta */}
+                  <div className="flex flex-col items-center gap-0.5 text-slate-400">
+                    <span className="text-[10px]">👤</span>
+                    <span className="text-[6px] font-medium">Cuenta</span>
                   </div>
                 </div>
 
