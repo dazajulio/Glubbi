@@ -74,11 +74,11 @@ export function Hero() {
 
         {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON INGREDIENTES */}
         <div className="relative w-full flex justify-center items-center lg:translate-y-6 animate-fade-in-up" style={{animationDelay: '150ms'}}>
-          <div className="relative w-full max-w-[550px] lg:max-w-[620px] animate-float-3d flex items-center justify-center pointer-events-none">
+          <div className="relative w-full max-w-[550px] lg:max-w-[620px] flex items-center justify-center pointer-events-none">
             <img
               src="/hero-3d-composition.jpg"
               alt="Glubbi Ecosistema 3D Mobile"
-              className="w-full h-auto object-contain drop-shadow-[0_25px_50px_rgba(249,115,22,0.2)]"
+              className="w-full h-auto object-contain mix-blend-screen drop-shadow-[0_25px_50px_rgba(249,115,22,0.25)]"
             />
           </div>
         </div>
