@@ -18,7 +18,8 @@ export function RegisterCTA() {
       contactName: form.get('contactName'),
       email: form.get('email'),
       phone: form.get('phone'),
-      businessType: form.get('businessType'),
+      inquiryType: form.get('inquiryType'),
+      message: form.get('message'),
     };
 
     try {
@@ -44,18 +45,20 @@ export function RegisterCTA() {
       />
       <div className="relative max-w-2xl mx-auto px-6">
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight mb-6">Empieza tu Prueba Gratuita</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight mb-6">
+            ¿Quieres contactar a nuestro equipo?
+          </h2>
           <p className="text-slate-600 text-lg">
-            14 días sin costo. Nuestro equipo configura tu menú inicial y te contacta para el onboarding.
+            Nuestro equipo configura tu menú inicial y te contacta para el onboarding.
           </p>
         </div>
 
         {status === 'success' ? (
           <div className="flex flex-col items-center text-center gap-4 bg-emerald-50/50 border border-emerald-100 rounded-3xl p-10 shadow-sm shadow-emerald-50/20">
             <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-            <h3 className="text-xl font-bold text-slate-900">¡Solicitud recibida!</h3>
+            <h3 className="text-xl font-bold text-slate-900">¡Consulta recibida!</h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              En menos de 24 horas un especialista de onboarding se pondrá en contacto contigo para activar tu cuenta.
+              Hemos enviado los detalles de tu consulta a nuestro equipo. Te contactaremos muy pronto.
             </p>
           </div>
         ) : (
@@ -66,7 +69,7 @@ export function RegisterCTA() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label htmlFor="restaurantName" className="block text-sm font-medium text-slate-600 mb-2">
-                  Nombre del restaurante
+                  Nombre del restaurante o negocio
                 </label>
                 <input
                   id="restaurantName"
@@ -118,19 +121,36 @@ export function RegisterCTA() {
             </div>
 
             <div>
-              <label htmlFor="businessType" className="block text-sm font-medium text-slate-600 mb-2">
-                Tipo de negocio
+              <label htmlFor="inquiryType" className="block text-sm font-medium text-slate-600 mb-2">
+                ¿De qué se trata tu consulta?
               </label>
               <select
-                id="businessType"
-                name="businessType"
-                defaultValue="fast_food"
+                id="inquiryType"
+                name="inquiryType"
+                defaultValue="Registros/Onboarding"
                 className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-slate-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm"
               >
-                <option value="fast_food">Fast Food</option>
-                <option value="casual_dining">Casual Dining</option>
-                <option value="other">Otro</option>
+                <option value="Registros/Onboarding">Registros / Onboarding</option>
+                <option value="Alianzas">Alianzas</option>
+                <option value="Partners">Partners</option>
+                <option value="Desarrolladores">Desarrolladores</option>
+                <option value="Cadenas de restaurantes">Cadenas de restaurantes</option>
+                <option value="Centros comerciales">Centros comerciales</option>
+                <option value="Otros">Otros</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-slate-600 mb-2">
+                Mensaje <span className="text-slate-400">(opcional)</span>
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows={3}
+                placeholder="Cuéntanos un poco más sobre lo que necesitas..."
+                className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors text-sm resize-none"
+              />
             </div>
 
             {status === 'error' && (
@@ -148,12 +168,9 @@ export function RegisterCTA() {
                   Enviando...
                 </>
               ) : (
-                'Comenzar Prueba Gratuita'
+                'Enviar consulta'
               )}
             </button>
-            <p className="text-center text-xs text-slate-400 mt-2">
-              Sin tarjeta de crédito inicial. Cancela cuando quieras.
-            </p>
           </form>
         )}
       </div>

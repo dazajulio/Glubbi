@@ -42,9 +42,9 @@ export function FeaturesKDS() {
             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 border border-blue-100 mb-6">
               <Printer className="w-6 h-6" />
             </div>
-            <h3 className="text-slate-900 font-bold text-xl mb-3">Comanda Duplicada</h3>
+            <h3 className="text-slate-900 font-bold text-xl mb-3">Impresión de comandas</h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Imprime en un clic dos copias: una copia limpia para cocina (solo platos e ingredientes) y una copia detallada para caja (con montos, mesero e impuestos).
+              Imprime en un clic la comanda de tus pedidos entrantes con todos los detalles para cocina y caja.
             </p>
           </div>
 
@@ -55,7 +55,7 @@ export function FeaturesKDS() {
             </div>
             <h3 className="text-slate-900 font-bold text-xl mb-3">Pasarela de Pagos</h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Recibe pagos de manera digital e integrada en mesa mediante Stripe, terminal inalámbrica o registra transacciones en efectivo en caja desde el panel central.
+              Recibe pagos de manera digital e integrada mediante Lemon Squeezy, Pago Móvil o registra transacciones en efectivo en caja desde el panel central.
             </p>
           </div>
 

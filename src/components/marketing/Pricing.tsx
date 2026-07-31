@@ -1,4 +1,5 @@
 import { ShieldCheck, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 const PLAN = {
   name: 'Plan Pro Único',
@@ -10,7 +11,7 @@ const PLAN = {
     'Sistema de llamado de meseros sonoro y visual',
     'Agente de Crecimiento con IA (Upselling y Retención)',
     'Base de datos y CRM de clientes de por vida',
-    'Impresión de comandas duplicadas (Cocina/Caja)',
+    'Impresión de comandas (Cocina/Caja)',
     'Soporte prioritario por WhatsApp y Email',
   ],
 };
@@ -61,12 +62,11 @@ export function Pricing() {
               ))}
             </ul>
 
-            <a href="#registro" className="w-full block">
+            <Link href="/register" className="w-full block">
               <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold h-14 rounded-xl text-lg transition-all shadow-md shadow-orange-500/10 active:scale-[0.98]">
-                Comenzar Prueba Gratis 14 Días
+                REGÍSTRATE
               </button>
-            </a>
-            <p className="text-xs text-slate-400 mt-4">Cancela cuando quieras. No requiere tarjeta de crédito para iniciar.</p>
+            </Link>
           </div>
         </div>
       </div>
