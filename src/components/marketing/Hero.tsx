@@ -72,13 +72,13 @@ export function Hero() {
           </div>
         </div>
 
-        {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON TAMAÑO IMPONENTE SOBRESALIENTE */}
-        <div className="relative w-full flex justify-center items-center lg:translate-y-20 translate-y-10 lg:translate-x-8 animate-fade-in-up" style={{animationDelay: '150ms'}}>
-          <div className="relative w-full max-w-[650px] sm:max-w-[760px] lg:max-w-[900px] flex items-center justify-center pointer-events-none">
+        {/* LADO DERECHO: COMPOSICIÓN 3D DOMINANTE (ANCLADA 80% OSCURO / 20% BLANCO) */}
+        <div className="relative w-full flex justify-center lg:justify-end items-center lg:translate-y-24 translate-y-12 animate-fade-in-up" style={{animationDelay: '150ms'}}>
+          <div className="relative w-full max-w-[620px] sm:max-w-[760px] lg:max-w-[880px] xl:max-w-[960px] flex items-center justify-center lg:justify-end pointer-events-none">
             <img
               src="/hero-3d-composition.png"
               alt="Glubbi Ecosistema 3D Mobile"
-              className="w-full h-auto object-contain drop-shadow-[0_20px_40px_rgba(249,115,22,0.15)]"
+              className="w-full h-auto object-contain drop-shadow-[0_25px_45px_rgba(0,0,0,0.45)]"
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ export function Hero() {
       </div>
 
       {/* =========================================
-          FASE 3: BOTÓN OFICIAL DISPONIBLE EN GOOGLE PLAY
+          FASE 3: BOTÓN OFICIAL DISPONIBLE EN GOOGLE PLAY (SECCIÓN CLARA)
       ========================================= */}
       <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
         <a 
