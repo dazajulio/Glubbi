@@ -72,13 +72,13 @@ export function Hero() {
           </div>
         </div>
 
-        {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON BORDES METÁLICOS SOLIDOS */}
-        <div className="relative w-full flex justify-center items-center lg:translate-y-16 translate-y-8 animate-fade-in-up" style={{animationDelay: '150ms'}}>
-          <div className="relative w-full max-w-[560px] lg:max-w-[640px] flex items-center justify-center pointer-events-none">
+        {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON TAMAÑO IMPONENTE SOBRESALIENTE */}
+        <div className="relative w-full flex justify-center items-center lg:translate-y-20 translate-y-10 lg:translate-x-8 animate-fade-in-up" style={{animationDelay: '150ms'}}>
+          <div className="relative w-full max-w-[650px] sm:max-w-[760px] lg:max-w-[900px] flex items-center justify-center pointer-events-none">
             <img
               src="/hero-3d-composition.png"
               alt="Glubbi Ecosistema 3D Mobile"
-              className="w-full h-auto object-contain drop-shadow-[0_25px_50px_rgba(249,115,22,0.2)]"
+              className="w-full h-auto object-contain drop-shadow-[0_20px_40px_rgba(249,115,22,0.15)]"
             />
           </div>
         </div>
@@ -86,19 +86,19 @@ export function Hero() {
       </div>
 
       {/* =========================================
-          FASE 3: BOTÓN OFICIAL GOOGLE PLAY (Centrado abajo sobre la curva)
+          FASE 3: BOTÓN OFICIAL DISPONIBLE EN GOOGLE PLAY
       ========================================= */}
-      <div className="absolute bottom-1 md:bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+      <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
         <a 
           href="/glubbi" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="block transition-transform hover:scale-105 active:scale-95 shadow-[0_10px_35px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden"
+          className="block transition-transform hover:scale-105 active:scale-95 drop-shadow-xl"
         >
           <img 
-            src="/google-play-clean.png" 
-            alt="Get it on Google Play" 
-            className="h-12 sm:h-14 w-auto object-contain bg-black/90 p-0.5 rounded-2xl border border-slate-700/60"
+            src="/google-play-es.png" 
+            alt="Disponible en Google Play" 
+            className="h-12 sm:h-14 md:h-16 w-auto object-contain"
           />
         </a>
       </div>
