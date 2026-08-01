@@ -72,13 +72,13 @@ export function Hero() {
           </div>
         </div>
 
-        {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON INGREDIENTES (TRANSPARENTE PNG) */}
-        <div className="relative w-full flex justify-center items-center lg:translate-y-6 animate-fade-in-up" style={{animationDelay: '150ms'}}>
-          <div className="relative w-full max-w-[550px] lg:max-w-[620px] flex items-center justify-center pointer-events-none">
+        {/* LADO DERECHO: COMPOSICIÓN 3D CELULAR CON BORDES METÁLICOS SOLIDOS */}
+        <div className="relative w-full flex justify-center items-center lg:translate-y-16 translate-y-8 animate-fade-in-up" style={{animationDelay: '150ms'}}>
+          <div className="relative w-full max-w-[560px] lg:max-w-[640px] flex items-center justify-center pointer-events-none">
             <img
               src="/hero-3d-composition.png"
               alt="Glubbi Ecosistema 3D Mobile"
-              className="w-full h-auto object-contain drop-shadow-[0_25px_50px_rgba(249,115,22,0.25)]"
+              className="w-full h-auto object-contain drop-shadow-[0_25px_50px_rgba(249,115,22,0.2)]"
             />
           </div>
         </div>
@@ -86,18 +86,21 @@ export function Hero() {
       </div>
 
       {/* =========================================
-          FASE 3: ACCESO EXCLUSIVO BADGE (Centrado abajo sobre la curva)
+          FASE 3: BOTÓN OFICIAL GOOGLE PLAY (Centrado abajo sobre la curva)
       ========================================= */}
       <div className="absolute bottom-1 md:bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
-        <div className="flex items-center gap-3.5 bg-[#0a101d] backdrop-blur-xl border border-blue-500/60 p-2.5 px-6 rounded-full shadow-[0_0_35px_rgba(59,130,246,0.45)] hover:border-blue-400 transition-all">
-          <div className="w-10 h-10 rounded-full bg-slate-950 flex items-center justify-center border border-blue-400/60 shrink-0 shadow-inner overflow-hidden">
-            <Image src="/logo-glubbi.png" alt="Glubbi Logo" width={40} height={40} className="object-cover w-full h-full" />
-          </div>
-          <div className="flex flex-col text-left">
-            <span className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-wider leading-tight">ACCESO EXCLUSIVO</span>
-            <span className="text-xs sm:text-sm font-extrabold text-white leading-tight">APP Delivery</span>
-          </div>
-        </div>
+        <a 
+          href="/glubbi" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block transition-transform hover:scale-105 active:scale-95 shadow-[0_10px_35px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden"
+        >
+          <img 
+            src="/google-play-clean.png" 
+            alt="Get it on Google Play" 
+            className="h-12 sm:h-14 w-auto object-contain bg-black/90 p-0.5 rounded-2xl border border-slate-700/60"
+          />
+        </a>
       </div>
 
       {/* =========================================
