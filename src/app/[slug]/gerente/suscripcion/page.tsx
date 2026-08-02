@@ -100,7 +100,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
               placeholder="Ej. 29.99"
             />
           </div>
@@ -111,7 +111,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
               required
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
               placeholder="Últimos 6 dígitos o referencia completa"
             />
           </div>
@@ -122,7 +122,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
               required
               value={bank}
               onChange={(e) => setBank(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
               placeholder="Ej. Banesco, Mercantil, Provincial"
             />
           </div>
@@ -133,7 +133,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
             />
           </div>
         </div>

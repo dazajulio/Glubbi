@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { OrderWithItems } from '@/types/database';
 import { formatPrice, formatElapsedTime } from '@/lib/utils';
-import { Search, MapPin, User, Hash, Clock } from 'lucide-react';
+import { Search, MapPin, User, Hash, Clock, Info } from 'lucide-react';
 import { getCustomerName } from '@/modules/kds/components/OrderCard';
+import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 interface OrderHistoryBoardProps {
   restaurantId: string;
@@ -16,6 +17,7 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<OrderWithItems | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -67,9 +69,13 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
     
     if (isPagoMovilValidado) {
       return (
-        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
-          ✅ Pago Validado (Móvil)
-        </span>
+        <button 
+          onClick={() => setSelectedPaymentOrder(order)}
+          title="Ver datos del pago"
+          className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+        >
+          ✅ Pago Validado (Móvil) <Info className="w-3 h-3 text-green-600 ml-0.5 shrink-0" />
+        </button>
       );
     }
     
@@ -78,16 +84,24 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                      (order.payment_method as any) === 'terminal' ? 'Terminal' : 
                      (order.payment_method as any) === 'pago_movil' ? 'Pago Móvil' : 'Efectivo';
       return (
-        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
-          ✅ Pagado ({method})
-        </span>
+        <button 
+          onClick={() => setSelectedPaymentOrder(order)}
+          title="Ver datos del pago"
+          className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+        >
+          ✅ Pagado ({method}) <Info className="w-3 h-3 text-green-600 ml-0.5 shrink-0" />
+        </button>
       );
     }
 
     return (
-      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md bg-red-100 text-red-700 border border-red-200 flex items-center gap-1">
-        ⏳ Pendiente (Por Pagar)
-      </span>
+      <button 
+        onClick={() => setSelectedPaymentOrder(order)}
+        title="Ver detalles de la cuenta por cobrar"
+        className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+      >
+        ⏳ Pendiente (Por Pagar) <Info className="w-3 h-3 text-red-600 ml-0.5 shrink-0" />
+      </button>
     );
   };
 
@@ -174,14 +188,27 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
                       )}
                     </div>
 
-                    {order.notes && order.notes.includes('[Origen: Delivery]') && (
-                      <div className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
+                    {order.notes && order.notes.includes('[Origen: Retiro en Local]') && (
+                      <div className="text-xs bg-orange-500/10 border border-orange-500/20 text-orange-700 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
+                        <div className="font-bold text-orange-800">🛍️ Retiro en Local</div>
                         {getCustomerName(order) && (
-                          <div><strong className="text-blue-600">Cliente:</strong> {getCustomerName(order)}</div>
+                          <div><strong className="text-orange-700">Cliente:</strong> {getCustomerName(order)}</div>
                         )}
-                        <div><strong className="text-blue-600">Dirección:</strong> {order.notes.match(/Dirección:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div><strong className="text-blue-600">Teléfono:</strong> {order.notes.match(/Teléfono:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
-                        <div><strong className="text-blue-600">Referencia:</strong> {order.notes.match(/Referencia:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
+                        <div><strong className="text-orange-700">Hora estimada:</strong> {order.notes.match(/Hora estimada:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
+                        {order.notes.includes('Teléfono:') && (
+                          <div><strong className="text-orange-700">Teléfono:</strong> {order.notes.match(/Teléfono:\s*([^|]+)/)?.[1]?.trim()}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {order.notes && order.notes.includes('[Origen: Delivery]') && (
+                      <div className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-700 rounded-lg p-2.5 mt-2 space-y-0.5 max-w-md">
+                        <div className="font-bold text-blue-800">🛵 Envío a Domicilio</div>
+                        {getCustomerName(order) && (
+                          <div><strong className="text-blue-700">Cliente:</strong> {getCustomerName(order)}</div>
+                        )}
+                        <div><strong className="text-blue-700">Dirección:</strong> {order.notes.match(/Dirección:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
+                        <div><strong className="text-blue-700">Teléfono:</strong> {order.notes.match(/Teléfono:\s*([^|]+)/)?.[1]?.trim() || 'N/A'}</div>
                       </div>
                     )}
                   </div>
@@ -203,6 +230,13 @@ export function OrderHistoryBoard({ restaurantId }: OrderHistoryBoardProps) {
           </div>
         )}
       </div>
+
+      {/* Payment Details Modal */}
+      <PaymentDetailsModal 
+        order={selectedPaymentOrder}
+        isOpen={!!selectedPaymentOrder}
+        onClose={() => setSelectedPaymentOrder(null)}
+      />
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function ProductRow({
             {/* Drag Handle */}
             <div 
               {...provided.dragHandleProps} 
-              className="p-2 text-gray-400 hover:text-white cursor-grab active:cursor-grabbing flex-shrink-0"
+              className="p-2 text-gray-400 hover:text-slate-700 cursor-grab active:cursor-grabbing flex-shrink-0"
             >
               <GripVertical className="w-5 h-5" />
             </div>
@@ -63,7 +63,7 @@ export function ProductRow({
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <button 
                 onClick={() => onEdit(product)}
-                className="p-2 sm:p-3 text-gray-500 hover:bg-slate-100 hover:text-white rounded-xl transition-colors"
+                className="p-2 sm:p-3 text-gray-500 hover:bg-slate-100 hover:text-slate-800 rounded-xl transition-colors"
                 title="Editar Plato"
               >
                 <Edit2 className="w-5 h-5" />
@@ -83,7 +83,7 @@ export function ProductRow({
 
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="ml-2 p-2 text-gray-500 hover:text-white hover:bg-slate-100 rounded-xl transition-colors"
+                className="ml-2 p-2 text-gray-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
                 title={isExpanded ? "Ocultar detalles" : "Ver detalles"}
               >
                 {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}

@@ -323,7 +323,7 @@ export default function SettingsAdminPage() {
           <div className="bg-white shadow-sm border border-gray-200 rounded-3xl p-6">
             <div className="flex items-center gap-3 mb-6">
               <Package className="w-5 h-5 text-orange-500" />
-              <h3 className="text-lg font-bold text-white">Productos más vendidos</h3>
+              <h3 className="text-lg font-bold text-slate-900">Productos más vendidos</h3>
             </div>
             <div className="space-y-4">
               {topProducts.length === 0 && <p className="text-gray-400 text-sm">No hay datos suficientes.</p>}
@@ -333,7 +333,7 @@ export default function SettingsAdminPage() {
                     <div className="w-8 h-8 rounded-full bg-slate-100 text-gray-500 flex items-center justify-center font-bold text-sm">
                       {i + 1}
                     </div>
-                    <span className="font-medium text-white">{p.name}</span>
+                    <span className="font-medium text-slate-800">{p.name}</span>
                   </div>
                   <div className="text-right">
                     <p className="text-orange-500 font-bold">{p.qty} unid.</p>
@@ -348,7 +348,7 @@ export default function SettingsAdminPage() {
           <div className="bg-white shadow-sm border border-gray-200 rounded-3xl p-6">
             <div className="flex items-center gap-3 mb-6">
               <Users className="w-5 h-5 text-emerald-500" />
-              <h3 className="text-lg font-bold text-white">Mejores Clientes</h3>
+              <h3 className="text-lg font-bold text-slate-900">Mejores Clientes</h3>
             </div>
             <div className="space-y-4">
               {topCustomers.length === 0 && <p className="text-gray-400 text-sm">No hay clientes registrados con compras.</p>}
@@ -359,7 +359,7 @@ export default function SettingsAdminPage() {
                       {c.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <span className="font-medium text-white block">{c.name}</span>
+                      <span className="font-medium text-slate-800 block">{c.name}</span>
                       <span className="text-xs text-gray-400">{c.ordersCount} pedidos</span>
                     </div>
                   </div>
@@ -390,7 +390,7 @@ export default function SettingsAdminPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Venta Sugerida */}
           <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 shadow-xl h-fit">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <span className="text-orange-500">💰</span> Venta Sugerida (Upsell)
             </h2>
             <p className="text-gray-500 text-sm mb-6">
@@ -403,7 +403,7 @@ export default function SettingsAdminPage() {
                 <select 
                   value={upsell1} 
                   onChange={(e) => setUpsell1(e.target.value)}
-                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="">-- Seleccionar producto --</option>
                   {products.map(p => (
@@ -417,7 +417,7 @@ export default function SettingsAdminPage() {
                 <select 
                   value={upsell2} 
                   onChange={(e) => setUpsell2(e.target.value)}
-                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="">-- Seleccionar producto --</option>
                   {products.map(p => (
@@ -439,7 +439,7 @@ export default function SettingsAdminPage() {
 
           {/* Configuración de Glubbi Marketplace */}
           <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 shadow-xl h-fit">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <span className="text-orange-500">🛒</span> Presencia en Glubbi
             </h2>
             <p className="text-gray-500 text-sm mb-6">
@@ -452,7 +452,7 @@ export default function SettingsAdminPage() {
                 <select 
                   value={glubbiType} 
                   onChange={(e) => setGlubbiType(e.target.value)}
-                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="Restaurantes">Restaurantes</option>
                   <option value="Mercado">Mercado</option>
@@ -466,7 +466,7 @@ export default function SettingsAdminPage() {
                   <select 
                     value={glubbiCategory} 
                     onChange={(e) => setGlubbiCategory(e.target.value)}
-                    className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="">Seleccione una especialidad</option>
                     <option value="Hamburguesas">Hamburguesas 🍔</option>
@@ -582,7 +582,7 @@ export default function SettingsAdminPage() {
 
           {/* Seguridad del Sistema (Super-Admin Password) */}
           <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-6 shadow-xl h-fit">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <Lock className="w-5 h-5 text-orange-500" /> Seguridad de la Plataforma
             </h2>
             <p className="text-gray-500 text-sm mb-6">
@@ -597,7 +597,7 @@ export default function SettingsAdminPage() {
                   value={newAdminPassword} 
                   onChange={(e) => setNewAdminPassword(e.target.value)}
                   placeholder="Mínimo 4 caracteres"
-                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>
 
@@ -608,7 +608,7 @@ export default function SettingsAdminPage() {
                   value={confirmAdminPassword} 
                   onChange={(e) => setConfirmAdminPassword(e.target.value)}
                   placeholder="Confirmar nueva contraseña"
-                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  className="w-full bg-slate-100 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>
               

@@ -168,7 +168,7 @@ export default function ReportsPage() {
             <div className="bg-white shadow-sm border border-gray-200 rounded-3xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Package className="w-5 h-5 text-orange-500" />
-                <h3 className="text-lg font-bold text-white">Productos más vendidos</h3>
+                <h3 className="text-lg font-bold text-slate-900">Productos más vendidos</h3>
               </div>
               <div className="space-y-4">
                 {topProducts.length === 0 && <p className="text-gray-400 text-sm">No hay datos suficientes.</p>}
@@ -178,7 +178,7 @@ export default function ReportsPage() {
                       <div className="w-8 h-8 rounded-full bg-slate-100 text-gray-500 flex items-center justify-center font-bold text-sm">
                         {i + 1}
                       </div>
-                      <span className="font-medium text-white">{p.name}</span>
+                      <span className="font-medium text-slate-800">{p.name}</span>
                     </div>
                     <div className="text-right">
                       <p className="text-orange-500 font-bold">{p.qty} unid.</p>
@@ -193,7 +193,7 @@ export default function ReportsPage() {
             <div className="bg-white shadow-sm border border-gray-200 rounded-3xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Users className="w-5 h-5 text-emerald-500" />
-                <h3 className="text-lg font-bold text-white">Mejores Clientes</h3>
+                <h3 className="text-lg font-bold text-slate-900">Mejores Clientes</h3>
               </div>
               <div className="space-y-4">
                 {topCustomers.length === 0 && <p className="text-gray-400 text-sm">No hay clientes registrados con compras.</p>}
@@ -204,7 +204,7 @@ export default function ReportsPage() {
                         {c.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <span className="font-medium text-white block">{c.name}</span>
+                        <span className="font-medium text-slate-800 block">{c.name}</span>
                         <span className="text-xs text-gray-400">{c.ordersCount} pedidos</span>
                       </div>
                     </div>

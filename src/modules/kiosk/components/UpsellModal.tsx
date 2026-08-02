@@ -136,7 +136,7 @@ export function UpsellModal({ products, onAdd, onSkip, isOpen, currency }: Upsel
                   className={`w-full py-4 font-bold rounded-xl transition-all active:scale-[0.98] ${
                     hasAddedAny 
                       ? 'brand-bg text-white shadow-lg shadow-orange-500/20 hover:brightness-110' 
-                      : 'bg-slate-100 text-gray-800 hover:text-white hover:bg-zinc-700'
+                      : 'bg-slate-100 text-slate-800 hover:text-slate-900 hover:bg-slate-200 border border-gray-200'
                   }`}
                 >
                   {hasAddedAny ? '✓ Confirmar y Continuar al Pago' : t('upsellSkip')}

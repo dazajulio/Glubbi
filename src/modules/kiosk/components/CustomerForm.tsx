@@ -1,39 +1,44 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { User, Mail, Phone, ChevronRight, MapPin, Compass, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { User, Mail, Phone, ChevronRight, MapPin, Clock, Loader2 } from 'lucide-react';
 import { isValidEmail } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
 
-interface CustomerData {
+export interface CustomerData {
   name: string;
   email: string;
   phone?: string;
   address?: string;
-  reference?: string;
+  pickupTime?: string;
 }
 
 interface CustomerFormProps {
   onSubmit: (data: CustomerData) => void;
   isLoading?: boolean;
   isDelivery?: boolean;
+  orderType?: 'pickup' | 'delivery';
 }
 
-export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: CustomerFormProps) {
+export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderType }: CustomerFormProps) {
+  const isPickup = orderType === 'pickup' || (!isDelivery && orderType !== 'delivery');
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [reference, setReference] = useState('');
+  const [pickupTime, setPickupTime] = useState('En 20-30 min');
   
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [knownAddresses, setKnownAddresses] = useState<any[]>([]);
 
-  const [errors, setErrors] = useState<{name?: string; email?: string; phone?: string; address?: string; reference?: string}>({});
+  const [errors, setErrors] = useState<{name?: string; email?: string; phone?: string; address?: string; pickupTime?: string}>({});
+
+  const QUICK_TIME_OPTIONS = ['En 15 min', 'En 30 min', 'En 45 min', 'En 1 hora'];
 
   const validate = () => {
-    const newErrors: {name?: string; email?: string; phone?: string; address?: string; reference?: string} = {};
+    const newErrors: {name?: string; email?: string; phone?: string; address?: string; pickupTime?: string} = {};
     if (!name.trim()) newErrors.name = 'Requerido';
     if (!email.trim()) newErrors.email = 'Requerido';
     else if (!isValidEmail(email)) newErrors.email = 'Email inválido';
@@ -41,7 +46,10 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
     if (isDelivery) {
       if (!phone.trim()) newErrors.phone = 'Teléfono requerido para delivery';
       if (!address.trim()) newErrors.address = 'Dirección exacta requerida';
-      if (!reference.trim()) newErrors.reference = 'Punto de referencia requerido';
+    }
+
+    if (isPickup && !pickupTime.trim()) {
+      newErrors.pickupTime = 'Indica a qué hora estimas buscar tu pedido';
     }
 
     setErrors(newErrors);
@@ -56,7 +64,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
       const supabase = createClient();
       
       // Check Glubbi users
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('glubbi_customers')
         .select('first_name, last_name, phone, addresses')
         .eq('email', email.trim().toLowerCase())
@@ -70,7 +78,6 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
           setKnownAddresses(data.addresses);
           const def = data.addresses.find((a: any) => a.is_default) || data.addresses[0];
           if (!address) setAddress(def.address || '');
-          if (!reference) setReference(def.reference || '');
         }
       } else {
         // Check Kiosk guests
@@ -90,7 +97,6 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
             setKnownAddresses(kData.addresses);
             const def = kData.addresses.find((a: any) => a.is_default) || kData.addresses[0];
             if (!address) setAddress(def.address || '');
-            if (!reference) setReference(def.reference || '');
           }
         }
       }
@@ -105,13 +111,11 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
     const selectedId = e.target.value;
     if (selectedId === 'new') {
       setAddress('');
-      setReference('');
       return;
     }
     const selected = knownAddresses.find(a => a.id === selectedId);
     if (selected) {
       setAddress(selected.address || '');
-      setReference(selected.reference || '');
       if (selected.phone) setPhone(selected.phone);
     }
   };
@@ -124,7 +128,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
         email, 
         phone: phone || undefined, 
         address: isDelivery ? address : undefined, 
-        reference: isDelivery ? reference : undefined 
+        pickupTime: isPickup ? pickupTime : undefined
       });
     }
   };
@@ -219,16 +223,59 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
             />
           </div>
           {errors.phone && <p className="text-xs text-red-400 mt-1 ml-1">{errors.phone}</p>}
-          {!isDelivery && (
-            <p className="text-xs text-gray-400 mt-2 ml-1">
-              ✨ {t('affiliatePrompt')}
-            </p>
-          )}
         </div>
 
-        {/* Delivery Address fields */}
+        {/* Pickup Time field for Yo busco mi pedido */}
+        {isPickup && (
+          <div className="pt-2 space-y-2">
+            <label className="block text-sm font-bold text-slate-800 mb-1 ml-1 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-orange-500" />
+              ¿A qué hora estimas buscar tu pedido? <span className="text-red-400">*</span>
+            </label>
+            
+            {/* Quick Pills */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {QUICK_TIME_OPTIONS.map(opt => (
+                <button
+                  type="button"
+                  key={opt}
+                  onClick={() => {
+                    setPickupTime(opt);
+                    if (errors.pickupTime) setErrors({...errors, pickupTime: undefined});
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                    pickupTime === opt
+                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-gray-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <input
+                type="text"
+                value={pickupTime}
+                onChange={(e) => {
+                  setPickupTime(e.target.value);
+                  if (errors.pickupTime) setErrors({...errors, pickupTime: undefined});
+                }}
+                className={`block w-full px-4 py-3.5 bg-white shadow-sm border rounded-xl text-slate-900 placeholder-zinc-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-sm font-medium ${
+                  errors.pickupTime ? 'border-red-500' : 'border-gray-200'
+                }`}
+                placeholder="Ej. En 20-30 min / 2:30 PM"
+                disabled={isLoading}
+              />
+            </div>
+            {errors.pickupTime && <p className="text-xs text-red-400 mt-1 ml-1">{errors.pickupTime}</p>}
+          </div>
+        )}
+
+        {/* Delivery Address field (Reference field removed) */}
         {isDelivery && (
-          <>
+          <div className="pt-2">
             {knownAddresses.length > 0 && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-500 mb-1.5 ml-1">
@@ -262,7 +309,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
                     setAddress(e.target.value);
                     if (errors.address) setErrors({...errors, address: undefined});
                   }}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-white shadow-sm border rounded-xl text-slate-900 placeholder-zinc-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all min-h-[80px] ${
+                  className={`block w-full pl-11 pr-4 py-3.5 bg-white shadow-sm border rounded-xl text-slate-900 placeholder-zinc-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all min-h-[90px] ${
                     errors.address ? 'border-red-500' : 'border-gray-200'
                   }`}
                   placeholder="Ej. Calle 3, Casa #15-A, Sector Las Tapias"
@@ -271,32 +318,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false }: Custom
               </div>
               {errors.address && <p className="text-xs text-red-400 mt-1 ml-1">{errors.address}</p>}
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1.5 ml-1">
-                Punto de Referencia <span className="text-red-400">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Compass className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={reference}
-                  onChange={(e) => {
-                    setReference(e.target.value);
-                    if (errors.reference) setErrors({...errors, reference: undefined});
-                  }}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-white shadow-sm border rounded-xl text-slate-900 placeholder-zinc-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all ${
-                    errors.reference ? 'border-red-500' : 'border-gray-200'
-                  }`}
-                  placeholder="Ej. A 50 metros del Centro Comercial Rodeo Plaza"
-                  disabled={isLoading}
-                />
-              </div>
-              {errors.reference && <p className="text-xs text-red-400 mt-1 ml-1">{errors.reference}</p>}
-            </div>
-          </>
+          </div>
         )}
       </div>
 

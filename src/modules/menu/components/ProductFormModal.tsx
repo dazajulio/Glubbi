@@ -119,6 +119,7 @@ export function ProductFormModal({
 
       if (productToEdit) {
         // 1A. Update Product
+        productId = productToEdit.id;
         const { data: productData, error: productError } = await supabase
           .from('products')
           .update({
@@ -129,12 +130,10 @@ export function ProductFormModal({
             discount_percentage: hasOffer ? discountPercentage : 0,
             image_url: imageUrl || null,
           } as any)
-          .eq('id', productToEdit.id)
-          .select()
-          .single() as any;
+          .eq('id', productId)
+          .select();
 
         if (productError) throw productError;
-        productId = productData.id;
 
         // Delete existing modifier groups (Cascade deletes modifiers)
         await supabase.from('modifier_groups').delete().eq('product_id', productId);
@@ -153,11 +152,28 @@ export function ProductFormModal({
             is_available: true,
             is_featured: false
           } as any)
-          .select()
-          .single() as any;
+          .select();
 
         if (productError) throw productError;
-        productId = productData.id;
+
+        if (productData && productData.length > 0) {
+          productId = productData[0].id;
+        } else {
+          // Fallback if RETURNING was filtered by RLS
+          const { data: latest } = await supabase
+            .from('products')
+            .select('id')
+            .eq('restaurant_id', restaurantId)
+            .eq('name', name)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (latest && latest.length > 0) {
+            productId = latest[0].id;
+          } else {
+            throw new Error('No se pudo confirmar el ID del producto creado.');
+          }
+        }
       }
 
       // 2. Create Modifier Groups and Modifiers
@@ -172,14 +188,27 @@ export function ProductFormModal({
             min_selections: group.min_selections,
             max_selections: group.max_selections
           } as any)
-          .select()
-          .single() as any;
+          .select();
 
         if (groupError) throw groupError;
 
-        if (group.modifiers.length > 0) {
+        let groupId = groupData?.[0]?.id;
+        if (!groupId) {
+          const { data: latestG } = await supabase
+            .from('modifier_groups')
+            .select('id')
+            .eq('product_id', productId)
+            .eq('name', group.name)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (latestG && latestG.length > 0) {
+            groupId = latestG[0].id;
+          }
+        }
+
+        if (groupId && group.modifiers.length > 0) {
           const modifiersToInsert = group.modifiers.map(m => ({
-            group_id: groupData.id,
+            group_id: groupId,
             name: m.name,
             extra_price: m.extra_price
           }));
@@ -206,7 +235,7 @@ export function ProductFormModal({
     <div className="fixed inset-0 z-[100] flex justify-center items-center bg-white/80 backdrop-blur-sm p-4">
       <div className="bg-white shadow-sm w-full max-w-2xl rounded-2xl border border-gray-200 max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-white">{productToEdit ? 'Editar Plato' : 'Añadir Nuevo Plato'}</h2>
+          <h2 className="text-xl font-bold text-slate-900">{productToEdit ? 'Editar Plato' : 'Añadir Nuevo Plato'}</h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-gray-500">
             <X className="w-5 h-5" />
           </button>
@@ -240,7 +269,7 @@ export function ProductFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-500 mb-1">Precio Base ($) *</label>
-                <input required type="number" step="0.01" min="0" value={price} onChange={e => setPrice(parseFloat(e.target.value) || 0)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-brand-primary outline-none text-slate-800" />
+                <input required type="number" step="0.01" min="0" value={price} onChange={e => setPrice(parseFloat(e.target.value) || 0)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-brand-primary outline-none" />
               </div>
               <div className="flex flex-col">
                 <label className="block text-sm text-gray-500 mb-1">Imagen del Plato (Opcional)</label>
@@ -262,7 +291,7 @@ export function ProductFormModal({
                 </div>
                 
                 {uploadMode === 'url' ? (
-                  <input type="url" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-orange-500 outline-none transition-all" />
+                  <input type="url" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 outline-none transition-all" />
                 ) : (
                   <input 
                     type="file" 
@@ -283,7 +312,7 @@ export function ProductFormModal({
                       };
                       reader.readAsDataURL(file);
                     }} 
-                    className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2 text-white focus:ring-2 focus:ring-orange-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-gray-800 hover:file:bg-zinc-700 cursor-pointer transition-all" 
+                    className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-orange-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-gray-800 hover:file:bg-slate-200 cursor-pointer transition-all" 
                   />
                 )}
 
@@ -362,7 +391,7 @@ export function ProductFormModal({
                   <div className="grid grid-cols-2 gap-3 flex-1 mr-4">
                     <input required placeholder="Nombre del grupo (Ej. Salsas)" value={group.name} onChange={e => {
                       const newGroups = [...groups]; newGroups[groupIdx].name = e.target.value; setGroups(newGroups);
-                    }} className="col-span-2 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-white" />
+                    }} className="col-span-2 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-slate-800 placeholder-gray-400" />
                     
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Min. Selecciones</label>
@@ -370,13 +399,13 @@ export function ProductFormModal({
                         const newGroups = [...groups]; newGroups[groupIdx].min_selections = parseInt(e.target.value) || 0; 
                         newGroups[groupIdx].is_required = (parseInt(e.target.value) || 0) > 0;
                         setGroups(newGroups);
-                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-white text-center" />
+                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Max. Selecciones</label>
                       <input type="number" min="1" value={group.max_selections} onChange={e => {
                         const newGroups = [...groups]; newGroups[groupIdx].max_selections = parseInt(e.target.value) || 1; setGroups(newGroups);
-                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-white text-center" />
+                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
                     </div>
                   </div>
                   <button type="button" onClick={() => removeGroup(groupIdx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg">
@@ -389,13 +418,13 @@ export function ProductFormModal({
                     <div key={modIdx} className="flex items-center space-x-2">
                       <input required placeholder="Opcion (Ej. Queso Cheddar)" value={mod.name} onChange={e => {
                         const newGroups = [...groups]; newGroups[groupIdx].modifiers[modIdx].name = e.target.value; setGroups(newGroups);
-                      }} className="flex-1 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-white text-sm" />
+                      }} className="flex-1 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-slate-800 placeholder-gray-400 text-sm" />
                       
                       <div className="flex items-center">
                         <span className="text-gray-400 mr-2 text-sm">+$</span>
                         <input type="number" step="0.01" min="0" value={mod.extra_price} onChange={e => {
                           const newGroups = [...groups]; newGroups[groupIdx].modifiers[modIdx].extra_price = parseFloat(e.target.value) || 0; setGroups(newGroups);
-                        }} className="w-20 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-2 text-white text-sm text-center" />
+                        }} className="w-20 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-2 text-slate-800 text-sm text-center" />
                       </div>
                       
                       <button type="button" onClick={() => removeModifier(groupIdx, modIdx)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md">
@@ -403,7 +432,7 @@ export function ProductFormModal({
                       </button>
                     </div>
                   ))}
-                  <button type="button" onClick={() => addModifier(groupIdx)} className="text-xs text-gray-500 hover:text-white flex items-center mt-2">
+                  <button type="button" onClick={() => addModifier(groupIdx)} className="text-xs text-gray-500 hover:text-slate-800 flex items-center mt-2">
                     <Plus className="w-3 h-3 mr-1" /> Añadir Opción
                   </button>
                 </div>

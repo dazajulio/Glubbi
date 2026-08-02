@@ -30,26 +30,30 @@ export function ProductCustomizationModal({
   // Reset state when product changes
   useEffect(() => {
     if (product) {
-      if (initialSelections && initialSelections.length > 0) {
-        const prefilled: Record<string, Modifier[]> = {};
-        
-        // Match snapshots back to actual modifiers
-        (product.modifier_groups || []).forEach(group => {
+      const prefilled: Record<string, Modifier[]> = {};
+
+      (product.modifier_groups || []).forEach(group => {
+        const availableMods = (group.modifiers || []).filter(m => m.is_available !== false);
+
+        if (initialSelections && initialSelections.length > 0) {
+          // Match snapshots back to actual modifiers
           const snapshotGroup = initialSelections.find(s => s.group === group.name);
           if (snapshotGroup) {
-            const selectedMods = group.modifiers.filter(m => 
+            const selectedMods = availableMods.filter(m => 
               snapshotGroup.items.some(item => item.name === m.name)
             );
             if (selectedMods.length > 0) {
               prefilled[group.id] = selectedMods;
             }
           }
-        });
-        
-        setSelections(prefilled);
-      } else {
-        setSelections({});
-      }
+        } else if (group.min_selections > 0 && availableMods.length > 0) {
+          // Auto-select initial defaults if required group so modal opens valid
+          const defaultCount = Math.min(group.min_selections, availableMods.length);
+          prefilled[group.id] = availableMods.slice(0, defaultCount);
+        }
+      });
+      
+      setSelections(prefilled);
     }
   }, [product, initialSelections]);
 
@@ -67,7 +71,7 @@ export function ProductCustomizationModal({
     ? product.base_price - (product.base_price * ((product as any).discount_percentage / 100))
     : product.base_price;
 
-  const extraPrice = Object.values(selections).flat().reduce((sum, mod) => sum + mod.extra_price, 0);
+  const extraPrice = Object.values(selections).flat().reduce((sum, mod) => sum + (mod?.extra_price || 0), 0);
   const totalPrice = basePrice + extraPrice;
 
   const toggleModifier = (group: ModifierGroup, modifier: Modifier) => {
@@ -104,24 +108,29 @@ export function ProductCustomizationModal({
   const handleAdd = () => {
     if (!isValid) return;
     
-    // Build modifier snapshot
-    const snapshots: ModifierSnapshot[] = [];
-    
-    (product.modifier_groups || []).forEach(group => {
-      const selected = selections[group.id];
-      if (selected && selected.length > 0) {
-        snapshots.push({
-          group: group.name,
-          items: selected.map(mod => ({
-            name: mod.name,
-            price: mod.extra_price
-          }))
-        });
-      }
-    });
-    
-    onAddToCart(product, snapshots, totalPrice);
-    onClose();
+    try {
+      // Build modifier snapshot
+      const snapshots: ModifierSnapshot[] = [];
+      
+      (product.modifier_groups || []).forEach(group => {
+        const selected = selections[group.id];
+        if (selected && selected.length > 0) {
+          snapshots.push({
+            group: group.name,
+            items: selected.map(mod => ({
+              name: mod.name,
+              price: mod.extra_price || 0
+            }))
+          });
+        }
+      });
+      
+      onAddToCart(product, snapshots, totalPrice);
+    } catch (err) {
+      console.error('Error adding product to cart:', err);
+    } finally {
+      onClose();
+    }
   };
 
   return (
@@ -184,7 +193,7 @@ export function ProductCustomizationModal({
                   </div>
                   
                   <div className="space-y-2">
-                    {group.modifiers.filter(m => m.is_available !== false).map(modifier => {
+                    {(group.modifiers || []).filter(m => m.is_available !== false).map(modifier => {
                       const isSelected = (selections[group.id] || []).some(m => m.id === modifier.id);
                       // Disable if max reached and this one is not selected
                       const isDisabled = !isSelected && selectedCount >= group.max_selections && group.max_selections > 1;

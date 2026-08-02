@@ -221,13 +221,13 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
             placeholder="Buscar producto..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white shadow-sm border border-gray-200 rounded-2xl py-4 pl-14 pr-6 text-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full bg-white shadow-sm border border-gray-200 rounded-2xl py-4 pl-14 pr-6 text-lg text-slate-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button 
             onClick={createCategory}
-            className="bg-slate-100 hover:bg-zinc-700 text-white rounded-2xl px-5 py-4 font-bold flex items-center justify-center transition-all flex-1 sm:flex-none whitespace-nowrap"
+            className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-gray-200 rounded-2xl px-5 py-4 font-bold flex items-center justify-center transition-all flex-1 sm:flex-none whitespace-nowrap"
           >
             <FolderPlus className="w-5 h-5 mr-2" />
             Categoría
@@ -272,16 +272,16 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
                         className={`bg-white shadow-sm border border-gray-200 rounded-2xl overflow-hidden shadow-xl ${catSnapshot.isDragging ? 'ring-2 ring-orange-500 shadow-2xl z-50' : ''}`}
                       >
                         <div className="bg-slate-50 px-6 py-5 flex items-center gap-3 border-b border-gray-200 group">
-                          <div {...catProvided.dragHandleProps} className="text-gray-400 hover:text-white cursor-grab active:cursor-grabbing p-1 -ml-2">
+                          <div {...catProvided.dragHandleProps} className="text-gray-400 hover:text-slate-700 cursor-grab active:cursor-grabbing p-1 -ml-2">
                             <GripVertical className="w-5 h-5" />
                           </div>
                           <UtensilsCrossed className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                          <h2 className="text-xl font-bold text-white truncate max-w-[200px] sm:max-w-none">{category.name}</h2>
+                          <h2 className="text-xl font-bold text-slate-900 truncate max-w-[200px] sm:max-w-none">{category.name}</h2>
                           
                           <div className="flex gap-1 ml-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => editCategory(category)}
-                              className="p-1.5 text-gray-500 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+                              className="p-1.5 text-gray-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
                               title="Editar nombre de categoría"
                             >
                               <Edit2 className="w-4 h-4" />

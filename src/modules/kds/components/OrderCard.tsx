@@ -17,6 +17,7 @@ import {
   Trash2,
   Compass,
   CreditCard,
+  Store,
 } from 'lucide-react';
 import { cn, formatElapsedTime } from '@/lib/utils';
 import type { OrderWithItems, OrderStatus, ModifierSnapshot } from '@/types/database';
@@ -106,11 +107,14 @@ function getTimeBadgeClass(status: OrderStatus, elapsedMinutes: number): string 
 }
 
 // ----------------------------------------------------------------------------
-// Helper: Parsing Order Origin (Mesa, Mesero, Delivery)
+// Helper: Parsing Order Origin (Mesa, Mesero, Delivery, Retiro)
 // ----------------------------------------------------------------------------
-export function getOrderOrigin(order: OrderWithItems): { type: 'Mesa' | 'Mesero' | 'Delivery'; details?: string } {
+export function getOrderOrigin(order: OrderWithItems): { type: 'Mesa' | 'Mesero' | 'Delivery' | 'Retiro'; details?: string } {
   // Check notes first
   if (order.notes) {
+    if (order.notes.includes('[Origen: Retiro en Local]')) {
+      return { type: 'Retiro', details: 'Retiro en Local' };
+    }
     if (order.notes.includes('[Origen: Delivery]')) {
       return { type: 'Delivery' };
     }
@@ -135,7 +139,21 @@ export function getOrderOrigin(order: OrderWithItems): { type: 'Mesa' | 'Mesero'
     return { type: 'Mesa', details: `Mesa ${order.table.table_number}` };
   }
 
-  return { type: 'Delivery', details: 'Web Directo' };
+  return { type: 'Retiro', details: 'Retiro en Local' };
+}
+
+export function getPickupDetails(notes: string | null): { estimatedTime?: string; phone?: string } | null {
+  if (!notes) return null;
+  const safeNotes = notes.substring(0, 1500);
+  if (!safeNotes.includes('[Origen: Retiro en Local]')) return null;
+  
+  const timeMatch = safeNotes.match(/Hora estimada:\s*([^|]{1,100})/);
+  const phoneMatch = safeNotes.match(/Teléfono:\s*([^|]{1,50})/);
+  
+  return {
+    estimatedTime: timeMatch ? timeMatch[1].trim() : undefined,
+    phone: phoneMatch ? phoneMatch[1].trim() : undefined
+  };
 }
 
 export function getDeliveryDetails(notes: string | null): { address?: string; phone?: string; reference?: string } | null {
@@ -347,6 +365,7 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
 
   const origin = getOrderOrigin(order);
   const delivery = getDeliveryDetails(order.notes);
+  const pickup = getPickupDetails(order.notes);
   const validation = getValidationDetails(order.notes);
   
   const rawNotes = order.notes || '';
@@ -356,7 +375,7 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
     .replace(/Cliente:\s*[^|]+/gi, '')
     .replace(/\|\s*Dirección:\s*[^|]+/g, '')
     .replace(/\|\s*Teléfono:\s*[^|]+/g, '')
-    .replace(/\|\s*Referencia:\s*[^|]+/g, '')
+    .replace(/\|\s*Hora estimada:\s*[^|]+/g, '')
     .replace(validation?.raw || '', '')
     .replace(/^[\s|]+|[\s|]+$/g, '')
     .trim() || null;
@@ -407,13 +426,15 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
       <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-2 text-sm">
         {/* Origin Badge */}
         <span className={cn(
-          "text-xs font-bold px-2.5 py-0.5 rounded-md uppercase shrink-0",
-          origin.type === 'Delivery' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' :
-          origin.type === 'Mesero' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20' :
-          'bg-amber-500/20 text-amber-400 border border-amber-500/20'
+          "text-xs font-bold px-2.5 py-0.5 rounded-md uppercase shrink-0 flex items-center gap-1",
+          origin.type === 'Delivery' ? 'bg-blue-500/20 text-blue-600 border border-blue-500/20' :
+          origin.type === 'Mesero' ? 'bg-indigo-500/20 text-indigo-600 border border-indigo-500/20' :
+          origin.type === 'Retiro' ? 'bg-orange-500/20 text-orange-600 border border-orange-500/20' :
+          'bg-amber-500/20 text-amber-600 border border-amber-500/20'
         )}>
           {origin.type === 'Mesero' ? `🧑‍💼 Mesero: ${origin.details || ''}` :
-           origin.type === 'Delivery' ? `🛵 Delivery: ${origin.details || ''}` :
+           origin.type === 'Delivery' ? `🛵 Delivery` :
+           origin.type === 'Retiro' ? `🛍️ Retiro en Local` :
            `🍽️ Mesa: ${origin.details || ''}`}
         </span>
 
@@ -459,10 +480,35 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
         ))}
       </div>
 
+      {/* ── Retiro en Local Details ─────────────────────────────────── */}
+      {pickup && (
+        <div className="mx-4 mb-3 border border-orange-500/20 bg-orange-500/[0.04] rounded-xl p-3 space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-orange-600 uppercase tracking-wider">
+            <Store className="h-4 w-4" /> Datos de Retiro en Local
+          </div>
+          
+          <div className="space-y-1 text-xs">
+            {pickup.estimatedTime && (
+              <div className="flex items-center gap-2 text-gray-800">
+                <Clock className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                <span className="text-gray-500 font-medium">Hora estimada:</span>
+                <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-orange-200">{pickup.estimatedTime}</span>
+              </div>
+            )}
+            {pickup.phone && (
+              <div className="flex items-center gap-2 text-gray-800 pt-0.5">
+                <span className="text-gray-500 font-medium">Teléfono:</span>
+                <span className="font-semibold text-slate-900">{pickup.phone}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Delivery Details ───────────────────────────────────────── */}
       {delivery && (
         <div className="mx-4 mb-3 border border-blue-500/20 bg-blue-500/[0.03] rounded-xl p-3.5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase tracking-wider">
             <Truck className="h-4 w-4" /> Datos de Delivery
           </div>
           
@@ -478,8 +524,8 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
               <div className="flex items-start gap-2 text-gray-800">
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400 mt-0.5" />
                 <div>
-                  <span className="text-gray-400 font-medium mr-1">Dirección:</span>
-                  <span className="text-gray-900">{delivery.address}</span>
+                  <span className="text-gray-400 font-medium mr-1.5">Dirección:</span>
+                  <span className="font-semibold text-gray-900">{delivery.address}</span>
                 </div>
               </div>
             )}

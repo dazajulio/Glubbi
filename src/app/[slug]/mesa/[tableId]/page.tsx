@@ -6,7 +6,8 @@ import type { Category, ProductWithModifiers, Product } from '@/types/database';
 import { CategoryNav } from '@/modules/kiosk/components/CategoryNav';
 import { ProductCard } from '@/modules/kiosk/components/ProductCard';
 import { CartDrawer } from '@/modules/kiosk/components/CartDrawer';
-import { CustomerForm } from '@/modules/kiosk/components/CustomerForm';
+import { CustomerForm, type CustomerData } from '@/modules/kiosk/components/CustomerForm';
+import { OrderTypeSelector } from '@/modules/kiosk/components/OrderTypeSelector';
 import { UpsellModal } from '@/modules/kiosk/components/UpsellModal';
 import { CheckoutForm } from '@/modules/kiosk/components/CheckoutForm';
 import { OrderStatus } from '@/modules/kiosk/components/OrderStatus';
@@ -18,7 +19,7 @@ import { t } from '@/lib/i18n';
 import { formatPrice, isRestaurantOpen } from '@/lib/utils';
 import Link from 'next/link';
 
-type FlowStep = 'browse' | 'customer' | 'upsell' | 'checkout' | 'success' | 'order_status';
+type FlowStep = 'browse' | 'order_type' | 'customer' | 'upsell' | 'checkout' | 'success' | 'order_status';
 
 interface KioskPageProps {
   params: Promise<{ slug: string; tableId: string }>;
@@ -39,13 +40,14 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [isWaiter, setIsWaiter] = useState(false);
   const [waiterName, setWaiterName] = useState('');
   const [isDelivery, setIsDelivery] = useState(false);
+  const [orderType, setOrderType] = useState<'pickup' | 'delivery'>('pickup');
+  const [pickupTime, setPickupTime] = useState<string>('');
   const [allTables, setAllTables] = useState<any[]>([]);
   const [selectedTableId, setSelectedTableId] = useState<string>('');
 
-  // Delivery Address Info
+  // Delivery / Pickup Info
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryPhone, setDeliveryPhone] = useState('');
-  const [deliveryReference, setDeliveryReference] = useState('');
   
   // Pricing Rules
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -376,24 +378,37 @@ export default function KioskPage({ params }: KioskPageProps) {
 
   const handleCheckoutClick = () => {
     setIsCartOpen(false);
-    if (isWaiter) {
-      changeStep('checkout');
+    // Physical table QR or Waiter bypasses the order_type selection screen
+    const isPhysicalTable = isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1');
+    if (isPhysicalTable) {
+      if (isWaiter) {
+        changeStep('checkout');
+      } else {
+        changeStep('customer');
+      }
     } else {
-      changeStep('customer');
+      changeStep('order_type');
     }
     window.scrollTo(0, 0);
   };
 
-  const handleCustomerSubmit = async (data: { name: string; email: string; phone?: string; address?: string; reference?: string }) => {
+  const handleSelectOrderType = (type: 'pickup' | 'delivery') => {
+    setOrderType(type);
+    setIsDelivery(type === 'delivery');
+    changeStep('customer');
+    window.scrollTo(0, 0);
+  };
+
+  const handleCustomerSubmit = async (data: CustomerData) => {
     setIsProcessing(true);
     const supabase = createClient();
     
     if (data.name) setCustomerName(data.name.trim());
 
-    // Save delivery details to states
+    // Save details to states
     if (data.address) setDeliveryAddress(data.address);
     if (data.phone) setDeliveryPhone(data.phone);
-    if (data.reference) setDeliveryReference(data.reference);
+    if (data.pickupTime) setPickupTime(data.pickupTime);
 
     // Check if customer exists or create new in kiosk customers (for FK)
     let newCustomerId = '';
@@ -444,7 +459,6 @@ export default function KioskPage({ params }: KioskPageProps) {
              id: Math.random().toString(36).substring(7),
              label: 'Dirección Reciente',
              address: data.address,
-             reference: data.reference,
              phone: data.phone,
              is_default: currentAddresses.length === 0
            };
@@ -466,7 +480,6 @@ export default function KioskPage({ params }: KioskPageProps) {
          id: Math.random().toString(36).substring(7),
          label: 'Dirección Reciente',
          address: data.address,
-         reference: data.reference,
          phone: data.phone,
          is_default: true
        }] : [];
@@ -536,7 +549,9 @@ export default function KioskPage({ params }: KioskPageProps) {
     let notesPrefix = '';
     const custTag = customerName ? `[Cliente: ${customerName}]` : '';
     if (isDelivery) {
-      notesPrefix = `[Origen: Delivery]${custTag ? ` | ${custTag}` : ''} | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone} | Referencia: ${deliveryReference}`;
+      notesPrefix = `[Origen: Delivery]${custTag ? ` | ${custTag}` : ''} | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone}`;
+    } else if (orderType === 'pickup' || tableId === 'takeaway') {
+      notesPrefix = `[Origen: Retiro en Local]${custTag ? ` | ${custTag}` : ''} | Hora estimada: ${pickupTime || 'En 20-30 min'}${deliveryPhone ? ` | Teléfono: ${deliveryPhone}` : ''}`;
     } else if (isWaiter) {
       notesPrefix = `[Origen: Mesero: ${waiterName}]${custTag ? ` | ${custTag}` : ''}`;
     } else if (custTag) {
@@ -681,20 +696,49 @@ export default function KioskPage({ params }: KioskPageProps) {
 
   // --- RENDERING FLOW STEPS ---
 
+  if (step === 'order_type') {
+    return (
+      <div className="p-6 pb-32 animate-fade-in">
+        <ElegantHeader />
+
+        <button onClick={() => changeStep('browse')} className="flex items-center text-gray-500 mb-6 hover:text-slate-900 transition-colors">
+          <ChevronLeft className="w-5 h-5 mr-1" />
+          Volver al menú
+        </button>
+
+        <OrderTypeSelector 
+          onSelectType={handleSelectOrderType}
+          deliveryEnabled={deliveryEnabled}
+        />
+      </div>
+    );
+  }
+
   if (step === 'customer') {
     return (
       <div className="p-6 pb-32 animate-fade-in">
         <ElegantHeader />
 
-        <button onClick={() => changeStep('browse')} className="flex items-center text-gray-500 mb-8">
+        <button onClick={() => changeStep(isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1') ? 'browse' : 'order_type')} className="flex items-center text-gray-500 mb-8 hover:text-slate-900 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
-          Volver al menú
+          {isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1') ? 'Volver al menú' : 'Cambiar opción de entrega'}
         </button>
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Tus Datos</h2>
-          <p className="text-gray-500">Ingresa tus datos para vincular el pedido a tu mesa.</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Tus Datos</h2>
+          <p className="text-gray-500">
+            {orderType === 'pickup' 
+              ? 'Ingresa tus datos y la hora estimada para retirar tu pedido.' 
+              : isDelivery 
+              ? 'Ingresa la dirección exacta donde entregaremos tu pedido.' 
+              : 'Ingresa tus datos para vincular el pedido a tu mesa.'}
+          </p>
         </div>
-        <CustomerForm onSubmit={handleCustomerSubmit} isLoading={isProcessing} isDelivery={isDelivery} />
+        <CustomerForm 
+          onSubmit={handleCustomerSubmit} 
+          isLoading={isProcessing} 
+          isDelivery={isDelivery} 
+          orderType={orderType}
+        />
       </div>
     );
   }
