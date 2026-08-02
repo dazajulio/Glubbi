@@ -68,6 +68,9 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [lastTotal, setLastTotal] = useState(0);
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [upsellProducts, setUpsellProducts] = useState<ProductWithModifiers[]>([]);
+
+  // Computed physical table flag for QR vs Takeaway/Delivery
+  const isPhysicalTable = Boolean(isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1'));
   const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isFromGlubbi, setIsFromGlubbi] = useState(false);
   const [kycStatus, setKycStatus] = useState('unverified');
@@ -379,7 +382,6 @@ export default function KioskPage({ params }: KioskPageProps) {
   const handleCheckoutClick = () => {
     setIsCartOpen(false);
     // Physical table QR or Waiter bypasses the order_type selection screen
-    const isPhysicalTable = isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1');
     if (isPhysicalTable) {
       if (isWaiter) {
         changeStep('checkout');
@@ -408,99 +410,105 @@ export default function KioskPage({ params }: KioskPageProps) {
     // Save details to states
     if (data.address) setDeliveryAddress(data.address);
     if (data.phone) setDeliveryPhone(data.phone);
-    if (data.pickupTime) setPickupTime(data.pickupTime);
-
-    // Check if customer exists or create new in kiosk customers (for FK)
+    if (data.pickupTime) setPickupTime(data.pickupTime);    // Check if customer exists or create new in kiosk customers (for FK)
     let newCustomerId = '';
-    const { data: existing } = await supabase
-      .from('customers')
-      .select('id')
-      .eq('restaurant_id', restaurantId || '')
-      .eq('email', data.email.trim().toLowerCase())
-      .maybeSingle() as any;
-      
-    if (existing) {
-      newCustomerId = existing.id;
-    } else {
-      const { data: newCust, error } = await supabase
+    try {
+      const { data: existing } = await supabase
         .from('customers')
-        .insert({
-          restaurant_id: restaurantId || GLUBBI_ID,
-          name: data.name,
-          email: data.email.trim().toLowerCase(),
-          phone: data.phone || null
-        } as any)
         .select('id')
-        .single() as any;
-      if (!error && newCust) newCustomerId = newCust.id;
+        .eq('restaurant_id', restaurantId || '')
+        .eq('email', data.email.trim().toLowerCase())
+        .maybeSingle() as any;
+        
+      if (existing) {
+        newCustomerId = existing.id;
+      } else {
+        const { data: newCust } = await supabase
+          .from('customers')
+          .insert({
+            restaurant_id: restaurantId || GLUBBI_ID,
+            name: data.name,
+            email: data.email.trim().toLowerCase(),
+            phone: data.phone || null
+          } as any)
+          .select('id')
+          .maybeSingle() as any;
+        if (newCust) newCustomerId = newCust.id;
+      }
+    } catch (e) {
+      console.warn('Customer query fallback:', e);
     }
     
     setCustomerId(newCustomerId);
 
     // Check if they exist in glubbi_customers (App)
-    const { data: glubbiExisting } = await supabase
-      .from('glubbi_customers')
-      .select('id, addresses')
-      .eq('email', data.email.trim().toLowerCase())
-      .maybeSingle();
+    try {
+      const { data: glubbiExisting } = await supabase
+        .from('glubbi_customers')
+        .select('id, addresses')
+        .eq('email', data.email.trim().toLowerCase())
+        .maybeSingle() as any;
 
-    if (glubbiExisting) {
-       setIsFromGlubbi(true); // Don't show invite
-       // Update addresses if a new address was provided
-       if (data.address) {
-         let currentAddresses = [];
-         if (Array.isArray(glubbiExisting.addresses)) {
-           currentAddresses = glubbiExisting.addresses;
-         }
-         // check if address already exists
-         const exists = currentAddresses.some((a: any) => a.address === data.address);
-         if (!exists) {
-           const newAddress = {
-             id: Math.random().toString(36).substring(7),
-             label: 'Dirección Reciente',
-             address: data.address,
-             phone: data.phone,
-             is_default: currentAddresses.length === 0
-           };
-           try {
-             const { saveCustomerAddressesAction } = await import('@/modules/glubbi/actions');
-             await saveCustomerAddressesAction(glubbiExisting.id, [...currentAddresses, newAddress]);
-           } catch (e) {
-             console.error('Failed to save address in mesa:', e);
-           }
-         }
-       }
-    } else {
-       // Create Shadow Account
-       const nameParts = data.name.trim().split(' ');
-       const firstName = nameParts[0];
-       const lastName = nameParts.slice(1).join(' ') || ' ';
-       
-       const newAddressEntry = data.address ? [{
-         id: Math.random().toString(36).substring(7),
-         label: 'Dirección Reciente',
-         address: data.address,
-         phone: data.phone,
-         is_default: true
-       }] : [];
+      if (glubbiExisting) {
+        setIsFromGlubbi(true); // Don't show invite
+        // Update addresses if a new address was provided
+        if (data.address) {
+          let currentAddresses = [];
+          if (Array.isArray(glubbiExisting.addresses)) {
+            currentAddresses = glubbiExisting.addresses;
+          }
+          // check if address already exists
+          const exists = currentAddresses.some((a: any) => a.address === data.address);
+          if (!exists) {
+            const newAddress = {
+              id: Math.random().toString(36).substring(7),
+              label: 'Dirección Reciente',
+              address: data.address,
+              phone: data.phone,
+              is_default: currentAddresses.length === 0
+            };
+            try {
+              const { saveCustomerAddressesAction } = await import('@/modules/glubbi/actions');
+              await saveCustomerAddressesAction(glubbiExisting.id, [...currentAddresses, newAddress]);
+            } catch (e) {
+              console.error('Failed to save address in mesa:', e);
+            }
+          }
+        }
+      } else {
+        // Create Shadow Account
+        const nameParts = data.name.trim().split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ') || ' ';
+        
+        const newAddressEntry = data.address ? [{
+          id: Math.random().toString(36).substring(7),
+          label: 'Dirección Reciente',
+          address: data.address,
+          phone: data.phone,
+          is_default: true
+        }] : [];
 
-       const { error: glubbiError } = await supabase
-         .from('glubbi_customers')
-         .insert({
-           first_name: firstName,
-           last_name: lastName,
-           email: data.email.trim().toLowerCase(),
-           phone: data.phone || '',
-           addresses: newAddressEntry
-         } as any);
+        const { error: glubbiError } = await supabase
+          .from('glubbi_customers')
+          .insert({
+            first_name: firstName,
+            last_name: lastName,
+            email: data.email.trim().toLowerCase(),
+            phone: data.phone || '',
+            addresses: newAddressEntry
+          } as any);
 
-       if (!glubbiError) {
-         fetch('/api/customer/invite', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ email: data.email.trim().toLowerCase(), firstName })
-         }).catch(e => console.error(e));
-       }
+        if (!glubbiError) {
+          fetch('/api/customer/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: data.email.trim().toLowerCase(), firstName })
+          }).catch(e => console.error(e));
+        }
+      }
+    } catch (e) {
+      console.warn('Glubbi customer query fallback:', e);
     }
 
     setIsProcessing(false);
