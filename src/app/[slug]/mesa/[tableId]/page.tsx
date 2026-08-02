@@ -169,7 +169,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       
       // Set defaults for delivery
       setDeliveryFee(restaurant.delivery_fee || 0);
-      setDeliveryEnabled(restaurant.delivery_enabled || false);
+      setDeliveryEnabled(restaurant.delivery_enabled !== false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
       setIsClosed(!isRestaurantOpen(restaurant.schedule, restaurant.timezone));
       

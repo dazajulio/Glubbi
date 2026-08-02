@@ -44,6 +44,7 @@ export default function SettingsAdminPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodItem[]>([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [hasFreeDelivery, setHasFreeDelivery] = useState(false);
+  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState('');
 
   // --- Admin Password State ---
@@ -97,6 +98,7 @@ export default function SettingsAdminPage() {
         }
         setDiscountPercentage(restData.discount_percentage || 0);
         setHasFreeDelivery(restData.has_free_delivery || false);
+        setDeliveryEnabled(restData.delivery_enabled !== false);
         setWhatsappNumber(restData.whatsapp_number || '');
 
         // Products for upsell selection
@@ -151,6 +153,7 @@ export default function SettingsAdminPage() {
         payment_methods: paymentMethods,
         discount_percentage: discountPercentage,
         has_free_delivery: hasFreeDelivery,
+        delivery_enabled: deliveryEnabled,
         whatsapp_number: whatsappNumber
       } as any)
       .eq('id', restaurantId);
@@ -762,6 +765,23 @@ export default function SettingsAdminPage() {
             </p>
             
             <div className="space-y-6">
+              {/* Enable / Disable Delivery Service */}
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                  <h3 className="font-bold text-slate-900">Activar Servicio de Delivery</h3>
+                  <p className="text-xs text-gray-500">Permite a los comensales seleccionar "Envío a domicilio" en el kiosco y web.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={deliveryEnabled}
+                    onChange={(e) => setDeliveryEnabled(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                </label>
+              </div>
+
               {/* Delivery Discount */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
