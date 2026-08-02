@@ -8,9 +8,10 @@ import { BarChart3, Building2, Save, Lock, TrendingUp, Users, Package, DollarSig
 import { formatPrice } from '@/lib/utils';
 import type { Product, OrderWithItems, Customer } from '@/types/database';
 
-interface PaymentMethodItem {
+export interface PaymentMethodItem {
   id: string;
   title: string;
+  currency?: 'VES' | 'USD';
   details: string;
   logoUrl: string;
 }
@@ -166,13 +167,14 @@ export default function SettingsAdminPage() {
     const newMethod: PaymentMethodItem = {
       id: crypto.randomUUID(),
       title: 'Nuevo Método',
+      currency: 'VES',
       details: '',
       logoUrl: ''
     };
     setPaymentMethods([...paymentMethods, newMethod]);
   };
 
-  const updatePaymentMethod = (id: string, field: keyof PaymentMethodItem, value: string) => {
+  const updatePaymentMethod = (id: string, field: keyof PaymentMethodItem, value: any) => {
     setPaymentMethods(paymentMethods.map(pm => pm.id === id ? { ...pm, [field]: value } : pm));
   };
 
@@ -847,22 +849,94 @@ export default function SettingsAdminPage() {
                   </button>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Título (Ej. Pago Móvil)</label>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Título del Método</label>
                       <input 
                         type="text"
                         value={pm.title}
                         onChange={(e) => updatePaymentMethod(pm.id, 'title', e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Ej. Pago Móvil Banesco / Zelle BofA"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Detalles / Instrucciones</label>
-                      <textarea 
-                        value={pm.details}
-                        onChange={(e) => updatePaymentMethod(pm.id, 'details', e.target.value)}
-                        placeholder="Ej. Banco: Banesco, CI: 1234567, Tel: 0414-1234567"
-                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 h-20"
-                      />
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Moneda de Recepción</label>
+                      <select 
+                        value={pm.currency || 'VES'}
+                        onChange={(e) => updatePaymentMethod(pm.id, 'currency', e.target.value as 'VES' | 'USD')}
+                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      >
+                        <option value="VES">🇻🇪 Bolívares (VES / Bs.) — Con tasa BCV</option>
+                        <option value="USD">🇺🇸 Dólares (USD / $) — Monto neto en USD</option>
+                      </select>
+                    </div>
+
+                    {/* 4 Line Details Input */}
+                    <div className="md:col-span-2 space-y-2 bg-white p-4 rounded-xl border border-gray-200">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                          Datos del Pago (Hasta 4 Líneas con Copiado Individual)
+                        </label>
+                        <span className="text-[10px] text-gray-400 font-mono">Cada línea tendrá su botón "Copiar" en el Kiosco</span>
+                      </div>
+
+                      {(() => {
+                        const lines = (pm.details || '').split('\n');
+                        const updateLine = (lineIdx: number, val: string) => {
+                          const newLines = [
+                            lines[0] || '',
+                            lines[1] || '',
+                            lines[2] || '',
+                            lines[3] || ''
+                          ];
+                          newLines[lineIdx] = val;
+                          updatePaymentMethod(pm.id, 'details', newLines.join('\n'));
+                        };
+
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-bold ml-1">Línea 1 (ej. Banco / Plataforma)</span>
+                              <input 
+                                type="text"
+                                value={lines[0] || ''}
+                                onChange={(e) => updateLine(0, e.target.value)}
+                                placeholder="Ej: Banco: Banesco (0102) / Zelle"
+                                className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs focus:bg-white focus:ring-2 focus:ring-orange-500"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-bold ml-1">Línea 2 (ej. Cédula / RIF / Correo)</span>
+                              <input 
+                                type="text"
+                                value={lines[1] || ''}
+                                onChange={(e) => updateLine(1, e.target.value)}
+                                placeholder="Ej: CI/RIF: J-123456789 / Correo Zelle"
+                                className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs focus:bg-white focus:ring-2 focus:ring-orange-500"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-bold ml-1">Línea 3 (ej. Teléfono / Usuario)</span>
+                              <input 
+                                type="text"
+                                value={lines[2] || ''}
+                                onChange={(e) => updateLine(2, e.target.value)}
+                                placeholder="Ej: Teléfono: 0412-1234567"
+                                className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs focus:bg-white focus:ring-2 focus:ring-orange-500"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-bold ml-1">Línea 4 (ej. Titular / Cuenta / Nota)</span>
+                              <input 
+                                type="text"
+                                value={lines[3] || ''}
+                                onChange={(e) => updateLine(3, e.target.value)}
+                                placeholder="Ej: Titular: Mi Negocio C.A."
+                                className="w-full bg-slate-50 border border-gray-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs focus:bg-white focus:ring-2 focus:ring-orange-500"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Logo del Método (URL o Subir)</label>
