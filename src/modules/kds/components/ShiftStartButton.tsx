@@ -219,9 +219,9 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
             <option value="new-order">Tono Predeterminado</option>
             <option value="digital-chime">Timbre Digital</option>
             <option value="soft-alert">Alerta Suave</option>
-            <option value="siren-alert">Sirena (Invasivo)</option>
-            <option value="urgent-buzz">Chicharra (Invasivo)</option>
-            <option value="rapid-beep">Pitido Rápido (Invasivo)</option>
+            <option value="siren-alert">Sirena</option>
+            <option value="urgent-buzz">Chicharra</option>
+            <option value="rapid-beep">Pitido Rápido</option>
           </select>
         </div>
 

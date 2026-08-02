@@ -24,6 +24,7 @@ interface CheckoutFormProps {
   tables?: any[];
   selectedTableId?: string;
   onTableChange?: (tableId: string) => void;
+  isPhysicalTable?: boolean;
 }
 
 export function CheckoutForm({
@@ -36,7 +37,8 @@ export function CheckoutForm({
   isWaiter = false,
   tables = [],
   selectedTableId = '',
-  onTableChange
+  onTableChange,
+  isPhysicalTable = false
 }: CheckoutFormProps) {
   const [verificationMethod, setVerificationMethod] = useState<any | null>(null);
   const [bcvRate, setBcvRate] = useState<number>(0);
@@ -142,9 +144,9 @@ export function CheckoutForm({
           <p className="text-slate-500 text-sm">Realiza tu pago en <strong>{verificationMethod.title}</strong> y registra los datos abajo para procesar tu orden.</p>
         </div>
 
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 space-y-4 shadow-sm">
+        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-5 space-y-4 shadow-sm">
           {/* Amount Box */}
-          <div className="flex justify-between items-center border-b border-orange-200/60 pb-3">
+          <div className="flex justify-between items-center border-b border-emerald-200/60 pb-3">
             <div>
               <span className="text-slate-600 text-xs font-bold block">Monto Total a Pagar:</span>
               <span className="text-xs text-slate-400">Orden ({formatPrice(total, currency)})</span>
@@ -153,12 +155,12 @@ export function CheckoutForm({
             <div className="flex items-center gap-2">
               {isUSD ? (
                 <>
-                  <span className="text-2xl font-black text-orange-600">${total.toFixed(2)} USD</span>
+                  <span className="text-base sm:text-lg font-extrabold text-emerald-600 font-mono">${total.toFixed(2)} USD</span>
                   <button
                     type="button"
                     onClick={() => handleCopyText('amount', total.toFixed(2))}
                     title="Copiar monto en USD"
-                    className="flex items-center gap-1 bg-white hover:bg-orange-100 text-orange-600 border border-orange-300 font-bold px-2.5 py-1 rounded-lg text-xs transition-all active:scale-95 shadow-sm"
+                    className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs transition-all active:scale-95 shadow-xs"
                   >
                     {copiedKey === 'amount' ? (
                       <span className="flex items-center gap-1 text-emerald-600 font-bold"><Check className="w-3.5 h-3.5" /> Copiado</span>
@@ -170,8 +172,8 @@ export function CheckoutForm({
               ) : (
                 <>
                   <div className="text-right">
-                    <span className="text-xl font-black text-orange-600 block">
-                      {isFetchingRate ? <Loader2 className="w-4 h-4 animate-spin inline" /> : `Bs. ${formattedBs}`}
+                    <span className="text-base sm:text-lg font-extrabold text-emerald-600 font-mono block">
+                      {isFetchingRate ? <Loader2 className="w-4 h-4 animate-spin inline text-emerald-600" /> : `Bs. ${formattedBs}`}
                     </span>
                   </div>
                   {bsCalculated && (
@@ -179,7 +181,7 @@ export function CheckoutForm({
                       type="button"
                       onClick={() => handleCopyText('amount', bsCalculated)}
                       title="Copiar monto en Bolívares"
-                      className="flex items-center gap-1 bg-white hover:bg-orange-100 text-orange-600 border border-orange-300 font-bold px-2.5 py-1 rounded-lg text-xs transition-all active:scale-95 shadow-sm"
+                      className="flex items-center gap-1 bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs transition-all active:scale-95 shadow-xs"
                     >
                       {copiedKey === 'amount' ? (
                         <span className="flex items-center gap-1 text-emerald-600 font-bold"><Check className="w-3.5 h-3.5" /> Copiado</span>
@@ -197,7 +199,7 @@ export function CheckoutForm({
           <div className="space-y-2 pt-1">
             <p className="font-bold text-xs text-slate-700 uppercase tracking-wider">Datos para realizar el pago:</p>
             {detailLines.length === 0 ? (
-              <div className="bg-white/70 p-3 rounded-xl border border-orange-200/50 text-xs text-slate-500">
+              <div className="bg-white/70 p-3 rounded-xl border border-emerald-200/50 text-xs text-slate-500">
                 No hay detalles específicos registrados.
               </div>
             ) : (
@@ -208,13 +210,13 @@ export function CheckoutForm({
                 const key = `line-${idx}`;
 
                 return (
-                  <div key={key} className="bg-white p-3 rounded-xl border border-orange-200/60 flex items-center justify-between gap-3 shadow-xs">
+                  <div key={key} className="bg-white p-3 rounded-xl border border-emerald-200/60 flex items-center justify-between gap-3 shadow-xs">
                     <span className="text-xs font-semibold text-slate-800 break-all">{line}</span>
                     <button
                       type="button"
                       onClick={() => handleCopyText(key, copyableValue)}
                       title={`Copiar ${copyableValue}`}
-                      className="shrink-0 flex items-center gap-1 bg-slate-50 hover:bg-orange-100 text-slate-700 hover:text-orange-700 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
+                      className="shrink-0 flex items-center gap-1 bg-slate-50 hover:bg-emerald-100 text-slate-700 hover:text-emerald-700 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
                     >
                       {copiedKey === key ? (
                         <span className="text-emerald-600 font-bold flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Copiado</span>
@@ -229,7 +231,7 @@ export function CheckoutForm({
           </div>
           
           {!isUSD && (
-            <div className="text-[11px] text-orange-600/80 font-semibold pt-1 text-center border-t border-orange-200/40">
+            <div className="text-[11px] text-emerald-700 font-semibold pt-1 text-center border-t border-emerald-200/40">
               Tasa oficial BCV referencial: Bs. {bcvRate ? bcvRate.toLocaleString('es-VE', { minimumFractionDigits: 4 }) : '...'} / USD
             </div>
           )}
@@ -243,7 +245,7 @@ export function CheckoutForm({
               onChange={e => setPmReference(e.target.value)}
               required 
               placeholder="Ej: 849201" 
-              className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 transition-colors text-sm"
+              className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -256,7 +258,7 @@ export function CheckoutForm({
                 onChange={e => setPmAmount(e.target.value)}
                 required 
                 placeholder={isUSD ? `Ej: ${total.toFixed(2)}` : `Ej: ${bsCalculated || '1058.50'}`}
-                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
             <div className="space-y-1.5">
@@ -266,7 +268,7 @@ export function CheckoutForm({
                 value={pmDate}
                 onChange={e => setPmDate(e.target.value)}
                 required 
-                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
           </div>
@@ -278,7 +280,7 @@ export function CheckoutForm({
                 onChange={e => setPmBank(e.target.value)}
                 required 
                 placeholder={isUSD ? 'Ej: Zelle / BofA' : 'Ej: Banesco'} 
-                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
             <div className="space-y-1.5">
@@ -288,7 +290,7 @@ export function CheckoutForm({
                 onChange={e => setPmCedula(e.target.value)}
                 required 
                 placeholder="Ej: V-12345678" 
-                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
           </div>
@@ -298,7 +300,7 @@ export function CheckoutForm({
           <button 
             type="submit"
             disabled={isProcessing || !pmReference || !pmAmount || !pmDate || !pmBank || !pmCedula}
-            className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl h-14 text-base transition-all shadow-[0_4px_20px_rgba(249,115,22,0.2)] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-14 text-base transition-all shadow-[0_4px_20px_rgba(16,185,129,0.25)] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
           >
             {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</> : 'YA REALICÉ EL PAGO'}
           </button>
@@ -348,42 +350,65 @@ export function CheckoutForm({
 
       <div className="space-y-4 pt-4">
         {paymentMethods.length === 0 ? (
-          <button
-            onClick={() => onSelectPayment({ id: 'default', title: 'Efectivo / Caja', details: 'Pagar directamente en la caja.', logoUrl: '' })}
-            disabled={isProcessing}
-            className="w-full bg-white shadow-sm hover:bg-slate-100 text-gray-900 font-bold text-lg py-5 px-6 rounded-2xl border border-gray-200 active:scale-[0.98] transition-all flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Banknote className="w-6 h-6 text-gray-500" />
-              <span>Pago en Caja (Efectivo/Tarjeta)</span>
-            </div>
-            {isProcessing && <Loader2 className="w-5 h-5 animate-spin text-gray-400" />}
-          </button>
-        ) : (
-          paymentMethods.map(pm => (
+          isPhysicalTable ? (
             <button
-              key={pm.id}
-              onClick={() => handleMethodClick(pm)}
+              onClick={() => onSelectPayment({ id: 'default', title: 'Efectivo / Caja', details: 'Pagar directamente en la caja.', logoUrl: '' })}
               disabled={isProcessing}
-              className="w-full bg-white shadow-sm hover:bg-slate-100 text-gray-900 font-bold text-lg py-5 px-6 rounded-2xl border border-gray-200 active:scale-[0.98] transition-all flex items-center justify-between group text-left"
+              className="w-full bg-white shadow-sm hover:bg-slate-100 text-gray-900 font-bold text-lg py-5 px-6 rounded-2xl border border-gray-200 active:scale-[0.98] transition-all flex items-center justify-between"
             >
-              <div className="flex items-center gap-4 flex-1">
-                <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                  {pm.logoUrl ? (
-                    <img src={pm.logoUrl} alt={pm.title} className="w-full h-full object-contain" />
-                  ) : (
-                    <CreditCard className="w-6 h-6 text-orange-400" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <span className="block">{pm.title}</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <Banknote className="w-6 h-6 text-gray-500" />
+                <span>Pago en Caja (Efectivo/Tarjeta)</span>
               </div>
-              <div className="shrink-0">
-                {isProcessing ? <Loader2 className="w-5 h-5 animate-spin text-gray-400" /> : <span className="text-gray-300 group-hover:text-orange-500">&rarr;</span>}
-              </div>
+              {isProcessing && <Loader2 className="w-5 h-5 animate-spin text-gray-400" />}
             </button>
-          ))
+          ) : (
+            <div className="p-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold rounded-2xl text-center">
+              No hay métodos de pago digital activos configurados. Por favor contacta al restaurante para coordinar tu pago.
+            </div>
+          )
+        ) : (
+          <>
+            {paymentMethods.map(pm => (
+              <button
+                key={pm.id}
+                onClick={() => handleMethodClick(pm)}
+                disabled={isProcessing}
+                className="w-full bg-white shadow-sm hover:bg-slate-100 text-gray-900 font-bold text-lg py-5 px-6 rounded-2xl border border-gray-200 active:scale-[0.98] transition-all flex items-center justify-between group text-left"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                    {pm.logoUrl ? (
+                      <img src={pm.logoUrl} alt={pm.title} className="w-full h-full object-contain" />
+                    ) : (
+                      <CreditCard className="w-6 h-6 text-orange-400" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <span className="block font-bold text-slate-900">{pm.title}</span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {isProcessing ? <Loader2 className="w-5 h-5 animate-spin text-gray-400" /> : <span className="text-gray-300 group-hover:text-orange-500">&rarr;</span>}
+                </div>
+              </button>
+            ))}
+
+            {/* ONLY Allow "Pagar al Final en Mesa" for Physical Tables (QR Mesa) */}
+            {isPhysicalTable && (
+              <div className="pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => onSelectPayment({ id: 'default', title: 'Pagar al Final en Mesa / Caja', details: 'Pagar al finalizar la estadía en la mesa.', logoUrl: '' })}
+                  disabled={isProcessing}
+                  className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-sm py-3.5 px-4 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2"
+                >
+                  <Banknote className="w-4 h-4 text-slate-500" />
+                  <span>📌 Pagar al finalizar en Mesa (Caja / Mesero)</span>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
