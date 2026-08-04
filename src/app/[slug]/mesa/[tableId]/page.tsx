@@ -76,8 +76,6 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [kycStatus, setKycStatus] = useState('unverified');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [restaurantId, setRestaurantId] = useState('');
-  const { favoriteRestaurants, toggleFavorite } = useGlubbiStore();
-  const [isClosed, setIsClosed] = useState(false);
   
   const { addItem, getItemCount, getTotal, setContext, items, clearCart, restaurantId: cartStoreRestaurantId, updateItemModifiers } = useCartStore();
   
@@ -379,8 +377,19 @@ export default function KioskPage({ params }: KioskPageProps) {
     </div>
   );
 
+  const { customer, favoriteRestaurants, toggleFavorite } = useGlubbiStore();
+  const [isClosed, setIsClosed] = useState(false);
+
   const handleCheckoutClick = () => {
     setIsCartOpen(false);
+    
+    // Si el usuario viene desde la experiencia Glubbi/delivery y NO ha iniciado sesión, pedirle login
+    if (!isPhysicalTable && !isWaiter && !customer) {
+      const currentPath = window.location.pathname + window.location.search;
+      router.push(`/glubbi/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
     // Physical table QR or Waiter bypasses the order_type selection screen
     if (isPhysicalTable) {
       if (isWaiter) {

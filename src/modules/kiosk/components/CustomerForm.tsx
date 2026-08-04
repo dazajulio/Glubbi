@@ -5,6 +5,7 @@ import { User, Mail, Phone, ChevronRight, MapPin, Clock, Loader2 } from 'lucide-
 import { isValidEmail } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
+import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 
 export interface CustomerData {
   name: string;
@@ -24,9 +25,11 @@ interface CustomerFormProps {
 export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderType }: CustomerFormProps) {
   const isPickup = orderType === 'pickup' || (!isDelivery && orderType !== 'delivery');
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const { customer } = useGlubbiStore();
+
+  const [name, setName] = useState(customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() : '');
+  const [email, setEmail] = useState(customer?.email || '');
+  const [phone, setPhone] = useState(customer?.phone || '');
   const [address, setAddress] = useState('');
   const [pickupTime, setPickupTime] = useState('En 20-30 min');
   

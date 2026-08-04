@@ -88,10 +88,6 @@ export default function GlubbiMarketplace() {
   ];
 
   useEffect(() => {
-    if (!customer) {
-      router.replace('/glubbi/login');
-      return;
-    }
     async function loadRestaurants() {
       const supabase = createClient();
       const { data } = await supabase
@@ -112,7 +108,7 @@ export default function GlubbiMarketplace() {
       setIsLoading(false);
     }
     loadRestaurants();
-  }, [customer, router]);
+  }, []);
 
   const filteredRestaurants = restaurants
     .filter(r => {

@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 
 type AuthMode = 'login' | 'register';
 
-export default function GlubbiLogin() {
+function GlubbiLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get('redirect') || '/glubbi';
+
   const { customer, setCustomer } = useGlubbiStore();
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +26,11 @@ export default function GlubbiLogin() {
   });
 
   useEffect(() => {
-    // Si ya tiene sesión, redirigir al home
+    // Si ya tiene sesión, redirigir al destino o home
     if (customer) {
-      router.replace('/glubbi');
+      router.replace(redirectTarget);
     }
-  }, [customer, router]);
+  }, [customer, router, redirectTarget]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +54,7 @@ export default function GlubbiLogin() {
     }
 
     setCustomer(user as any);
-    router.replace('/glubbi');
+    router.replace(redirectTarget);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -100,7 +103,7 @@ export default function GlubbiLogin() {
     }
 
     setCustomer(newUser as any);
-    router.replace('/glubbi');
+    router.replace(redirectTarget);
   };
 
   if (customer) return null;
@@ -230,5 +233,17 @@ export default function GlubbiLogin() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function GlubbiLogin() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <GlubbiLoginForm />
+    </Suspense>
   );
 }
