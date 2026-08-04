@@ -18,6 +18,7 @@ import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck, Heart } fro
 import { t } from '@/lib/i18n';
 import { formatPrice, isRestaurantOpen } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type FlowStep = 'browse' | 'order_type' | 'customer' | 'upsell' | 'checkout' | 'success' | 'order_status';
 
@@ -26,6 +27,7 @@ interface KioskPageProps {
 }
 
 export default function KioskPage({ params }: KioskPageProps) {
+  const router = useRouter();
   const { slug, tableId } = use(params);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<ProductWithModifiers[]>([]);
