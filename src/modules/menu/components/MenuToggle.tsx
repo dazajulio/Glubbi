@@ -55,13 +55,16 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
     // Optimistic update
     setProducts(products.filter(p => p.id !== productId));
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', productId);
-
-    if (error) {
-      console.error('Error deleting:', error);
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_product', payload: { id: productId } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+    } catch (error) {
+      console.error('Error deleting product:', error);
       alert('No se pudo eliminar el producto');
       loadMenu(); // reload to revert
     }
@@ -72,15 +75,18 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
     const newValue = !product.is_available;
     setProducts(products.map(p => p.id === product.id ? { ...p, is_available: newValue } : p));
 
-    const { error } = await supabase
-      .from('products')
-      .update({ is_available: newValue } as any)
-      .eq('id', product.id);
-
-    if (error) {
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_product', payload: { id: product.id, is_available: newValue } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+    } catch (error) {
       // Revert on error
       setProducts(products.map(p => p.id === product.id ? { ...p, is_available: !newValue } : p));
-      console.error(error);
+      console.error('Error toggling product:', error);
     }
   };
 
@@ -99,13 +105,14 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
       };
     }));
 
-    const { error } = await supabase
-      .from('modifiers')
-      .update({ is_available: newValue } as any)
-      .eq('id', modifierId);
-
-    if (error) {
-      console.error(error);
+    try {
+      await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_modifier', payload: { id: modifierId, is_available: newValue } })
+      });
+    } catch (error) {
+      console.error('Error toggling modifier:', error);
     }
   };
 
@@ -113,25 +120,36 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
     const name = window.prompt('Nombre de la nueva categoría:');
     if (!name?.trim()) return;
 
-    const { error } = await supabase
-      .from('categories')
-      .insert({ restaurant_id: restaurantId, name: name.trim() });
-    
-    if (error) alert('Error al crear la categoría');
-    else loadMenu();
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_category', payload: { restaurantId, name: name.trim() } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      loadMenu();
+    } catch (error: any) {
+      alert('Error al crear la categoría: ' + (error.message || ''));
+    }
   };
 
   const editCategory = async (category: Category) => {
     const newName = window.prompt('Nuevo nombre para la categoría:', category.name);
     if (!newName?.trim() || newName === category.name) return;
 
-    const { error } = await supabase
-      .from('categories')
-      .update({ name: newName.trim() } as any)
-      .eq('id', category.id);
-
-    if (error) alert('Error al actualizar la categoría');
-    else loadMenu();
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'edit_category', payload: { id: category.id, name: newName.trim() } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      loadMenu();
+    } catch (error: any) {
+      alert('Error al actualizar la categoría: ' + (error.message || ''));
+    }
   };
 
   const deleteCategory = async (category: Category, productCount: number) => {
@@ -141,13 +159,18 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
     }
     if (!window.confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`)) return;
 
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', category.id);
-
-    if (error) alert('Error al eliminar la categoría');
-    else loadMenu();
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_category', payload: { id: category.id } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      loadMenu();
+    } catch (error: any) {
+      alert('Error al eliminar la categoría: ' + (error.message || ''));
+    }
   };
 
   const onDragEnd = async (result: DropResult) => {

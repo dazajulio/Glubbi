@@ -269,16 +269,41 @@ export default function SettingsAdminPage() {
   });
   const topProducts = Object.values(productSales).sort((a, b) => b.qty - a.qty).slice(0, 5);
 
-  // Best customers
+  // Best customers (extracted from customer_id or order notes fallback)
   const customerSales: Record<string, { name: string, totalSpent: number, ordersCount: number }> = {};
   orders.forEach(order => {
-    if (order.payment_status !== 'paid' || !order.customer_id) return;
-    const cid = order.customer_id;
-    if (!customerSales[cid]) {
-      const c = customers.find(x => x.id === cid);
-      customerSales[cid] = { name: c ? c.name : 'Desconocido', totalSpent: 0, ordersCount: 0 };
+    if (order.payment_status !== 'paid') return;
+    
+    let cid = order.customer_id || '';
+    let cName = '';
+
+    if (order.customer_id) {
+      const c = customers.find(x => x.id === order.customer_id);
+      if (c && c.name) cName = c.name;
     }
-    customerSales[cid].totalSpent += Number(order.total_amount);
+
+    if (!cName && order.notes) {
+      const match = order.notes.match(/\[Cliente:\s*([^\]]+)\]/i) || order.notes.match(/Cliente:\s*([^|\n]+)/i);
+      if (match && match[1]) {
+        cName = match[1].trim();
+        cid = `name:${cName.toLowerCase().replace(/\s+/g, '')}`;
+      }
+    }
+
+    if (!cName && order.table_id) {
+      cName = `Mesa (ID: ${order.table_id.substring(0, 4)})`;
+      cid = `table:${order.table_id}`;
+    }
+
+    if (!cName) {
+      cName = 'Cliente General / Presencial';
+      cid = 'general';
+    }
+
+    if (!customerSales[cid]) {
+      customerSales[cid] = { name: cName, totalSpent: 0, ordersCount: 0 };
+    }
+    customerSales[cid].totalSpent += Number(order.total_amount) || 0;
     customerSales[cid].ordersCount += 1;
   });
   const topCustomers = Object.values(customerSales).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);

@@ -123,13 +123,33 @@ export default function ReportesPage() {
     .slice(0, 10);
 
   const customerStats = orders.reduce((acc, order) => {
-    if (order.customer) {
-      if (!acc[order.customer.id]) {
-        acc[order.customer.id] = { name: order.customer.name, amount: 0, count: 0 };
+    let cid = order.customer?.id || order.customer_id || '';
+    let cName = order.customer?.name || '';
+
+    if (!cName && order.notes) {
+      const match = order.notes.match(/\[Cliente:\s*([^\]]+)\]/i) || order.notes.match(/Cliente:\s*([^|\n]+)/i);
+      if (match && match[1]) {
+        cName = match[1].trim();
+        cid = `name:${cName.toLowerCase().replace(/\s+/g, '')}`;
       }
-      acc[order.customer.id].amount += order.total_amount;
-      acc[order.customer.id].count += 1;
     }
+
+    if (!cName && order.table_id) {
+      cName = `Mesa (ID: ${order.table_id.substring(0, 4)})`;
+      cid = `table:${order.table_id}`;
+    }
+
+    if (!cName) {
+      cName = 'Cliente General / Presencial';
+      cid = 'general';
+    }
+
+    if (!acc[cid]) {
+      acc[cid] = { name: cName, amount: 0, count: 0 };
+    }
+    acc[cid].amount += Number(order.total_amount) || 0;
+    acc[cid].count += 1;
+
     return acc;
   }, {} as Record<string, { name: string; amount: number; count: number }>);
 
