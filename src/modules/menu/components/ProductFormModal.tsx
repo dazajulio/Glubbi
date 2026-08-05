@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Category } from '@/types/database';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { createClient, GLUBBI_ID } from '@/lib/supabase/client';
+import { compressImage } from '@/lib/image-compression';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -296,21 +297,18 @@ export function ProductFormModal({
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/webp" 
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       
-                      // Limit size to 2MB to keep DB small
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("La imagen es demasiado grande. El límite es 2MB.");
-                        return;
+                      try {
+                        // Compress image automatically before saving
+                        const compressedDataUrl = await compressImage(file, 800, 800, 0.75);
+                        setImageUrl(compressedDataUrl);
+                      } catch (err) {
+                        console.error('Error al comprimir la imagen:', err);
+                        alert('Error al procesar la imagen. Intenta con otra.');
                       }
-
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setImageUrl(reader.result as string);
-                      };
-                      reader.readAsDataURL(file);
                     }} 
                     className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-orange-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-gray-800 hover:file:bg-slate-200 cursor-pointer transition-all" 
                   />

@@ -7,6 +7,7 @@ import { PinAuthModal } from '@/components/shared/PinAuthModal';
 import { BarChart3, Building2, Save, Lock, TrendingUp, Users, Package, DollarSign, Calendar, Truck, Percent } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import type { Product, OrderWithItems, Customer } from '@/types/database';
+import { compressImage } from '@/lib/image-compression';
 
 export interface PaymentMethodItem {
   id: string;
@@ -519,16 +520,16 @@ export default function SettingsAdminPage() {
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/webp" 
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (file.size > 5 * 1024 * 1024) {
-                        alert("La imagen es demasiado grande. El límite es 5MB.");
-                        return;
+                      try {
+                        const compressed = await compressImage(file, 1200, 1200, 0.75);
+                        setCoverImageUrl(compressed);
+                      } catch (err) {
+                        console.error('Error comprimiendo portada:', err);
+                        alert('Error al procesar la portada.');
                       }
-                      const reader = new FileReader();
-                      reader.onloadend = () => setCoverImageUrl(reader.result as string);
-                      reader.readAsDataURL(file);
                     }} 
                     className="w-full bg-slate-100 border border-gray-200 rounded-xl py-2 px-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 cursor-pointer" 
                   />
@@ -670,16 +671,16 @@ export default function SettingsAdminPage() {
                     <input 
                       type="file" 
                       accept="image/png, image/jpeg, image/webp, image/svg+xml" 
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        if (file.size > 2 * 1024 * 1024) {
-                          alert("La imagen es demasiado grande. El límite es 2MB.");
-                          return;
+                        try {
+                          const compressed = await compressImage(file, 400, 400, 0.8);
+                          setLogoUrl(compressed);
+                        } catch (err) {
+                          console.error('Error comprimiendo logo:', err);
+                          alert('Error al procesar el logo.');
                         }
-                        const reader = new FileReader();
-                        reader.onloadend = () => setLogoUrl(reader.result as string);
-                        reader.readAsDataURL(file);
                       }} 
                       className="w-full bg-slate-50 border border-gray-200 rounded-lg py-1.5 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-gray-700 hover:file:bg-slate-300 cursor-pointer" 
                     />
@@ -960,16 +961,16 @@ export default function SettingsAdminPage() {
                           <input 
                             type="file" 
                             accept="image/png, image/jpeg, image/webp, image/svg+xml" 
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
-                              if (file.size > 2 * 1024 * 1024) {
-                                alert("La imagen es demasiado grande. El límite es 2MB.");
-                                return;
+                              try {
+                                const compressed = await compressImage(file, 400, 400, 0.8);
+                                updatePaymentMethod(pm.id, 'logoUrl', compressed);
+                              } catch (err) {
+                                console.error('Error comprimiendo logo de pago:', err);
+                                alert('Error al procesar la imagen.');
                               }
-                              const reader = new FileReader();
-                              reader.onloadend = () => updatePaymentMethod(pm.id, 'logoUrl', reader.result as string);
-                              reader.readAsDataURL(file);
                             }} 
                             className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 cursor-pointer" 
                           />
