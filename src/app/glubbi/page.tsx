@@ -294,9 +294,9 @@ export default function GlubbiMarketplace() {
       />
       </div>
 
-      {/* Los más amados */}
+      {/* Los más pedidos */}
       <HorizontalRestaurantScroll 
-        title="Los más amados" 
+        title="Los más pedidos" 
         subtitle="Favoritos de la comunidad"
         icon={<Heart className="w-5 h-5 text-rose-500 fill-rose-500" />}
         restaurants={filteredRestaurants.filter(r => (r.rating || 0) >= 4.8).slice(0, 4)}
