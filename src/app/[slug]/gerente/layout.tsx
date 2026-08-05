@@ -78,10 +78,14 @@ export default function GerenteLayout({
   }, [slug]);
 
   const handleInstallPWA = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setDeferredPrompt(null);
+    } else {
+      // Fallback: Si ya está instalada o el navegador no soporta el prompt nativo, abre KDS directamente en nueva pestaña
+      window.open(`/${slug}/cocina`, '_blank');
+    }
   };
 
   const links = [
@@ -140,16 +144,15 @@ export default function GerenteLayout({
         </nav>
 
         <div className="mt-auto pt-4 space-y-2 border-t border-slate-800">
-          {/* PWA Install Button — bottom of sidebar */}
-          {deferredPrompt && (
-            <button
-              onClick={handleInstallPWA}
-              className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all text-xs font-bold shadow-sm"
-            >
-              <Download className="w-4 h-4 shrink-0" />
-              <span>Descargar KDS</span>
-            </button>
-          )}
+          {/* PWA Install / KDS Open Button — bottom of sidebar */}
+          <button
+            onClick={handleInstallPWA}
+            title={deferredPrompt ? "Instalar App de Cocina (KDS)" : "Abrir Pantalla de Cocina (KDS)"}
+            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all text-xs font-bold shadow-sm"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            <span>{deferredPrompt ? 'Descargar KDS' : 'Abrir KDS (Cocina)'}</span>
+          </button>
 
           {/* Logout Button */}
           <button
