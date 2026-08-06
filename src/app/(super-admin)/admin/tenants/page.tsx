@@ -84,66 +84,87 @@ export default function TenantsPage() {
     setIsUpdating(true);
     setActionMessage('Actualizando estatus...');
     
-    const { error } = await supabase
-      .from('restaurants')
-      .update({ is_active: !tenant.is_active } as any)
-      .eq('id', tenant.id);
-
-    if (error) {
-      console.error(error);
-      alert('Error al cambiar el estatus del restaurante.');
-    } else {
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: tenant.id,
+          is_active: !tenant.is_active,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al cambiar el estatus del restaurante.');
+      }
       await loadData();
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error al cambiar el estatus del restaurante.');
+    } finally {
+      setIsUpdating(false);
+      setActionMessage('');
     }
-    setIsUpdating(false);
-    setActionMessage('');
   };
 
   const updateKycStatus = async (tenant: any, newStatus: string) => {
     setIsUpdating(true);
     setActionMessage('Actualizando estado KYC...');
     
-    const { error } = await supabase
-      .from('restaurants')
-      .update({ kyc_status: newStatus } as any)
-      .eq('id', tenant.id);
-
-    if (error) {
-      console.error(error);
-      alert('Error al actualizar el estado KYC.');
-    } else {
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: tenant.id,
+          kyc_status: newStatus,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al actualizar el estado KYC.');
+      }
       await loadData();
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error al actualizar el estado KYC.');
+    } finally {
+      setIsUpdating(false);
+      setActionMessage('');
     }
-    setIsUpdating(false);
-    setActionMessage('');
   };
 
   const generateLicense = async (tenantId: string) => {
     setIsUpdating(true);
     setActionMessage('Generando licencia...');
 
-    // Generate random 6 characters
     const randomChars = Math.random().toString(36).substring(2, 8).toUpperCase();
     const licenseCode = `GLB-${randomChars}`;
     const validityDate = new Date();
     validityDate.setFullYear(validityDate.getFullYear() + 1); // 1 year validity
 
-    const { error } = await supabase
-      .from('restaurants')
-      .update({ 
-        license_code: licenseCode,
-        license_valid_until: validityDate.toISOString()
-      } as any)
-      .eq('id', tenantId);
-
-    if (error) {
-      console.error(error);
-      alert('Error al generar la licencia.');
-    } else {
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId,
+          license_code: licenseCode,
+          license_valid_until: validityDate.toISOString(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al generar la licencia.');
+      }
       await loadData();
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error al generar la licencia.');
+    } finally {
+      setIsUpdating(false);
+      setActionMessage('');
     }
-    setIsUpdating(false);
-    setActionMessage('');
   };
 
   // --- Filtered Tenants ---

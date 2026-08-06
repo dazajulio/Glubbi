@@ -28,18 +28,37 @@ export default function ApprovalsPage() {
   };
 
   const handleApprove = async (id: string) => {
-    await supabase.from('restaurants').update({ kyc_status: 'verified' }).eq('id', id);
-    alert('Restaurante Aprobado. Ya es público.');
-    setSelectedKyc(null);
-    fetchPendingKyc();
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: id, kyc_status: 'verified' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al aprobar.');
+      alert('Restaurante Aprobado. Ya es público.');
+      setSelectedKyc(null);
+      fetchPendingKyc();
+    } catch (err: any) {
+      alert(err.message || 'Error al aprobar restaurante.');
+    }
   };
 
   const handleReject = async (id: string) => {
-    // Para simplificar, lo pasamos a unverified (needs_info) para que vuelva a subir los documentos.
-    await supabase.from('restaurants').update({ kyc_status: 'unverified' }).eq('id', id);
-    alert('Solicitud rechazada. Se le pedirá que suba los documentos de nuevo.');
-    setSelectedKyc(null);
-    fetchPendingKyc();
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: id, kyc_status: 'unverified' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al rechazar.');
+      alert('Solicitud rechazada. Se le pedirá que suba los documentos de nuevo.');
+      setSelectedKyc(null);
+      fetchPendingKyc();
+    } catch (err: any) {
+      alert(err.message || 'Error al rechazar solicitud.');
+    }
   };
 
   const filtered = restaurants.filter(r => 
