@@ -44,6 +44,7 @@ export function ProductFormModal({
   const [imageUrl, setImageUrl] = useState('');
   const [uploadMode, setUploadMode] = useState<'url' | 'file'>('url');
   const [hasOffer, setHasOffer] = useState(false);
+  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [groups, setGroups] = useState<GroupInput[]>([]);
 
   // States for "Copiar de otro plato" feature
