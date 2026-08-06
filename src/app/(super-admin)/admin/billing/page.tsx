@@ -18,14 +18,20 @@ export default function BillingPage() {
 
   useEffect(() => {
     async function loadBillingData() {
-      const { data } = await supabase
-        .from('restaurants')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (data) {
-        setRestaurants(data);
+      try {
+        const res = await fetch('/api/admin/tenants');
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          setRestaurants(json.data);
+        } else {
+          const { data } = await supabase.from('restaurants').select('*').order('created_at', { ascending: false });
+          if (data) setRestaurants(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadBillingData();
   }, [supabase]);
@@ -54,19 +60,22 @@ export default function BillingPage() {
         <p className="text-xs text-gray-400">Monitoreo de ingresos de suscripciones y transacciones de Lemon Squeezy</p>
       </div>
 
-      {/* Alert box - Pending Gateway setup */}
-      <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-3xl p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      {/* Active Gateway Banner */}
+      <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-3xl p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="space-y-1">
-          <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Integración Próxima: Lemon Squeezy</span>
-          <p className="text-sm text-gray-800">
-            Esta sección usa datos reales de tus restaurantes activos para proyectar tus ganancias mensuales.
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block">Integración Activa: Lemon Squeezy (Modo Real)</span>
+          </div>
+          <p className="text-sm font-semibold text-slate-800">
+            Cobro automático de suscripciones B2B ($29.00/mes) habilitado y conectado a producción.
           </p>
-          <p className="text-xs text-gray-400">
-            En un futuro cercano, conectaremos la API de Lemon Squeezy (plataforma que cobrará las suscripciones por ti). Una vez enlazada, esta pantalla mostrará los pagos reales recibidos en tu cuenta bancaria y los logs de transacciones oficiales.
+          <p className="text-xs text-slate-500">
+            Los eventos de pago, renovaciones y bajas son recibidos en tiempo real vía Webhooks de Lemon Squeezy y sincronizados con la base de datos de Glubbi.
           </p>
         </div>
-        <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-xl text-xs font-bold uppercase tracking-wider">
-          Enlace Real
+        <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-xl text-xs font-extrabold uppercase tracking-wider shrink-0">
+          ● En Vivo / Producción
         </div>
       </div>
 
