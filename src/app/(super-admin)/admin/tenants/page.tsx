@@ -34,14 +34,19 @@ export default function TenantsPage() {
   // --- Load Data ---
   async function loadData() {
     setIsLoading(true);
-    const [restRes, ordersRes] = await Promise.all([
-      supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
+    const [adminRestRes, ordersRes] = await Promise.all([
+      fetch('/api/admin/tenants').then(r => r.json()).catch(() => ({ success: false, data: [] })),
       supabase.from('orders').select('restaurant_id, total_amount, payment_status, status, created_at')
     ]);
 
-    if (!restRes.error && restRes.data) {
-      setRestaurants(restRes.data);
+    if (adminRestRes?.success && Array.isArray(adminRestRes.data)) {
+      setRestaurants(adminRestRes.data);
+    } else {
+      // Fallback
+      const { data } = await supabase.from('restaurants').select('*').order('created_at', { ascending: false });
+      if (data) setRestaurants(data);
     }
+
     if (!ordersRes.error && ordersRes.data) {
       setOrders(ordersRes.data);
     }

@@ -63,11 +63,8 @@ export default function SuperAdminDashboard() {
       const startTime = performance.now();
       
       // Fetch restaurants, orders, tables, and customers in parallel
-      const [restRes, ordersRes, tablesRes, customersRes] = await Promise.all([
-        supabase
-          .from('restaurants')
-          .select('*')
-          .order('created_at', { ascending: false }),
+      const [adminRestRes, ordersRes, tablesRes, customersRes] = await Promise.all([
+        fetch('/api/admin/tenants').then(r => r.json()).catch(() => ({ success: false, data: [] })),
         supabase
           .from('orders')
           .select('id, restaurant_id, total_amount, status, payment_status, created_at')
@@ -83,12 +80,15 @@ export default function SuperAdminDashboard() {
       const endTime = performance.now();
       setDbLatency(Math.round(endTime - startTime));
 
-      if (restRes.error || ordersRes.error || tablesRes.error || customersRes.error) {
+      if (ordersRes.error || tablesRes.error || customersRes.error) {
         setHasError(true);
       }
 
-      if (!restRes.error && restRes.data) {
-        setRestaurants(restRes.data);
+      if (adminRestRes?.success && Array.isArray(adminRestRes.data)) {
+        setRestaurants(adminRestRes.data);
+      } else {
+        const { data } = await supabase.from('restaurants').select('*').order('created_at', { ascending: false });
+        if (data) setRestaurants(data);
       }
       if (!ordersRes.error && ordersRes.data) {
         setOrders(ordersRes.data);
