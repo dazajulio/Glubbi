@@ -12,6 +12,7 @@ export default function QRAdminPage() {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [slug, setSlug] = useState('');
   const [brandColor, setBrandColor] = useState('#FF6B00');
+  const [restaurantName, setRestaurantName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function QRAdminPage() {
         const supabase = createClient();
         const { data } = await supabase
           .from('restaurants')
-          .select('id, slug, brand_color_primary')
+          .select('id, slug, brand_color_primary, name')
           .eq('slug', slugFromUrl)
           .single();
           
@@ -30,6 +31,7 @@ export default function QRAdminPage() {
           localStorage.setItem('active_restaurant_id', data.id);
           setSlug(data.slug);
           setBrandColor(data.brand_color_primary || '#FF6B00');
+          setRestaurantName(data.name || '');
         }
       } catch (err) {
         console.error('Error fetching restaurant details for QR:', err);
@@ -64,6 +66,7 @@ export default function QRAdminPage() {
           restaurantId={restaurantId} 
           restaurantSlug={slug} 
           brandColor={brandColor} 
+          restaurantName={restaurantName}
         />
       ) : (
         <p className="text-gray-400 text-sm">Registra un restaurante para generar códigos QR.</p>

@@ -3,19 +3,31 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Table } from '@/types/database';
-import { Download, QrCode, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Download, QrCode, Plus, Trash2, Edit2, Share2, Check } from 'lucide-react';
 
 interface QRGeneratorProps {
   restaurantId: string;
   restaurantSlug: string;
   brandColor: string;
+  restaurantName?: string;
 }
 
-export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGeneratorProps) {
+export function QRGenerator({ restaurantId, restaurantSlug, brandColor, restaurantName }: QRGeneratorProps) {
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const supabase = createClient();
+
+  const handleCopyLink = async (id: string, textToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2500);
+    } catch (err) {
+      console.error('Error al copiar al portapapeles:', err);
+    }
+  };
   
   // Always use glubbi.app in production; fallback to current origin in local dev
   const getBaseUrl = () => {
@@ -186,6 +198,9 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
           let cardTitle = '';
           let cardColor = brandColor;
           let badgeText = '';
+          let shareText = '';
+
+          const displayRestaurantName = restaurantName ? restaurantName.trim() : restaurantSlug;
 
           if (isWaiter) {
             const name = table.label?.replace('Mesero:', '').trim() || '';
@@ -193,17 +208,20 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
             cardTitle = `🧑‍💼 Mesero: ${name}`;
             cardColor = '#4F46E5'; // Indigo
             badgeText = 'Acceso Mesero';
+            shareText = `Acceso exclusivo para tomar pedidos (${name}): ${url}`;
           } else if (isDelivery) {
             const channel = table.label?.replace('Delivery:', '').trim() || '';
-            url = `${domain}/${restaurantSlug}/mesa/takeaway?type=delivery`;
+            url = `${domain}/${restaurantSlug}/pedir`;
             cardTitle = `🛵 Delivery: ${channel}`;
             cardColor = '#2563EB'; // Blue
             badgeText = 'Enlace Delivery';
+            shareText = `🛵 Haz tu pedido ${displayRestaurantName} online de forma rápida y segura aquí: ${url}`;
           } else {
             url = `${domain}/${restaurantSlug}/mesa/${table.id}`;
             cardTitle = table.label || `Mesa ${table.table_number}`;
             cardColor = brandColor;
             badgeText = 'Mesa Física';
+            shareText = `Escanea o accede para pedir desde ${cardTitle}: ${url}`;
           }
 
           const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&color=000000&bgcolor=ffffff`;
@@ -240,19 +258,37 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor }: QRGene
               
               <div className="p-8 flex-1 flex flex-col items-center justify-center bg-white">
                 <img src={qrUrl} alt={`QR ${cardTitle}`} className="w-48 h-48 mb-6" />
-                <p className="text-gray-400 text-xs text-center mb-6 break-all max-w-[220px]">
+                <p className="text-gray-500 text-xs text-center mb-6 break-all max-w-[220px] font-mono bg-zinc-50 py-1 px-2.5 rounded-md border border-zinc-100">
                   {url.replace(/^https?:\/\//, '')}
                 </p>
-                <a 
-                  href={qrUrl}
-                  download={`${cardTitle.replace(/\s+/g, '_')}.png`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border border-zinc-300"
-                >
-                  <Download className="w-5 h-5" />
-                  Descargar PNG
-                </a>
+                <div className="w-full space-y-2">
+                  <a 
+                    href={qrUrl}
+                    download={`${cardTitle.replace(/\s+/g, '_')}.png`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border border-zinc-300 text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar PNG
+                  </a>
+                  <button
+                    onClick={() => handleCopyLink(table.id, shareText)}
+                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors border border-blue-200 text-sm"
+                  >
+                    {copiedId === table.id ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-emerald-600 font-bold">¡Link Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4 text-blue-600" />
+                        Copiar Link para Compartir
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );
