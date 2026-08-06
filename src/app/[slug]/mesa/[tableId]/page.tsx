@@ -73,7 +73,6 @@ export default function KioskPage({ params }: KioskPageProps) {
 
   // Computed physical table flag for QR vs Takeaway/Delivery
   const isPhysicalTable = Boolean(isWaiter || (tableId && tableId !== 'takeaway' && tableId !== 'delivery' && tableId !== '1'));
-  const [isCallingWaiter, setIsCallingWaiter] = useState(false);
   const [isFromGlubbi, setIsFromGlubbi] = useState(false);
   const [kycStatus, setKycStatus] = useState('unverified');
   const [whatsappNumber, setWhatsappNumber] = useState('');

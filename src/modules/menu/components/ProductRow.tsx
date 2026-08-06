@@ -60,30 +60,45 @@ export function ProductRow({
             </div>
             
             {/* Actions */}
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 relative z-10">
               <button 
-                onClick={() => onEdit(product)}
-                className="p-2 sm:p-3 text-gray-500 hover:bg-slate-100 hover:text-slate-800 rounded-xl transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(product);
+                }}
+                className="p-2 sm:p-3 text-gray-500 hover:bg-slate-100 hover:text-slate-800 rounded-xl transition-colors cursor-pointer"
                 title="Editar Plato"
               >
                 <Edit2 className="w-5 h-5" />
               </button>
               <button 
-                onClick={() => onDelete(product.id)}
-                className="p-2 sm:p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(product.id);
+                }}
+                className="p-2 sm:p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
                 title="Eliminar Plato"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
               
               <div 
-                onClick={() => onToggleProduct(product)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleProduct(product);
+                }}
                 className={`toggle-switch flex-shrink-0 ml-1 sm:ml-2 scale-75 sm:scale-100 cursor-pointer ${product.is_available ? 'active' : 'inactive'}`}
               ></div>
 
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="ml-2 p-2 text-gray-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(!isExpanded);
+                }}
+                className="ml-2 p-2 text-gray-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                 title={isExpanded ? "Ocultar detalles" : "Ver detalles"}
               >
                 {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}

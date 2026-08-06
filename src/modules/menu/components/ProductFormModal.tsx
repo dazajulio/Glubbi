@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Category } from '@/types/database';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Copy } from 'lucide-react';
 import { createClient, GLUBBI_ID } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image-compression';
 
@@ -44,8 +44,59 @@ export function ProductFormModal({
   const [imageUrl, setImageUrl] = useState('');
   const [uploadMode, setUploadMode] = useState<'url' | 'file'>('url');
   const [hasOffer, setHasOffer] = useState(false);
-  const [discountPercentage, setDiscountPercentage] = useState(0);
   const [groups, setGroups] = useState<GroupInput[]>([]);
+
+  // States for "Copiar de otro plato" feature
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [existingProductsWithGroups, setExistingProductsWithGroups] = useState<any[]>([]);
+  const [selectedProductToCopy, setSelectedProductToCopy] = useState<string>('');
+  const [isLoadingCopyProducts, setIsLoadingCopyProducts] = useState(false);
+
+  const handleOpenCopyModal = async () => {
+    setIsCopyModalOpen(true);
+    setIsLoadingCopyProducts(true);
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('products')
+        .select('id, name, modifier_groups(*, modifiers(*))')
+        .eq('restaurant_id', restaurantId);
+
+      if (data) {
+        // Filter out current product if editing and keep products with modifier groups
+        const filtered = data.filter(
+          (p: any) => p.id !== (productToEdit?.id || '') && p.modifier_groups && p.modifier_groups.length > 0
+        );
+        setExistingProductsWithGroups(filtered);
+        if (filtered.length > 0) {
+          setSelectedProductToCopy(filtered[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching products for copy:', err);
+    } finally {
+      setIsLoadingCopyProducts(false);
+    }
+  };
+
+  const handleCopyGroups = () => {
+    const prod = existingProductsWithGroups.find(p => p.id === selectedProductToCopy);
+    if (!prod || !prod.modifier_groups) return;
+
+    const copiedGroups: GroupInput[] = prod.modifier_groups.map((g: any) => ({
+      name: g.name,
+      is_required: g.is_required || false,
+      min_selections: g.min_selections || 0,
+      max_selections: g.max_selections || 1,
+      modifiers: (g.modifiers || []).map((m: any) => ({
+        name: m.name,
+        extra_price: m.extra_price || 0
+      }))
+    }));
+
+    setGroups(prev => [...prev, ...copiedGroups]);
+    setIsCopyModalOpen(false);
+  };
 
   // Use useEffect to reset state when modal opens or productToEdit changes
   useEffect(() => {
@@ -113,36 +164,15 @@ export function ProductFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const supabase = createClient();
 
     try {
-      let productId = '';
-
-      if (productToEdit) {
-        // 1A. Update Product
-        productId = productToEdit.id;
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .update({
-            category_id: categoryId,
-            name,
-            description,
-            base_price: price,
-            discount_percentage: hasOffer ? discountPercentage : 0,
-            image_url: imageUrl || null,
-          } as any)
-          .eq('id', productId)
-          .select();
-
-        if (productError) throw productError;
-
-        // Delete existing modifier groups (Cascade deletes modifiers)
-        await supabase.from('modifier_groups').delete().eq('product_id', productId);
-      } else {
-        // 1B. Create Product
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .insert({
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_product',
+          payload: {
+            id: productToEdit?.id || null,
             restaurant_id: restaurantId,
             category_id: categoryId,
             name,
@@ -150,83 +180,21 @@ export function ProductFormModal({
             base_price: price,
             discount_percentage: hasOffer ? discountPercentage : 0,
             image_url: imageUrl || null,
-            is_available: true,
-            is_featured: false
-          } as any)
-          .select();
-
-        if (productError) throw productError;
-
-        if (productData && productData.length > 0) {
-          productId = productData[0].id;
-        } else {
-          // Fallback if RETURNING was filtered by RLS
-          const { data: latest } = await supabase
-            .from('products')
-            .select('id')
-            .eq('restaurant_id', restaurantId)
-            .eq('name', name)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (latest && latest.length > 0) {
-            productId = latest[0].id;
-          } else {
-            throw new Error('No se pudo confirmar el ID del producto creado.');
+            groups
           }
-        }
-      }
+        })
+      });
 
-      // 2. Create Modifier Groups and Modifiers
-      for (const group of groups) {
-        const { data: groupData, error: groupError } = await supabase
-          .from('modifier_groups')
-          .insert({
-            restaurant_id: restaurantId,
-            product_id: productId,
-            name: group.name,
-            is_required: group.is_required,
-            min_selections: group.min_selections,
-            max_selections: group.max_selections
-          } as any)
-          .select();
-
-        if (groupError) throw groupError;
-
-        let groupId = groupData?.[0]?.id;
-        if (!groupId) {
-          const { data: latestG } = await supabase
-            .from('modifier_groups')
-            .select('id')
-            .eq('product_id', productId)
-            .eq('name', group.name)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (latestG && latestG.length > 0) {
-            groupId = latestG[0].id;
-          }
-        }
-
-        if (groupId && group.modifiers.length > 0) {
-          const modifiersToInsert = group.modifiers.map(m => ({
-            group_id: groupId,
-            name: m.name,
-            extra_price: m.extra_price
-          }));
-
-          const { error: modError } = await supabase
-            .from('modifiers')
-            .insert(modifiersToInsert as any);
-
-          if (modError) throw modError;
-        }
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'No se pudo guardar el plato.');
       }
 
       onSaved();
       onClose();
-    } catch (error) {
-      console.error('Error creating product:', error);
-      alert('Error al crear el producto');
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      alert('Error al guardar el producto: ' + (error.message || ''));
     } finally {
       setIsSubmitting(false);
     }
@@ -371,12 +339,22 @@ export function ProductFormModal({
 
           {/* Modifiers */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <h3 className="text-lg font-semibold text-gray-900">Grupos de Modificadores</h3>
-              <button type="button" onClick={addGroup} className="flex items-center text-sm font-medium text-brand-primary hover:brightness-110">
-                <Plus className="w-4 h-4 mr-1" />
-                Añadir Grupo
-              </button>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button 
+                  type="button" 
+                  onClick={handleOpenCopyModal} 
+                  className="flex items-center justify-center text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-2 rounded-xl border border-orange-200/80 transition-colors shadow-sm"
+                >
+                  <Copy className="w-3.5 h-3.5 mr-1.5" />
+                  Copiar de otro plato
+                </button>
+                <button type="button" onClick={addGroup} className="flex items-center justify-center text-xs font-bold text-brand-primary bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl border border-gray-200 transition-colors">
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Añadir Grupo
+                </button>
+              </div>
             </div>
 
             {groups.length === 0 && (
@@ -448,6 +426,92 @@ export function ProductFormModal({
           </button>
         </div>
       </div>
+
+      {/* Modal de Copiar Modificadores de Otro Plato */}
+      {isCopyModalOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Copy className="w-5 h-5 text-orange-500" />
+                Copiar Modificadores
+              </h3>
+              <button type="button" onClick={() => setIsCopyModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-lg text-gray-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Selecciona un plato existente para importar todos sus grupos de adicionales y modificadores a este plato.
+            </p>
+
+            {isLoadingCopyProducts ? (
+              <div className="py-8 flex justify-center">
+                <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : existingProductsWithGroups.length === 0 ? (
+              <div className="p-4 bg-amber-50 text-amber-800 rounded-xl text-center text-sm border border-amber-200">
+                No hay otros platos con modificadores creados en tu menú aún.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
+                    Seleccionar Plato Origen
+                  </label>
+                  <select
+                    value={selectedProductToCopy}
+                    onChange={(e) => setSelectedProductToCopy(e.target.value)}
+                    className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-slate-800 text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none"
+                  >
+                    {existingProductsWithGroups.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.modifier_groups.length} grupo{p.modifier_groups.length > 1 ? 's' : ''})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Vista previa de los grupos que se van a copiar */}
+                {selectedProductToCopy && (() => {
+                  const selected = existingProductsWithGroups.find(p => p.id === selectedProductToCopy);
+                  if (!selected) return null;
+                  return (
+                    <div className="bg-slate-50 border border-gray-200 rounded-xl p-3 max-h-44 overflow-y-auto space-y-2">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Grupos a importar:</p>
+                      {selected.modifier_groups.map((g: any, i: number) => (
+                        <div key={i} className="text-xs text-gray-700 bg-white p-2.5 rounded-lg border border-gray-200/80 shadow-xs">
+                          <span className="font-bold text-slate-900">{g.name}</span>
+                          <span className="text-gray-400 block text-[11px] mt-0.5">
+                            {g.modifiers?.map((m: any) => `${m.name} (+$${m.extra_price})`).join(', ')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsCopyModalOpen(false)}
+                    className="px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyGroups}
+                    className="brand-bg px-5 py-2.5 text-sm font-bold text-white rounded-xl hover:brightness-110 shadow-lg shadow-orange-500/20 transition-all"
+                  >
+                    Copiar Modificadores
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
