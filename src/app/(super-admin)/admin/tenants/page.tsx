@@ -234,16 +234,20 @@ export default function TenantsPage() {
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-semibold">{stats.ordersCount}</td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-orange-400">${stats.totalGmv.toLocaleString()}</td>
-                        <td className="px-6 py-4 text-center">
-                          {tenant.is_active ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20">
-                              Activo
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-                              Suspendido
-                            </span>
-                          )}
+                        <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            disabled={isUpdating}
+                            onClick={() => toggleTenantStatus(tenant)}
+                            title={tenant.is_active ? "Clic para suspender este restaurante" : "Clic para activar este restaurante"}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold transition-all border shadow-sm active:scale-95 ${
+                              tenant.is_active 
+                                ? 'bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/20' 
+                                : 'bg-red-500/10 text-red-700 border-red-500/30 hover:bg-red-500/20'
+                            }`}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${tenant.is_active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                            {tenant.is_active ? 'Activo' : 'Suspendido'}
+                          </button>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <button 
