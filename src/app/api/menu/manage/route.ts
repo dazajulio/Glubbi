@@ -136,15 +136,18 @@ export async function POST(request: Request) {
       if (groups && Array.isArray(groups) && groups.length > 0) {
         for (const group of groups) {
           if (!group.name || !group.name.trim()) continue;
+          const minSel = Math.max(0, parseInt(group.min_selections) || 0);
+          const maxSel = Math.max(minSel, Math.max(1, parseInt(group.max_selections) || 1));
+
           const { data: newGroup, error: groupErr } = await supabaseAdmin
             .from('modifier_groups')
             .insert({
               restaurant_id,
               product_id: productId,
               name: group.name.trim(),
-              is_required: group.is_required || false,
-              min_selections: group.min_selections || 0,
-              max_selections: group.max_selections || 1
+              is_required: minSel > 0 || group.is_required || false,
+              min_selections: minSel,
+              max_selections: maxSel
             })
             .select('id')
             .single();

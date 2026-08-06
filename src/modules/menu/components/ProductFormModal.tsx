@@ -373,15 +373,23 @@ export function ProductFormModal({
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Min. Selecciones</label>
                       <input type="number" min="0" value={group.min_selections} onChange={e => {
-                        const newGroups = [...groups]; newGroups[groupIdx].min_selections = parseInt(e.target.value) || 0; 
-                        newGroups[groupIdx].is_required = (parseInt(e.target.value) || 0) > 0;
+                        const newGroups = [...groups]; 
+                        const newMin = Math.max(0, parseInt(e.target.value) || 0);
+                        newGroups[groupIdx].min_selections = newMin; 
+                        newGroups[groupIdx].is_required = newMin > 0;
+                        if (newGroups[groupIdx].max_selections < newMin) {
+                          newGroups[groupIdx].max_selections = newMin;
+                        }
                         setGroups(newGroups);
                       }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Max. Selecciones</label>
-                      <input type="number" min="1" value={group.max_selections} onChange={e => {
-                        const newGroups = [...groups]; newGroups[groupIdx].max_selections = parseInt(e.target.value) || 1; setGroups(newGroups);
+                      <input type="number" min={Math.max(1, group.min_selections)} value={group.max_selections} onChange={e => {
+                        const newGroups = [...groups]; 
+                        const newMax = parseInt(e.target.value) || 1;
+                        newGroups[groupIdx].max_selections = Math.max(newGroups[groupIdx].min_selections, newMax); 
+                        setGroups(newGroups);
                       }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
                     </div>
                   </div>
