@@ -1,6 +1,6 @@
 import { Gift, Bell, Award, Sparkles, Star } from 'lucide-react';
 
-export function MtriqRewards() {
+export function GlubbiRewards() {
   return (
     <section className="pt-12 pb-24 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
       {/* Decorative background grid */}

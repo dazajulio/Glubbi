@@ -106,7 +106,7 @@ export default function MenuAdminPage() {
           
           <div className="flex flex-col sm:flex-row gap-3 w-full">
             <a 
-              href="/plantilla_menu_mtriq.csv" 
+              href="/plantilla_menu_glubbi.csv" 
               download
               className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
             >

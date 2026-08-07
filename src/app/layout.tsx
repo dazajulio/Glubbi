@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description:
     'Únete a Glubbi. Gestiona tu negocio con nuestro ecosistema integral (KDS, Kiosko, Analíticas) por una tarifa plana y vende sin comisiones.',
   manifest: '/manifest.json',
+  verification: {
+    google: 'google33d68a5f53fec96a',
+  },
   icons: {
     icon: [
       {

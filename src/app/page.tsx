@@ -1,6 +1,6 @@
 import { Ecosystem } from '@/components/marketing/Ecosystem';
 import { UseCases } from '@/components/marketing/UseCases';
-import { MtriqRewards } from '@/components/marketing/MtriqRewards';
+import { GlubbiRewards } from '@/components/marketing/GlubbiRewards';
 import { WhatsAppComparison } from '@/components/marketing/WhatsAppComparison';
 import { GrowthAgentAI } from '@/components/marketing/GrowthAgentAI';
 import { FeaturesKDS } from '@/components/marketing/FeaturesKDS';
@@ -17,7 +17,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-orange-500/10">
       <Navbar />
       <Hero />
-      <MtriqRewards />
+      <GlubbiRewards />
       <Ecosystem />
       <WhatsAppComparison />
       <UseCases />

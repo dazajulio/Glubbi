@@ -25,7 +25,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Lemon Squeezy:** Pasarela de pagos principal para el cobro de la suscripción SaaS a los restaurantes (B2B).
 - **Stripe:** Pasarela de pagos para las compras de comida de los clientes finales dentro de cada restaurante (B2C).
 - **Capacitor / PWABuilder:** Herramientas utilizadas para empaquetar la experiencia web (`/glubbi`) como aplicación nativa Android.
-- **Cloudflare / GitHub:** (Si aplica) GitHub como repositorio fuente conectado a Vercel para CI/CD; Cloudflare posiblemente para gestión de DNS/Dominios (`mtriq.app` / `glubbi.app`).
+- **Cloudflare / GitHub:** (Si aplica) GitHub como repositorio fuente conectado a Vercel para CI/CD; Cloudflare para gestión de DNS/Dominios (`glubbi.app`).
 
 ## 3. Estructura de Rutas (Next.js App Router)
 El proyecto está dividido en varios portales o "aplicaciones" dentro del mismo repositorio:
@@ -34,7 +34,7 @@ El proyecto está dividido en varios portales o "aplicaciones" dentro del mismo 
    - **Propósito:** Panel de control maestro para los dueños de Glubbi.
    - **Funciones:** Gestión de tenants (restaurantes), facturación global (billing), configuración de correos, gestión de cupones (futuro), y control de usuarios globales.
 2. **Restaurante Público (`src/app/[slug]`):**
-   - **Propósito:** La página pública/menú de cada restaurante específico (Ej. `mtriq.app/burger-palace`).
+   - **Propósito:** La página pública/menú de cada restaurante específico (Ej. `glubbi.app/burger-palace`).
    - **Funciones:** Ver menú, agregar al carrito, proceso de checkout del consumidor final.
 3. **Módulo de QR (`src/app/[slug]/mesa/[id]`):**
    - **Propósito:** Menú digital escaneado desde la mesa física.

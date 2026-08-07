@@ -33,8 +33,8 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor, restaura
   const getBaseUrl = () => {
     if (typeof window !== 'undefined') {
       const origin = window.location.origin;
-      // If running on any glubbi/mtriq variant, always normalise to glubbi.app
-      if (origin.includes('glubbi.app') || origin.includes('mtriq.app') || origin.includes('vercel.app')) {
+      // If running on glubbi.app or vercel.app, always normalise to glubbi.app
+      if (origin.includes('glubbi.app') || origin.includes('vercel.app')) {
         return 'https://www.glubbi.app';
       }
       return origin;

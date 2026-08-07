@@ -41,7 +41,7 @@ export default function AIAgentPage() {
     loadTenant();
   }, [slugFromUrl]);
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; time: string }>>([
-    { sender: 'ai', text: '¡Hola! Soy tu Agente IA de Crecimiento de Mtriq. Analizo las compras, tiempos de servicio y comportamiento de tus clientes en tiempo real. ¿En qué campaña o sugerencia de marketing te gustaría trabajar hoy?', time: 'Ahora' }
+    { sender: 'ai', text: '¡Hola! Soy tu Agente IA de Crecimiento de Glubbi. Analizo las compras, tiempos de servicio y comportamiento de tus clientes en tiempo real. ¿En qué campaña o sugerencia de marketing te gustaría trabajar hoy?', time: 'Ahora' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);

@@ -1,4 +1,4 @@
-package com.mtriq.glubbi;
+package app.glubbi.www.twa;
 
 import com.getcapacitor.BridgeActivity;
 

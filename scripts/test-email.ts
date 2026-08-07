@@ -11,17 +11,17 @@ async function run() {
     process.exit(1);
   }
 
-  console.log('Intentando enviar correo de bienvenida de prueba a: soporte@mtriq.app...');
+  console.log('Intentando enviar correo de bienvenida de prueba a: soporte@glubbi.app...');
   
   const success = await sendWelcomeEmail({
-    toEmail: 'soporte@mtriq.app',
+    toEmail: 'soporte@glubbi.app',
     restaurantName: 'La Rustica Pizzería',
     contactName: 'Julio Daza',
     slug: 'la-rustica-pizzeria',
   });
 
   if (success) {
-    console.log('¡ÉXITO! El correo de prueba fue enviado correctamente a soporte@mtriq.app.');
+    console.log('¡ÉXITO! El correo de prueba fue enviado correctamente a soporte@glubbi.app.');
     console.log('Revisa tu bandeja de entrada en Gmail.');
   } else {
     console.error('ERROR: El envío falló. Verifica si tu API Key es válida y que el dominio esté verificado en Resend.');
