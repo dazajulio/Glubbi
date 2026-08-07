@@ -8,9 +8,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Glubbi Partners — Ecosistema para Negocios sin Comisiones',
+  title: 'Glubbi | Plataforma de Pedidos Online',
   description:
-    'Únete a Glubbi. Gestiona tu negocio con nuestro ecosistema integral (KDS, Kiosko, Analíticas) por una tarifa plana y vende sin comisiones.',
+    'Automatiza los pedidos de tu restaurante, dark kitchen o comercio. Menú digital interactivo, autopedido por QR en mesa, delivery directo y monitor de cocina (KDS) sin comisiones.',
   manifest: '/manifest.json',
   verification: {
     google: 'google33d68a5f53fec96a',
