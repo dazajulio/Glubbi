@@ -660,6 +660,8 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
           }}
           title="Autorizar Cancelación"
         />
+      )}
+
       {/* Payment Details Modal */}
       {isPaymentModalOpen && (
         <PaymentDetailsModal
@@ -670,6 +672,5 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
         />
       )}
     </div>
-    </>
   );
 }
