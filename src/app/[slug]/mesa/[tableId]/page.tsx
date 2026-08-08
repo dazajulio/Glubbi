@@ -379,6 +379,13 @@ export default function KioskPage({ params }: KioskPageProps) {
   );
 
   const { customer, favoriteRestaurants, toggleFavorite } = useGlubbiStore();
+
+  useEffect(() => {
+    if (customer?.id) {
+      setCustomerId(customer.id);
+      if (customer.name && !customerName) setCustomerName(customer.name);
+    }
+  }, [customer, customerName]);
   const [isClosed, setIsClosed] = useState(false);
 
   const handleCheckoutClick = () => {
@@ -588,7 +595,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       .insert({
         restaurant_id: restaurantId || GLUBBI_ID,
         table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
-        customer_id: customerId || null,
+        customer_id: customerId || customer?.id || null,
         status: 'pending',
         total_amount: finalTotal,
         payment_method: methodType, // Use validated method to pass DB constraint
@@ -649,7 +656,7 @@ export default function KioskPage({ params }: KioskPageProps) {
       .insert({
         restaurant_id: restaurantId || GLUBBI_ID,
         table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
-        customer_id: customerId || null,
+        customer_id: customerId || customer?.id || null,
         status: 'pending',
         total_amount: finalTotal,
         payment_method: 'cash',

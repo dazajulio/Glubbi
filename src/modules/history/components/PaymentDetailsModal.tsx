@@ -9,9 +9,10 @@ interface PaymentDetailsModalProps {
   order: OrderWithItems | null;
   isOpen: boolean;
   onClose: () => void;
+  onConfirmPayment?: (orderId: string, reference: string) => void;
 }
 
-export function PaymentDetailsModal({ order, isOpen, onClose }: PaymentDetailsModalProps) {
+export function PaymentDetailsModal({ order, isOpen, onClose, onConfirmPayment }: PaymentDetailsModalProps) {
   if (!isOpen || !order) return null;
 
   const isPaid = order.payment_status === 'paid';
@@ -27,10 +28,18 @@ export function PaymentDetailsModal({ order, isOpen, onClose }: PaymentDetailsMo
     return order.payment_method || 'Registrado por el Restaurante';
   };
 
+  const handleConfirm = () => {
+    const ref = validationDetails?.ref || window.prompt('Ingrese referencia de pago (Ej. 1234 o Tarjeta):', validationDetails?.ref || '');
+    if (ref && onConfirmPayment) {
+      onConfirmPayment(order.id, ref);
+      onClose();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center items-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
       <div 
-        className="bg-white shadow-2xl w-full max-w-lg rounded-3xl border border-gray-100 max-h-[90vh] flex flex-col overflow-hidden animate-scale-in"
+        className="bg-white shadow-2xl w-full max-w-lg rounded-3xl border border-gray-100 max-h-[90vh] flex flex-col overflow-hidden animate-scale-in text-left"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -166,13 +175,21 @@ export function PaymentDetailsModal({ order, isOpen, onClose }: PaymentDetailsMo
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-end">
+        <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-colors text-sm"
+            className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors text-sm"
           >
             Cerrar
           </button>
+          {!isPaid && onConfirmPayment && (
+            <button
+              onClick={handleConfirm}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors text-sm shadow-md flex items-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4" /> Confirmar y Marcar Pago
+            </button>
+          )}
         </div>
       </div>
     </div>

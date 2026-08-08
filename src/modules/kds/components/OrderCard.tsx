@@ -491,56 +491,50 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
             <Store className="h-4 w-4" /> Datos de Retiro en Local
           </div>
           
-          <div className="space-y-1 text-xs">
-            {pickup.estimatedTime && (
-              <div className="flex items-center gap-2 text-gray-800">
-                <Clock className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                <span className="text-gray-500 font-medium">Hora estimada:</span>
-                <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-orange-200">{pickup.estimatedTime}</span>
-              </div>
-            )}
-            {pickup.phone && (
-              <div className="flex items-center gap-2 text-gray-800 pt-0.5">
-                <span className="text-gray-500 font-medium">Teléfono:</span>
-                <span className="font-semibold text-slate-900">{pickup.phone}</span>
+        <div className="mx-4 mb-3 border border-orange-500/20 bg-orange-500/[0.03] rounded-xl p-3 space-y-1.5 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-bold text-orange-600">
+              <Store className="w-4 h-4" /> PEDIDO PARA RETIRAR (PICKUP)
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-gray-700 pt-1">
+            <div>
+              <span className="text-gray-400 font-medium mr-1">Teléfono:</span>
+              <span className="font-semibold text-gray-900">{pickup.phone || 'N/A'}</span>
+            </div>
+            {pickup.pickupTime && (
+              <div>
+                <span className="text-gray-400 font-medium mr-1">Hora Estimada:</span>
+                <span className="font-bold text-orange-600 bg-orange-100/60 px-1.5 py-0.5 rounded">{pickup.pickupTime}</span>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Delivery Details ───────────────────────────────────────── */}
+      {/* ── Delivery Details ─────────────────────────────────────── */}
       {delivery && (
-        <div className="mx-4 mb-3 border border-blue-500/20 bg-blue-500/[0.03] rounded-xl p-3.5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase tracking-wider">
-            <Truck className="h-4 w-4" /> Datos de Delivery
+        <div className="mx-4 mb-3 border border-blue-500/20 bg-blue-500/[0.03] rounded-xl p-3 space-y-1.5 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-bold text-blue-600">
+              <Truck className="w-4 h-4" /> DATOS PARA DELIVERY
+            </div>
           </div>
-          
-          <div className="space-y-1.5 pt-1 text-xs">
-            {delivery.phone && (
-              <div className="flex items-center gap-2 text-gray-800">
-                <span className="text-gray-400 font-medium">Teléfono:</span>
-                <span className="font-semibold text-gray-900">{delivery.phone}</span>
+          <div className="space-y-1 text-gray-700 pt-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-gray-400 font-medium mr-1">Teléfono:</span>
+                <span className="font-semibold text-gray-900">{delivery.phone || 'N/A'}</span>
               </div>
-            )}
-            
-            {delivery.address && (
-              <div className="flex items-start gap-2 text-gray-800">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400 mt-0.5" />
-                <div>
-                  <span className="text-gray-400 font-medium mr-1.5">Dirección:</span>
-                  <span className="font-semibold text-gray-900">{delivery.address}</span>
-                </div>
-              </div>
-            )}
-
+            </div>
+            <div>
+              <span className="text-gray-400 font-medium mr-1">Dirección:</span>
+              <span className="font-medium text-gray-900">{delivery.address || 'N/A'}</span>
+            </div>
             {delivery.reference && (
-              <div className="flex items-start gap-2 text-gray-800">
-                <Compass className="h-3.5 w-3.5 shrink-0 text-gray-400 mt-0.5" />
-                <div>
-                  <span className="text-gray-400 font-medium mr-1">Referencia:</span>
-                  <span className="text-gray-900 italic">"{delivery.reference}"</span>
-                </div>
+              <div>
+                <span className="text-gray-400 font-medium mr-1">Referencia:</span>
+                <span className="text-gray-900 italic">"{delivery.reference}"</span>
               </div>
             )}
           </div>
@@ -554,9 +548,13 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
             <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-wider">
               <CreditCard className="h-4 w-4" /> Pago por Validar
             </div>
-            <span className="text-xs font-black text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
-              {validation.monto}
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="text-[11px] font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 px-2 py-1 rounded-md border border-orange-200 transition-colors flex items-center gap-1"
+            >
+              🔍 Ver Detalles Completo
+            </button>
           </div>
           <div className="space-y-1.5 pt-1 text-xs">
             {validation.destino && (
@@ -594,15 +592,12 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
         
         {/* Payment status badge / validation button */}
         {order.payment_status === 'paid' ? (
-          <div className="w-full bg-emerald-500/10 text-emerald-400 font-bold text-center py-2.5 rounded-lg text-sm border border-emerald-500/20 flex items-center justify-center gap-2">
-            <CircleCheckBig className="w-4 h-4" />
-            PEDIDO PAGADO
-          </div>
-        ) : (
           <button
             type="button"
-            onClick={() => {
-              const ref = window.prompt('Ingrese referencia de pago (Ej. Tarjeta 1234 o Efectivo):');
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 font-bold text-center py-2.5 rounded-lg text-sm border border-emerald-500/20 flex items-center justify-center gap-2 transition-colors"
+          >
+            <CircleCheckBig className="w-4 h-4" />
               if (ref && onPaymentValidate) {
                 onPaymentValidate(order.id, ref);
               }
@@ -668,7 +663,16 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
           }}
           title="Autorizar Cancelación"
         />
+      {/* Payment Details Modal */}
+      {isPaymentModalOpen && (
+        <PaymentDetailsModal
+          order={order}
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          onConfirmPayment={onPaymentValidate}
+        />
       )}
     </div>
+    </>
   );
 }
