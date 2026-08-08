@@ -90,7 +90,12 @@ export default function SettingsAdminPage() {
         setGlubbiCategory(restData.glubbi_category || '');
         if (restData.payment_methods) {
           try {
-            setPaymentMethods(restData.payment_methods as any || []);
+            const rawMethods = (restData.payment_methods as any || []);
+            const sanitizedMethods = Array.isArray(rawMethods) ? rawMethods.map((pm: any) => ({
+              ...pm,
+              logoUrl: typeof pm.logoUrl === 'string' ? pm.logoUrl : ''
+            })) : [];
+            setPaymentMethods(sanitizedMethods);
           } catch (e) {
             console.error('Error parsing payment methods', e);
             setPaymentMethods([]);
@@ -977,10 +982,10 @@ export default function SettingsAdminPage() {
                         <div className="flex-1 w-full space-y-2">
                           <input 
                             type="text"
-                            value={pm.logoUrl.startsWith('data:') ? 'Imagen subida (Base64)' : pm.logoUrl}
+                            value={pm.logoUrl?.startsWith('data:') ? 'Imagen subida (Base64)' : (pm.logoUrl || '')}
                             onChange={(e) => updatePaymentMethod(pm.id, 'logoUrl', e.target.value)}
                             placeholder="https://ejemplo.com/logo-zelle.png"
-                            disabled={pm.logoUrl.startsWith('data:')}
+                            disabled={!!pm.logoUrl?.startsWith('data:')}
                             className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                           />
                           <input 
@@ -999,7 +1004,7 @@ export default function SettingsAdminPage() {
                             }} 
                             className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 cursor-pointer" 
                           />
-                          {pm.logoUrl.startsWith('data:') && (
+                          {pm.logoUrl?.startsWith('data:') && (
                             <button onClick={() => updatePaymentMethod(pm.id, 'logoUrl', '')} className="text-xs text-red-500 font-medium">Borrar imagen subida</button>
                           )}
                         </div>

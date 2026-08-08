@@ -126,10 +126,10 @@ export function getOrderOrigin(order: OrderWithItems): { type: 'Mesa' | 'Mesero'
 
   // Check table label
   if (order.table?.label) {
-    if (order.table.label.startsWith('Mesero:')) {
+    if (order.table?.label?.startsWith('Mesero:')) {
       return { type: 'Mesero', details: order.table.label.replace('Mesero:', '').trim() };
     }
-    if (order.table.label.startsWith('Delivery:')) {
+    if (order.table?.label?.startsWith('Delivery:')) {
       return { type: 'Delivery', details: order.table.label.replace('Delivery:', '').trim() };
     }
     return { type: 'Mesa', details: order.table.label };

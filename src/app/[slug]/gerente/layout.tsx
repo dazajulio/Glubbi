@@ -6,6 +6,7 @@ import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles, Plus } from 'lucide-react';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
+import { ProcessErrorBoundary } from '@/components/shared/ProcessErrorBoundary';
 
 export default function GerenteLayout({ 
   children,
@@ -170,9 +171,11 @@ export default function GerenteLayout({
 
       {/* Main Content Canvas */}
       <main className="flex-1 bg-[#F4F5F8] min-h-screen overflow-y-auto pb-20 md:pb-0 relative">
-        <GerentePinGuard restaurantId={restaurantId}>
-          {children}
-        </GerentePinGuard>
+        <ProcessErrorBoundary restaurantId={restaurantId} fallbackTitle="Inconveniente temporal al cargar el panel de gerente">
+          <GerentePinGuard restaurantId={restaurantId}>
+            {children}
+          </GerentePinGuard>
+        </ProcessErrorBoundary>
 
         {/* Floating Action Button (FAB +) - Quick Action shortcut */}
         <Link 

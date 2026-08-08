@@ -96,12 +96,13 @@ export function QRGenerator({ restaurantId, restaurantSlug, brandColor, restaura
   };
 
   const handleEditTable = async (tableId: string, currentLabel: string) => {
-    const isWaiter = currentLabel.startsWith('Mesero:');
-    const isDelivery = currentLabel.startsWith('Delivery:');
+    const safeLabel = currentLabel || '';
+    const isWaiter = safeLabel.startsWith('Mesero:');
+    const isDelivery = safeLabel.startsWith('Delivery:');
     
-    let cleanLabel = currentLabel;
-    if (isWaiter) cleanLabel = currentLabel.replace('Mesero:', '').trim();
-    else if (isDelivery) cleanLabel = currentLabel.replace('Delivery:', '').trim();
+    let cleanLabel = safeLabel;
+    if (isWaiter) cleanLabel = safeLabel.replace('Mesero:', '').trim();
+    else if (isDelivery) cleanLabel = safeLabel.replace('Delivery:', '').trim();
 
     const promptMsg = isWaiter ? "Ingresa el nuevo nombre del mesero:" :
                       isDelivery ? "Ingresa el nuevo nombre del canal de Delivery:" :
