@@ -5,7 +5,7 @@ import { resend } from '@/lib/resend';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { restaurantName, contactName, email, phone, inquiryType, message } = body;
+    const { restaurantName, contactName, email, phone, inquiryType, message, notifyAdmin } = body;
 
     if (!restaurantName || !contactName || !email) {
       return NextResponse.json(
@@ -32,13 +32,15 @@ export async function POST(request: Request) {
       console.warn('Database lead insert warning:', error);
     }
 
-    // Send notification email to soporte@glubbi.app via Resend
-    try {
-      await resend.emails.send({
-        from: 'Glubbi Contacto <hola@glubbi.app>',
-        to: 'soporte@glubbi.app',
-        subject: `[Lead Contactado] ${restaurantName}`,
-        html: `
+    // Send notification email to soporte@glubbi.app ONLY if notifyAdmin is not explicitly false and not SDR prospecting
+    const isSdrProspecting = Boolean(inquiryType && inquiryType.toLowerCase().includes('sdr'));
+    if (notifyAdmin !== false && !isSdrProspecting) {
+      try {
+        await resend.emails.send({
+          from: 'Glubbi Contacto <hola@glubbi.app>',
+          to: 'soporte@glubbi.app',
+          subject: `[Lead Contactado] ${restaurantName}`,
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
             <h2 style="color: #f97316; margin-top: 0;">Nueva solicitud de contacto</h2>
             <p>Se ha recibido una nueva consulta desde la página web de Glubbi con la siguiente información:</p>
@@ -80,8 +82,9 @@ export async function POST(request: Request) {
           </div>
         `,
       });
-    } catch (emailErr) {
-      console.error('Error sending lead notification email:', emailErr);
+      } catch (emailErr) {
+        console.error('Error sending lead notification email:', emailErr);
+      }
     }
 
     return NextResponse.json({ success: true, leadId: data?.id || null });
