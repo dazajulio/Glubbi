@@ -486,11 +486,6 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
 
       {/* ── Retiro en Local Details ─────────────────────────────────── */}
       {pickup && (
-        <div className="mx-4 mb-3 border border-orange-500/20 bg-orange-500/[0.04] rounded-xl p-3 space-y-1.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-orange-600 uppercase tracking-wider">
-            <Store className="h-4 w-4" /> Datos de Retiro en Local
-          </div>
-          
         <div className="mx-4 mb-3 border border-orange-500/20 bg-orange-500/[0.03] rounded-xl p-3 space-y-1.5 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-bold text-orange-600">
