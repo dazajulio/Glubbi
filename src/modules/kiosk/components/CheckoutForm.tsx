@@ -45,7 +45,7 @@ export function CheckoutForm({
   const [isFetchingRate, setIsFetchingRate] = useState(false);
   const [pmReference, setPmReference] = useState('');
   const [pmAmount, setPmAmount] = useState('');
-  const [pmDate, setPmDate] = useState('');
+  const [pmDate, setPmDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [pmBank, setPmBank] = useState('');
   const [pmCedula, setPmCedula] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -69,6 +69,8 @@ export function CheckoutForm({
       return;
     }
     setVerificationMethod(method);
+    if (!pmBank && method.title) setPmBank(method.title);
+    if (!pmDate) setPmDate(new Date().toISOString().split('T')[0]);
     
     // Only fetch BCV rate if method is in VES/Bolívares
     const isUSD = method.currency === 'USD' || (method.title && /zelle|paypal|binance|wise|dolar|usd/i.test(method.title));
@@ -89,10 +91,18 @@ export function CheckoutForm({
 
   const handleVerificationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pmReference || !pmAmount || !pmDate || !pmBank || !pmCedula) return;
     
     const currTag = verificationMethod?.currency === 'USD' ? '$ USD' : 'Bs.';
-    const verificationNotes = `Validación: Destino: ${verificationMethod?.title || 'Pago Móvil'} | Ref: ${pmReference} | Monto: ${currTag} ${pmAmount} | Fecha: ${pmDate} | Banco: ${pmBank} | CI/RIF/Titular: ${pmCedula}`;
+    const isUSD = verificationMethod?.currency === 'USD' || (verificationMethod?.title && /zelle|paypal|binance|wise|dolar|usd/i.test(verificationMethod.title));
+    const calculatedAmount = isUSD ? total.toFixed(2) : (bcvRate ? (bcvRate * total).toFixed(2) : total.toFixed(2));
+    
+    const finalAmount = pmAmount.trim() || calculatedAmount;
+    const finalDate = pmDate || new Date().toISOString().split('T')[0];
+    const finalBank = pmBank.trim() || verificationMethod?.title || 'Pago Móvil';
+    const finalRef = pmReference.trim() || 'Por verificar en caja';
+    const finalCedula = pmCedula.trim() || 'No registrada';
+
+    const verificationNotes = `Validación: Destino: ${verificationMethod?.title || 'Pago Móvil'} | Ref: ${finalRef} | Monto: ${currTag} ${finalAmount} | Fecha: ${finalDate} | Banco: ${finalBank} | CI/RIF/Titular: ${finalCedula}`;
     onSelectPayment(verificationMethod, verificationNotes);
   };
 
@@ -121,7 +131,7 @@ export function CheckoutForm({
             </div>
           )}
           <p className="text-xs text-amber-600 mt-4 text-center">
-            * El pedido no se entregará hasta confirmar el pago en caja.
+            * Tu pedido fue enviado a la cocina. El cajero verificará el pago al procesar la entrega.
           </p>
         </div>
       </div>
@@ -140,8 +150,8 @@ export function CheckoutForm({
     return (
       <form onSubmit={handleVerificationSubmit} className="w-full max-w-md mx-auto space-y-6 animate-fade-in text-left">
         <div className="space-y-2 mb-2">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Validar Pago</h1>
-          <p className="text-slate-500 text-sm">Realiza tu pago en <strong>{verificationMethod.title}</strong> y registra los datos abajo para procesar tu orden.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Datos del Pago</h1>
+          <p className="text-slate-500 text-sm">Realiza tu pago en <strong>{verificationMethod.title}</strong> e indica tus datos para enviar la orden a cocina.</p>
         </div>
 
         <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-5 space-y-4 shadow-sm">
@@ -239,11 +249,10 @@ export function CheckoutForm({
 
         <div className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">Número de Referencia / Comprobante *</label>
+            <label className="text-xs font-bold text-slate-700">Número de Referencia / Comprobante</label>
             <input 
               value={pmReference}
               onChange={e => setPmReference(e.target.value)}
-              required 
               placeholder="Ej: 849201" 
               className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
             />
@@ -251,44 +260,40 @@ export function CheckoutForm({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">
-                {isUSD ? 'Monto Exacto (USD $) *' : 'Monto Exacto (Bs) *'}
+                {isUSD ? 'Monto Exacto (USD $)' : 'Monto Exacto (Bs)'}
               </label>
               <input 
                 value={pmAmount}
                 onChange={e => setPmAmount(e.target.value)}
-                required 
                 placeholder={isUSD ? `Ej: ${total.toFixed(2)}` : `Ej: ${bsCalculated || '1058.50'}`}
                 className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Fecha del Pago *</label>
+              <label className="text-xs font-bold text-slate-700">Fecha del Pago</label>
               <input 
                 type="date"
                 value={pmDate}
                 onChange={e => setPmDate(e.target.value)}
-                required 
                 className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Banco / Plataforma *</label>
+              <label className="text-xs font-bold text-slate-700">Banco / Plataforma</label>
               <input 
                 value={pmBank}
                 onChange={e => setPmBank(e.target.value)}
-                required 
                 placeholder={isUSD ? 'Ej: Zelle / BofA' : 'Ej: Banesco'} 
                 className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">CI / RIF / Titular *</label>
+              <label className="text-xs font-bold text-slate-700">CI / RIF / Titular</label>
               <input 
                 value={pmCedula}
                 onChange={e => setPmCedula(e.target.value)}
-                required 
                 placeholder="Ej: V-12345678" 
                 className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors text-sm"
               />
@@ -299,7 +304,7 @@ export function CheckoutForm({
         <div className="pt-2 flex flex-col gap-3">
           <button 
             type="submit"
-            disabled={isProcessing || !pmReference || !pmAmount || !pmDate || !pmBank || !pmCedula}
+            disabled={isProcessing}
             className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-14 text-base transition-all shadow-[0_4px_20px_rgba(16,185,129,0.25)] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
           >
             {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</> : 'YA REALICÉ EL PAGO'}
