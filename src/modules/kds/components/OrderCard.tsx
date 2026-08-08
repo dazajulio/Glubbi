@@ -590,17 +590,19 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
           <button
             type="button"
             onClick={() => setIsPaymentModalOpen(true)}
-            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 font-bold text-center py-2.5 rounded-lg text-sm border border-emerald-500/20 flex items-center justify-center gap-2 transition-colors"
+            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 font-bold text-center py-2.5 rounded-lg text-sm border border-emerald-500/20 flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <CircleCheckBig className="w-4 h-4" />
-              if (ref && onPaymentValidate) {
-                onPaymentValidate(order.id, ref);
-              }
-            }}
-            className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-center py-2.5 rounded-lg text-sm border border-amber-500/20 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            PEDIDO PAGADO (Ver Ficha)
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 font-bold text-center py-2.5 rounded-lg text-sm border border-amber-500/20 flex items-center justify-center gap-2 transition-colors cursor-pointer"
             title="Confirmar Pago"
           >
-            ⚠️ ESPERA DE CONFIRMACIÓN DE PAGO
+            ⚠️ VALIDAR PAGO (Ref, CI, Banco)
           </button>
         )}
 
