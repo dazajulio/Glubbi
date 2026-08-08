@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { ProductWithModifiers, ModifierGroup, Modifier, ModifierSnapshot } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
-import { X, Check } from 'lucide-react';
+import { X, Check, Plus, Minus } from 'lucide-react';
 
 interface ProductCustomizationModalProps {
   product: ProductWithModifiers | null;
@@ -25,6 +25,7 @@ export function ProductCustomizationModal({
   isEditing
 }: ProductCustomizationModalProps) {
   // Use a map to store selected modifiers by group ID: Record<string, Modifier[]>
+  // For multi-select groups, an array can contain duplicate Modifier objects representing quantity > 1
   const [selections, setSelections] = useState<Record<string, Modifier[]>>({});
   
   // Reset state when product changes
@@ -39,9 +40,19 @@ export function ProductCustomizationModal({
           // Match snapshots back to actual modifiers
           const snapshotGroup = initialSelections.find(s => s.group === group.name);
           if (snapshotGroup) {
-            const selectedMods = availableMods.filter(m => 
-              snapshotGroup.items.some(item => item.name === m.name)
-            );
+            const selectedMods: Modifier[] = [];
+            snapshotGroup.items.forEach(item => {
+              const qtyMatch = item.name.match(/^(\d+)x\s+(.+)$/);
+              const qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+              const cleanName = qtyMatch ? qtyMatch[2] : item.name;
+
+              const targetMod = availableMods.find(m => m.name === cleanName || m.name === item.name);
+              if (targetMod) {
+                for (let i = 0; i < qty; i++) {
+                  selectedMods.push(targetMod);
+                }
+              }
+            });
             if (selectedMods.length > 0) {
               prefilled[group.id] = selectedMods;
             }
@@ -49,7 +60,17 @@ export function ProductCustomizationModal({
         } else if (group.min_selections > 0 && availableMods.length > 0) {
           // Auto-select initial defaults if required group so modal opens valid
           const defaultCount = Math.min(group.min_selections, availableMods.length);
-          prefilled[group.id] = availableMods.slice(0, defaultCount);
+          const defaultMods: Modifier[] = [];
+          
+          if (group.max_selections === 1) {
+            defaultMods.push(availableMods[0]);
+          } else {
+            // Distribute defaultCount across available modifiers
+            for (let i = 0; i < defaultCount; i++) {
+              defaultMods.push(availableMods[i % availableMods.length]);
+            }
+          }
+          prefilled[group.id] = defaultMods;
         }
       });
       
@@ -74,34 +95,30 @@ export function ProductCustomizationModal({
   const extraPrice = Object.values(selections).flat().reduce((sum, mod) => sum + (mod?.extra_price || 0), 0);
   const totalPrice = basePrice + extraPrice;
 
-  const toggleModifier = (group: ModifierGroup, modifier: Modifier) => {
+  // Increments quantity of a modifier inside a group
+  const addModifier = (group: ModifierGroup, modifier: Modifier) => {
     setSelections(prev => {
       const groupSelections = prev[group.id] || [];
-      const isSelected = groupSelections.some(m => m.id === modifier.id);
-      
-      let newGroupSelections: Modifier[];
-      
-      if (isSelected) {
-        // Deselect
-        newGroupSelections = groupSelections.filter(m => m.id !== modifier.id);
-      } else {
-        // Select
-        if (group.max_selections === 1) {
-          // Radio behavior: replace current selection
-          newGroupSelections = [modifier];
-        } else if (groupSelections.length < group.max_selections) {
-          // Checkbox behavior: add to selection
-          newGroupSelections = [...groupSelections, modifier];
-        } else {
-          // Max reached, do nothing
-          return prev;
-        }
+      if (group.max_selections === 1) {
+        return { ...prev, [group.id]: [modifier] };
       }
-      
-      return {
-        ...prev,
-        [group.id]: newGroupSelections
-      };
+      if (groupSelections.length >= group.max_selections) {
+        return prev;
+      }
+      return { ...prev, [group.id]: [...groupSelections, modifier] };
+    });
+  };
+
+  // Decrements quantity of a modifier inside a group
+  const removeModifier = (group: ModifierGroup, modifier: Modifier) => {
+    setSelections(prev => {
+      const groupSelections = prev[group.id] || [];
+      const index = groupSelections.findIndex(m => m.id === modifier.id);
+      if (index === -1) return prev;
+
+      const newGroupSelections = [...groupSelections];
+      newGroupSelections.splice(index, 1);
+      return { ...prev, [group.id]: newGroupSelections };
     });
   };
 
@@ -113,14 +130,26 @@ export function ProductCustomizationModal({
       const snapshots: ModifierSnapshot[] = [];
       
       (product.modifier_groups || []).forEach(group => {
-        const selected = selections[group.id];
-        if (selected && selected.length > 0) {
+        const selected = selections[group.id] || [];
+        if (selected.length > 0) {
+          const itemMap = new Map<string, { mod: Modifier; count: number }>();
+          selected.forEach(mod => {
+            const existing = itemMap.get(mod.id);
+            if (existing) {
+              existing.count += 1;
+            } else {
+              itemMap.set(mod.id, { mod, count: 1 });
+            }
+          });
+
+          const snapshotItems = Array.from(itemMap.values()).map(({ mod, count }) => ({
+            name: count > 1 ? `${count}x ${mod.name}` : mod.name,
+            price: (mod.extra_price || 0) * count
+          }));
+
           snapshots.push({
             group: group.name,
-            items: selected.map(mod => ({
-              name: mod.name,
-              price: mod.extra_price || 0
-            }))
+            items: snapshotItems
           });
         }
       });
@@ -160,7 +189,7 @@ export function ProductCustomizationModal({
           </button>
         </div>
 
-        {/* Product Title and Description (Moved below image) */}
+        {/* Product Title and Description */}
         <div className="p-4 sm:p-6 bg-white border-b border-gray-100 shrink-0">
           <h2 className="text-2xl font-black text-slate-900">{product.name}</h2>
           {product.description && (
@@ -174,62 +203,117 @@ export function ProductCustomizationModal({
             <p className="text-gray-500 text-center py-8">Este producto no tiene opciones adicionales.</p>
           ) : (
             (product.modifier_groups || []).map(group => {
-              const selectedCount = (selections[group.id] || []).length;
+              const groupSelections = selections[group.id] || [];
+              const selectedCount = groupSelections.length;
               const isGroupValid = selectedCount >= group.min_selections && selectedCount <= group.max_selections;
-              
+              const isMultiSelect = group.max_selections > 1;
+
               return (
                 <div key={group.id} className="space-y-4">
                   <div className="flex justify-between items-baseline border-b border-gray-200 pb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{group.name}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-md ${
-                      isGroupValid ? 'bg-slate-100 text-gray-500' : 'bg-red-500/20 text-red-400 font-medium'
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{group.name}</h3>
+                      {isMultiSelect && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Seleccionadas: <strong className="text-gray-900">{selectedCount}</strong> de {group.max_selections}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-md font-semibold ${
+                      isGroupValid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
                     }`}>
                       {group.min_selections === group.max_selections && group.min_selections > 0
-                        ? `Elige ${group.min_selections}`
+                        ? `Elige exacto ${group.min_selections}`
                         : group.min_selections > 0
-                        ? `Obligatorio (mín ${group.min_selections})`
+                        ? `Obligatorio (${selectedCount}/${group.max_selections})`
                         : `Opcional (máx ${group.max_selections})`}
                     </span>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {(group.modifiers || []).filter(m => m.is_available !== false).map(modifier => {
-                      const isSelected = (selections[group.id] || []).some(m => m.id === modifier.id);
-                      // Disable if max reached and this one is not selected
-                      const isDisabled = !isSelected && selectedCount >= group.max_selections && group.max_selections > 1;
-                      
+                      const modCount = groupSelections.filter(m => m.id === modifier.id).length;
+                      const isSelected = modCount > 0;
+                      const isGroupFull = selectedCount >= group.max_selections;
+
                       return (
-                        <button
+                        <div
                           key={modifier.id}
-                          disabled={isDisabled}
-                          onClick={() => toggleModifier(group, modifier)}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
                             isSelected 
-                              ? 'border-green-500 bg-green-50' 
+                              ? 'border-orange-500 bg-orange-50/50 shadow-sm' 
                               : 'border-gray-200 bg-white hover:bg-slate-50'
-                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          }`}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className={`w-5 h-5 flex items-center justify-center border ${
-                              group.max_selections === 1 ? 'rounded-full' : 'rounded-md'
-                            } ${
-                              isSelected 
-                                ? 'bg-green-500 border-green-500 text-white' 
-                                : 'border-zinc-400 bg-white'
-                            }`}>
-                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                            {!isMultiSelect && (
+                              <div className={`w-5 h-5 flex items-center justify-center rounded-full border ${
+                                isSelected 
+                                  ? 'bg-orange-500 border-orange-500 text-white' 
+                                  : 'border-zinc-400 bg-white'
+                              }`}>
+                                {isSelected && <Check className="w-3.5 h-3.5" />}
+                              </div>
+                            )}
+                            <div>
+                              <span className={`${isSelected ? 'text-slate-900 font-bold' : 'font-medium text-gray-800'}`}>
+                                {modifier.name}
+                              </span>
+                              {modifier.extra_price > 0 && (
+                                <span className="text-orange-600 text-xs font-semibold block">
+                                  +{formatPrice(modifier.extra_price, currency)}
+                                </span>
+                              )}
                             </div>
-                            <span className={`${isSelected ? 'text-green-700 font-bold' : 'font-medium text-gray-800'}`}>
-                              {modifier.name}
-                            </span>
                           </div>
                           
-                          {modifier.extra_price > 0 && (
-                            <span className="text-gray-500 text-sm font-medium">
-                              +{formatPrice(modifier.extra_price, currency)}
-                            </span>
+                          {/* Single selection vs Multi-Quantity Stepper */}
+                          {!isMultiSelect ? (
+                            <button
+                              type="button"
+                              onClick={() => addModifier(group, modifier)}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                isSelected
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {isSelected ? 'Seleccionado' : 'Seleccionar'}
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-xs">
+                              <button
+                                type="button"
+                                disabled={modCount === 0}
+                                onClick={() => removeModifier(group, modifier)}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                  modCount > 0 
+                                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                                    : 'text-gray-300 cursor-not-allowed'
+                                }`}
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
+                              
+                              <span className="w-6 text-center text-sm font-black text-slate-900">
+                                {modCount}
+                              </span>
+                              
+                              <button
+                                type="button"
+                                disabled={isGroupFull}
+                                onClick={() => addModifier(group, modifier)}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                                  !isGroupFull 
+                                    ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                    : 'bg-slate-100 text-gray-300 cursor-not-allowed'
+                                }`}
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>

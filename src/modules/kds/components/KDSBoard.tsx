@@ -129,9 +129,25 @@ export function KDSBoard({ restaurantId }: KDSBoardProps) {
   const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Callback when a new order arrives via realtime
-  const handleNewOrder = useCallback((_order: OrderWithItems) => {
-    // Play notification sound
-    shiftButtonRef.current?.playNewOrderSound();
+  const handleNewOrder = useCallback((order: OrderWithItems) => {
+    // Play notification sound & Desktop Notification
+    shiftButtonRef.current?.playNewOrderSound(order);
+
+    // Flash tab title if browser window is minimized or in background
+    if (typeof document !== 'undefined' && document.hidden) {
+      let count = 0;
+      const originalTitle = document.title;
+      const interval = setInterval(() => {
+        document.title = count % 2 === 0 
+          ? `🚀 ¡NUEVO PEDIDO #${order.order_number}! - KDS` 
+          : `⚠️ ALERTA EN COCINA - REVISAR`;
+        count++;
+        if (count > 25 || !document.hidden) {
+          clearInterval(interval);
+          document.title = originalTitle;
+        }
+      }, 800);
+    }
 
     // Auto-scroll the "pending" column to the bottom to show the new order
     const pendingCol = columnRefs.current['pending'];

@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils';
 import { useKdsStore } from '@/modules/kds/stores/kds-store';
 
 export interface ShiftStartButtonHandle {
-  playNewOrderSound: () => void;
+  playNewOrderSound: (order?: OrderWithItems) => void;
 }
 
 // ----------------------------------------------------------------------------
@@ -39,40 +39,38 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
     const { audioContext, isUnlocked, selectedTone, setAudioContext, setTone } = useKdsStore();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Initialize tone from localStorage on mount
+    // Auto-restore AudioContext on mount if turn was active in localStorage
     useEffect(() => {
-      const savedTone = localStorage.getItem('kds_alarm_tone');
-      if (savedTone) {
-        setTone(savedTone);
-      }
-      
-      // Auto-restore shift if previously active
       const isShiftActive = localStorage.getItem('kds_shift_active');
+      const savedTone = localStorage.getItem('kds_selected_tone');
+      if (savedTone) setTone(savedTone);
+
       if (isShiftActive === 'true' && !isUnlocked && !audioContext) {
-         // Attempt silent unlock
-         try {
+        try {
            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
            const ctx = new AudioCtx();
            setAudioContext(ctx);
-           
-           // We add a one-time global click listener to resume if it was suspended
+
            const resumeAudio = () => {
              if (ctx.state === 'suspended') ctx.resume();
              document.removeEventListener('click', resumeAudio);
            };
            document.addEventListener('click', resumeAudio);
-         } catch (e) {
+        } catch (e) {
            console.warn('Could not auto-restore audio context', e);
-         }
+        }
       }
     }, [setTone, isUnlocked, audioContext, setAudioContext]);
 
+    // Handle Tone Selector Change
     const handleToneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setTone(e.target.value);
+      const newTone = e.target.value;
+      setTone(newTone);
+      localStorage.setItem('kds_selected_tone', newTone);
     };
 
     // ------------------------------------------------------------------
-    // Unlock audio autoplay
+    // Unlock audio autoplay & Request Desktop Notifications
     // ------------------------------------------------------------------
     const unlockAudio = useCallback(async () => {
       if (isUnlocked) {
@@ -81,12 +79,22 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
             audioContext.close();
             setAudioContext(null);
           }
+          localStorage.removeItem('kds_shift_active');
         }
         return;
       }
       setIsLoading(true);
 
       try {
+        // Request Desktop Notifications permission
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+          try {
+            await Notification.requestPermission();
+          } catch (e) {
+            console.warn('[KDS] Notification permission error:', e);
+          }
+        }
+
         // Create AudioContext
         const AudioCtx =
           window.AudioContext ??
@@ -107,6 +115,7 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
         }
 
         setAudioContext(ctx);
+        localStorage.setItem('kds_shift_active', 'true');
       } catch (err) {
         console.error('[KDS] Error unlocking audio:', err);
       } finally {
@@ -115,86 +124,125 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
     }, [isUnlocked, audioContext, setAudioContext]);
 
     // ------------------------------------------------------------------
-    // Play the notification sound via Web Audio API Oscillator
+    // Play the notification sound via Web Audio API Oscillator & System Notifications
     // ------------------------------------------------------------------
-    const playNewOrderSound = useCallback(() => {
-      if (!audioContext) return;
-      
-      // Attempt to resume if suspended
-      if (audioContext.state === 'suspended') {
-         audioContext.resume().catch(() => console.log('Audio suspended'));
+    const playNewOrderSound = useCallback((order?: OrderWithItems) => {
+      // 1. Play Web Audio API Oscillator sound if audioContext is present
+      if (audioContext) {
+        if (audioContext.state === 'suspended') {
+           audioContext.resume().catch(() => console.log('Audio suspended'));
+        }
+
+        try {
+          const playRing = (startTimeOffset: number) => {
+            const startTime = audioContext.currentTime + startTimeOffset;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = 
+              selectedTone === 'digital-chime' ? 'square' : 
+              selectedTone === 'urgent-buzz' ? 'sawtooth' : 
+              selectedTone === 'siren-alert' ? 'sine' :
+              selectedTone === 'rapid-beep' ? 'square' :
+              selectedTone === 'soft-alert' ? 'sine' : 'triangle';
+              
+            oscillator.frequency.setValueAtTime(
+              selectedTone === 'digital-chime' ? 880 : 
+              selectedTone === 'urgent-buzz' ? 120 :
+              selectedTone === 'rapid-beep' ? 1200 :
+              523.25, startTime);
+
+            if (selectedTone === 'new-order') {
+              oscillator.frequency.setValueAtTime(523.25, startTime); // C5
+              oscillator.frequency.setValueAtTime(659.25, startTime + 0.15); // E5
+            } else if (selectedTone === 'siren-alert') {
+              oscillator.frequency.setValueAtTime(400, startTime);
+              oscillator.frequency.linearRampToValueAtTime(1200, startTime + 0.5);
+              oscillator.frequency.linearRampToValueAtTime(400, startTime + 1.0);
+            } else if (selectedTone === 'urgent-buzz') {
+              oscillator.frequency.setValueAtTime(100, startTime);
+              oscillator.frequency.linearRampToValueAtTime(200, startTime + 0.1);
+            } else if (selectedTone === 'rapid-beep') {
+              oscillator.frequency.setValueAtTime(1000, startTime);
+            }
+
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.5);
+          };
+
+          if (selectedTone === 'siren-alert') {
+            playRing(0);
+            playRing(1.0);
+            playRing(2.0);
+          } else if (selectedTone === 'rapid-beep') {
+            playRing(0);
+            playRing(0.2);
+            playRing(0.4);
+            playRing(0.6);
+            playRing(0.8);
+            playRing(1.0);
+          } else if (selectedTone === 'urgent-buzz') {
+            playRing(0);
+            playRing(0.3);
+            playRing(0.6);
+            playRing(0.9);
+          } else {
+            playRing(0);
+            setTimeout(() => playRing(0), 800);
+            setTimeout(() => playRing(0), 1600);
+          }
+        } catch (err) {
+          console.warn('[KDS] Could not play notification sound:', err);
+        }
       }
 
+      // 2. HTML5 Audio Synthesizer Fallback (Works when tab is minimized/in background)
       try {
-        const playRing = (startTimeOffset: number) => {
-          const startTime = audioContext.currentTime + startTimeOffset;
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.type = 
-            selectedTone === 'digital-chime' ? 'square' : 
-            selectedTone === 'urgent-buzz' ? 'sawtooth' : 
-            selectedTone === 'siren-alert' ? 'sine' :
-            selectedTone === 'rapid-beep' ? 'square' :
-            selectedTone === 'soft-alert' ? 'sine' : 'triangle';
-            
-          oscillator.frequency.setValueAtTime(
-            selectedTone === 'digital-chime' ? 880 : 
-            selectedTone === 'urgent-buzz' ? 120 :
-            selectedTone === 'rapid-beep' ? 1200 :
-            523.25, startTime);
-
-          if (selectedTone === 'new-order') {
-            oscillator.frequency.setValueAtTime(523.25, startTime); // C5
-            oscillator.frequency.setValueAtTime(659.25, startTime + 0.15); // E5
-          } else if (selectedTone === 'siren-alert') {
-            oscillator.frequency.setValueAtTime(400, startTime);
-            oscillator.frequency.linearRampToValueAtTime(1200, startTime + 0.5);
-            oscillator.frequency.linearRampToValueAtTime(400, startTime + 1.0);
-          } else if (selectedTone === 'urgent-buzz') {
-            oscillator.frequency.setValueAtTime(100, startTime);
-            oscillator.frequency.linearRampToValueAtTime(200, startTime + 0.1);
-          } else if (selectedTone === 'rapid-beep') {
-            oscillator.frequency.setValueAtTime(1000, startTime);
-          }
-
-          gainNode.gain.setValueAtTime(0, startTime);
-          gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.05); // Louder
-          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          oscillator.start(startTime);
-          oscillator.stop(startTime + 0.5);
-        };
-
-        // Different repetition patterns depending on urgency
-        if (selectedTone === 'siren-alert') {
-          playRing(0);
-          playRing(1.0);
-          playRing(2.0);
-        } else if (selectedTone === 'rapid-beep') {
-          playRing(0);
-          playRing(0.2);
-          playRing(0.4);
-          playRing(0.6);
-          playRing(0.8);
-          playRing(1.0);
-        } else if (selectedTone === 'urgent-buzz') {
-          playRing(0);
-          playRing(0.3);
-          playRing(0.6);
-          playRing(0.9);
-        } else {
-          // Standard ring 3 times
-          playRing(0);
-          setTimeout(() => playRing(0), 800);
-          setTimeout(() => playRing(0), 1600);
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) {
+          const bgCtx = new AudioContextClass();
+          const osc = bgCtx.createOscillator();
+          const gain = bgCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(800, bgCtx.currentTime);
+          gain.gain.setValueAtTime(0.5, bgCtx.currentTime);
+          osc.connect(gain);
+          gain.connect(bgCtx.destination);
+          osc.start();
+          osc.stop(bgCtx.currentTime + 0.4);
         }
-        
-      } catch (err) {
-        console.warn('[KDS] Could not play notification sound:', err);
+      } catch (e) {
+        // Ignore fallback errors
+      }
+
+      // 3. System-Level Desktop Toast Notification (Windows / macOS)
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          const orderNum = order ? `#${order.order_number}` : 'NUEVO';
+          const custName = order ? (getCustomerName(order) || 'Cliente') : '';
+          const totalStr = order ? `$${order.total_amount}` : '';
+
+          const notification = new Notification(`🚀 ¡NUEVO PEDIDO DE COMIDA ${orderNum}!`, {
+            body: `Cliente: ${custName} ${totalStr ? `| Total: ${totalStr}` : ''}\n¡Haz clic aquí para abrir el KDS!`,
+            icon: '/favicon.ico',
+            tag: order ? `kds-order-${order.id}` : `kds-alert-${Date.now()}`,
+            requireInteraction: true
+          });
+
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        } catch (e) {
+          console.warn('[KDS] Desktop notification error:', e);
+        }
       }
     }, [selectedTone, audioContext]);
 
