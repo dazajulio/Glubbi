@@ -172,17 +172,18 @@ export function getDeliveryDetails(notes: string | null): { address?: string; ph
   };
 }
 
-export function getValidationDetails(notes: string | null): { ref?: string; monto?: string; fecha?: string; banco?: string; ci?: string; raw?: string } | null {
+export function getValidationDetails(notes: string | null): { ref?: string; monto?: string; fecha?: string; banco?: string; ci?: string; destino?: string; raw?: string } | null {
   if (!notes) return null;
   const safeNotes = notes.substring(0, 1500); // Mitigation against ReDoS
-  if (!safeNotes.includes('Validación:')) return null;
+  if (!safeNotes.includes('Validación:') && !safeNotes.includes('PagoMovil')) return null;
   
   const refMatch = safeNotes.match(/Ref:\s*([^|]{1,50})/);
   const montoMatch = safeNotes.match(/Monto:\s*([^|]{1,50})/);
   const fechaMatch = safeNotes.match(/Fecha:\s*([^|]{1,50})/);
   const bancoMatch = safeNotes.match(/Banco:\s*([^|]{1,50})/);
-  const ciMatch = safeNotes.match(/CI\/RIF:\s*([^|]{1,50})/);
-  const rawMatch = safeNotes.match(/(Validación:.*?)(?:\n|$)/);
+  const ciMatch = safeNotes.match(/(?:CI\/RIF\/Titular|CI\/RIF|CI|RIF|Cedula|Cédula|Titular):\s*([^|\n]{1,50})/i);
+  const destinoMatch = safeNotes.match(/(?:Destino|Método|Metodo):\s*([^|\n]{1,50})/i);
+  const rawMatch = safeNotes.match(/((?:Validación|PagoMovil):.*?)(?:\n|$)/);
 
   return {
     ref: refMatch ? refMatch[1].trim() : undefined,
@@ -190,6 +191,7 @@ export function getValidationDetails(notes: string | null): { ref?: string; mont
     fecha: fechaMatch ? fechaMatch[1].trim() : undefined,
     banco: bancoMatch ? bancoMatch[1].trim() : undefined,
     ci: ciMatch ? ciMatch[1].trim() : undefined,
+    destino: destinoMatch ? destinoMatch[1].trim() : undefined,
     raw: rawMatch ? rawMatch[1].trim() : undefined
   };
 }
@@ -259,9 +261,11 @@ export function printOrder(order: OrderWithItems) {
   const validationHtml = validation ? `
     <div style="margin-top: 6px; border-top: 1px dashed #000; padding-top: 6px; font-size: 10px; text-align: left; color: #000 !important; background: #fff !important;">
       <div style="font-weight: bold; font-size: 11px; margin-bottom: 2px;">PAGO A VALIDAR:</div>
+      ${validation.destino ? `<div><strong>DESTINO:</strong> ${validation.destino}</div>` : ''}
       <div><strong>REF:</strong> ${validation.ref || 'N/A'}</div>
       <div><strong>MONTO:</strong> ${validation.monto || 'N/A'}</div>
-      <div><strong>BANCO:</strong> ${validation.banco || 'N/A'}</div>
+      <div><strong>BANCO EMISOR:</strong> ${validation.banco || 'N/A'}</div>
+      <div><strong>CI/RIF:</strong> ${validation.ci || 'N/A'}</div>
     </div>
   ` : '';
 
@@ -555,17 +559,23 @@ export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }
             </span>
           </div>
           <div className="space-y-1.5 pt-1 text-xs">
+            {validation.destino && (
+              <div className="flex items-center gap-2 text-gray-800">
+                <span className="text-gray-400 font-medium">Cuenta Destino:</span>
+                <span className="font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">{validation.destino}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-gray-800">
               <span className="text-gray-400 font-medium">Ref:</span>
-              <span className="font-semibold text-gray-900">{validation.ref}</span>
+              <span className="font-semibold text-gray-900">{validation.ref || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-800">
-              <span className="text-gray-400 font-medium">Banco:</span>
-              <span className="font-semibold text-gray-900">{validation.banco}</span>
+              <span className="text-gray-400 font-medium">Banco Emisor:</span>
+              <span className="font-semibold text-gray-900">{validation.banco || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-800">
               <span className="text-gray-400 font-medium">CI/RIF:</span>
-              <span className="font-semibold text-gray-900">{validation.ci}</span>
+              <span className="font-semibold text-gray-900">{validation.ci || 'No registrado'}</span>
             </div>
           </div>
         </div>

@@ -1,0 +1,422 @@
+{
+  "name": "Glubbi - Agente 01 SDR & Prospeccion de Ventas (PRODUCCION DIARIA)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        1280
+      ],
+      "id": "325dc391-6a35-4645-a3ab-c1674a747299",
+      "name": "Disparador Diario (Lunes a Lunes 10 AM)"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      restaurant_name: \"Pizzería Bella Italia\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Carlos Rossi\",\n      email: \"bellaitalia.merida@gmail.com\",\n      phone: \"+584141234567\",\n      business_category: \"Restaurante (Pizzería)\",\n      menu_type: \"PDF en Google Drive link en Instagram\",\n      ordering_method: \"Mensajes por WhatsApp sin carrito\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Burger Factory Mérida\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Andrés Gómez\",\n      email: \"burgerfactory.merida@gmail.com\",\n      phone: \"+584129876543\",\n      business_category: \"Restaurante (Hamburguesería)\",\n      menu_type: \"Fotos borrosas en historias destacadas\",\n      ordering_method: \"WhatsApp manual sin menú interactivo\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Bodegón Don Pedro\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Pedro Delgado\",\n      email: \"bodegondonpedro.merida@gmail.com\",\n      phone: \"+584245551234\",\n      business_category: \"Bodegón de Alimentos / Delicateses\",\n      menu_type: \"Lista de precios en imagen de WhatsApp\",\n      ordering_method: \"Pedidos informales por texto en WhatsApp\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Pastelería & Heladería La Dulcería\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"María Fernández\",\n      email: \"ladulceria.merida@gmail.com\",\n      phone: \"+584164448899\",\n      business_category: \"Venta de Postres / Repostería\",\n      menu_type: \"Catálogo PDF pesado no optimizado\",\n      ordering_method: \"Mensajes por Instagram DM y WhatsApp\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Farmacia & Conveniencia La Salud\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Dr. Luis Mendoza\",\n      email: \"farmasud.merida@gmail.com\",\n      phone: \"+584143332211\",\n      business_category: \"Farmacia / Productos de Conveniencia\",\n      menu_type: \"Sin catálogo digitalizado disponible\",\n      ordering_method: \"Llamadas telefónicas y WhatsApp manual\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Sushi Express Mérida\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Kenji Tanaka\",\n      email: \"sushiexpress.merida@gmail.com\",\n      phone: \"+584126667788\",\n      business_category: \"Restaurante (Sushi & Asian)\",\n      menu_type: \"Link de Linktree a PDF pesado\",\n      ordering_method: \"Chat manual de WhatsApp sin comandas\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Café & Panadería Don Pepe\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"José Silva\",\n      email: \"donpepe.merida@gmail.com\",\n      phone: \"+584241112233\",\n      business_category: \"Cafetería / Panadería\",\n      menu_type: \"Pizarra física en local sin menú web\",\n      ordering_method: \"Atención telefónica manual\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Pollo Sabroso Express\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Roberto Parra\",\n      email: \"pollosabroso.merida@gmail.com\",\n      phone: \"+584149990011\",\n      business_category: \"Restaurante (Comida Rápida)\",\n      menu_type: \"PDF no interactivo en Google Drive\",\n      ordering_method: \"WhatsApp directo sin cálculo de adicionales\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Bodegón & Delicateses El Páramo\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Carmen Morales\",\n      email: \"elparamo.merida@gmail.com\",\n      phone: \"+584127778899\",\n      business_category: \"Bodegón de Alimentos\",\n      menu_type: \"Historias en Instagram con precios cambiaros\",\n      ordering_method: \"WhatsApp manual sin carrito\"\n    }\n  },\n  {\n    json: {\n      restaurant_name: \"Tortas & Postres D'Gusto\",\n      city: \"Mérida, Venezuela\",\n      contact_name: \"Valeria Suárez\",\n      email: \"dgusto.merida@gmail.com\",\n      phone: \"+584248889900\",\n      business_category: \"Venta de Postres / Dulcería\",\n      menu_type: \"PDF sin fotos de productos\",\n      ordering_method: \"Mensajes por Instagram DM\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        1280
+      ],
+      "id": "8a6829e1-8ff4-4c6e-9cdd-c4a592a7da7a",
+      "name": "Lote Diario (10 Prospectos - Mérida Target)"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1488
+      ],
+      "id": "7ec2c23c-cba8-48fd-801a-ea517869f833",
+      "name": "OpenRouter Model (Claude 3.5 / GPT-4o-mini)",
+      "credentials": {
+        "openAiApi": {
+          "id": "ekrZEZoMONXbRuv4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza el siguiente prospecto comercial en Mérida, Venezuela para Glubbi:\nNegocio: {{ $json.restaurant_name }}\nCategoría: {{ $json.business_category }}\nContacto: {{ $json.contact_name }}\nCiudad: {{ $json.city }}\nEmail: {{ $json.email }}\nFormato de Menú/Catálogo: {{ $json.menu_type }}\nMétodo de Pedido: {{ $json.ordering_method }}\n\nREGLAS DE NEGOCIO:\n1. NO ofrecer prueba o demo gratis. El registro se realiza de manera sencilla en nuestra web: https://glubbi.app/register\n2. Operando activamente en la ciudad de Mérida, Venezuela.\n3. Invitar a seguirnos en Instagram: @glubbi.app\n4. Incluir opción para solicitar atención de soporte si lo desean.\n\nTAREA:\n1. Calcula el ICP Score (0 a 100).\n2. Identifica el dolor principal ('pdf_menu' | 'whatsapp_manual' | 'no_kds' | 'high_commissions').\n3. Redacta un Asunto de email corto e impactante.\n4. Redacta un Cuerpo de Cold Email en formato HTML profesional.\n\nResponde ÚNICAMENTE un objeto JSON válido:\n{\n  \"icp_score\": 85,\n  \"primary_pain\": \"pdf_menu\",\n  \"qualification_reason\": \"Usan PDF o catálogo informal y WhatsApp manual en Mérida\",\n  \"subject\": \"Optimiza las ventas de {{ $json.restaurant_name }} con Glubbi\",\n  \"html_body\": \"<p>Cuerpo de correo</p>\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -320,
+        1280
+      ],
+      "id": "f1d8a306-5685-4249-b0b6-273bf7236623",
+      "name": "Evaluador ICP & Copywriter Engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seenEmails = new Set();\nconst uniqueItems = [];\n\nfor (const item of items) {\n  let original = {};\n  try {\n    original = item.json || {};\n  } catch (e) {\n    original = {};\n  }\n  \n  const email = (original.email || '').toLowerCase().trim();\n  if (email && seenEmails.has(email)) {\n    continue; // Deduplicación anti-spam\n  }\n  if (email) seenEmails.add(email);\n\n  const responseText = item.json.text || item.json.response || '';\n  let parsed = {};\n  try {\n    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();\n    parsed = JSON.parse(cleanJson);\n  } catch (e) {\n    parsed = {\n      icp_score: 80,\n      primary_pain: 'pdf_menu',\n      qualification_reason: 'Prospección calificada en Mérida',\n      subject: 'Optimiza las ventas de ' + (original.restaurant_name || 'tu negocio')\n    };\n  }\n\n  uniqueItems.push({\n    json: {\n      restaurant_name: original.restaurant_name || 'Negocio Target',\n      contact_name: original.contact_name || 'Contacto',\n      email: original.email || 'contacto@ejemplo.com',\n      phone: original.phone || '+584140000000',\n      business_category: original.business_category || 'Comercio',\n      ...parsed\n    }\n  });\n}\n\nreturn uniqueItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2656,
+        896
+      ],
+      "id": "7425b258-e336-427a-ba11-6fcbf859f472",
+      "name": "Parseador & Deduplicador Anti-Spam"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.icp_score }}",
+              "operation": "largerEqual",
+              "value2": 65
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2496,
+        896
+      ],
+      "id": "87cb14e6-61a0-4fcd-8e6d-41ec39fde0b9",
+      "name": "Score ICP >= 65?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://glubbi.app/api/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"restaurantName\": \"{{ $json.restaurant_name }}\",\n  \"contactName\": \"{{ $json.contact_name }}\",\n  \"email\": \"{{ $json.email }}\",\n  \"phone\": \"{{ $json.phone }}\",\n  \"inquiryType\": \"Prospección SDR IA - Mérida\",\n  \"message\": \"ICP Score: {{ $json.icp_score }} | Categoría: {{ $json.business_category }} | Pain: {{ $json.primary_pain }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2272,
+        784
+      ],
+      "id": "776b8785-160b-44c7-8810-996f0211ad1d",
+      "name": "Guardar Lead en Glubbi (API/Supabase)"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2272,
+        1008
+      ],
+      "id": "9a12c4b8-842e-4b2a-89a1-055a8813aef1",
+      "name": "Procesador de Lote en Telegram (1 a 1)"
+    },
+    {
+      "parameters": {
+        "chatId": "887321647",
+        "text": "=🎯 NUEVO LEAD CALIFICADO EN MÉRIDA (SDR IA)\n\nNegocio: {{ $json.restaurant_name }} ({{ $json.business_category }})\nContacto: {{ $json.contact_name }}\nEmail: {{ $json.email }}\nICP Score: {{ $json.icp_score }}/100\nDolor Detectado: {{ $json.qualification_reason }}\n\nAsunto Propuesto:\n{{ $json.subject }}\n\n¿Aprobar el envío automático vía Resend?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboardB": {
+          "rows": [
+            {
+              "buttons": [
+                {
+                  "text": "🟢 Aprobar y Enviar Email",
+                  "additionalFields": {
+                    "callback_data": "=approve_{{ $json.email }}"
+                  }
+                },
+                {
+                  "text": "🔴 Rechazar Lead",
+                  "additionalFields": {
+                    "callback_data": "=reject_{{ $json.email }}"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2048,
+        1008
+      ],
+      "id": "dbaa3787-d28c-4a1b-bc4d-f5a2bf46e42e",
+      "name": "Aprobación HITL en Telegram",
+      "webhookId": "6aa03bb6-ce3a-4cd2-848e-51071e190ff9",
+      "credentials": {
+        "telegramApi": {
+          "id": "egs5gxbj0nmzjcMk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2272,
+        1248
+      ],
+      "id": "a0949b3a-fc37-4e19-8ace-5669da31e43b",
+      "name": "Escuchador de Clics en Telegram",
+      "webhookId": "91cef6ab-03af-49d2-b1a8-79ed398f301b",
+      "credentials": {
+        "telegramApi": {
+          "id": "egs5gxbj0nmzjcMk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.callback_query?.data || '' }}",
+              "operation": "startsWith",
+              "value2": "approve_"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        1248
+      ],
+      "id": "57c181e6-072b-4576-9b54-0376577b580d",
+      "name": "Boton Aprobar Clicked?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer YOUR_RESEND_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Glubbi Sales <soporte@glubbi.app>\",\n  \"to\": [\"{{ $json.callback_query.data.replace('approve_', '') }}\"],\n  \"subject\": \"Menu interactivo sin comisiones para tu restaurante con Glubbi\",\n  \"html\": \"<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'></head><body style='font-family:-apple-system,BlinkMacSystemFont,\\\"Segoe UI\\\",Roboto,Helvetica,Arial,sans-serif;background-color:#f8fafc;color:#1e293b;margin:0;padding:30px 12px;'><div style='max-width:580px;margin:0 auto;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);'><div style='background:linear-gradient(135deg,#ff6b00 0%,#ea580c 100%);padding:28px 24px;text-align:center;'><div style='font-size:28px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;'>Glubbi<span style='color:#ffe4d6;'>.app</span></div><div style='font-size:13px;color:#ffffff;opacity:0.95;margin-top:4px;font-weight:500;'>Menú QR Dinámico • KDS • Pedidos a WhatsApp sin Comisiones</div></div><div style='padding:32px 28px;line-height:1.6;color:#334155;font-size:15px;'><h2 style='color:#0f172a;font-size:19px;font-weight:700;margin-top:0;margin-bottom:16px;'>¡Hola! 👋</h2><p style='margin-bottom:16px;'>Estuve revisando la propuesta de tu negocio en Mérida y me pareció excelente. Sin embargo, noté que sus clientes deben descargar un PDF pesado para ver la carta y hacer pedidos a mano por WhatsApp.</p><p style='margin-bottom:16px;'>En horas pico, esto genera demoras, desorden en cocina y pérdida de ventas. Con <strong>Glubbi</strong> pueden tener su menú QR interactivo con carrito a WhatsApp y pantalla de cocina (KDS) por <strong>$0 comisiones por venta</strong>.</p><p style='margin-bottom:24px;'>El registro es muy sencillo y se realiza directamente en nuestra web:</p><div style='text-align:center;margin:32px 0 24px 0;'><a href='https://glubbi.app/register' style='display:inline-block;background-color:#ff6b00;color:#ffffff !important;font-weight:700;text-decoration:none;padding:15px 32px;border-radius:10px;font-size:15px;box-shadow:0 4px 14px rgba(255,107,0,0.35);'>Registrar mi Restaurante en Glubbi &rarr;</a></div><div style='background-color:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:16px;text-align:center;font-size:13px;color:#475569;'>¿Prefieres que un especialista de nuestro equipo te contacte y te asesore de forma personalizada?<br><a href='mailto:soporte@glubbi.app?subject=REQUERIMIENTO%20DE%20CONTACTO%20-%20Glubbi%20Merida' style='color:#ff6b00;font-weight:bold;text-decoration:underline;'>Haz clic aquí para solicitar llamada de soporte &rarr;</a></div></div><div style='background-color:#f1f5f9;padding:20px 24px;text-align:center;font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;'>Síguenos en Instagram: <a href='https://instagram.com/glubbi.app' style='color:#ff6b00;text-decoration:none;font-weight:600;'>@glubbi.app</a><br>&copy; 2026 glubbi.app • Todos los derechos reservados. | Soporte: <a href='mailto:soporte@glubbi.app' style='color:#ff6b00;text-decoration:none;font-weight:600;'>soporte@glubbi.app</a></div></div></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1824,
+        1248
+      ],
+      "id": "57558ede-474e-4722-a346-3ee31b1d11cb",
+      "name": "Despachador de Correo (Resend API)"
+    },
+    {
+      "parameters": {
+        "chatId": "887321647",
+        "text": "=✅ Correo enviado exitosamente vía Resend a {{ $json.callback_query.data.replace('approve_', '') }}!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        1248
+      ],
+      "id": "58907175-d0ec-47e7-a564-a9c18400f07e",
+      "name": "Confirmación Telegram",
+      "webhookId": "4f7dcbd2-d90e-4465-b1a2-2d2f957518e8",
+      "credentials": {
+        "telegramApi": {
+          "id": "egs5gxbj0nmzjcMk",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Disparador Diario (Lunes a Lunes 10 AM)": {
+      "main": [
+        [
+          {
+            "node": "Lote Diario (10 Prospectos - Mérida Target)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lote Diario (10 Prospectos - Mérida Target)": {
+      "main": [
+        [
+          {
+            "node": "Evaluador ICP & Copywriter Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Model (Claude 3.5 / GPT-4o-mini)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evaluador ICP & Copywriter Engine",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluador ICP & Copywriter Engine": {
+      "main": [
+        [
+          {
+            "node": "Parseador & Deduplicador Anti-Spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parseador & Deduplicador Anti-Spam": {
+      "main": [
+        [
+          {
+            "node": "Score ICP >= 65?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score ICP >= 65?": {
+      "main": [
+        [
+          {
+            "node": "Guardar Lead en Glubbi (API/Supabase)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Procesador de Lote en Telegram (1 a 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesador de Lote en Telegram (1 a 1)": {
+      "main": [
+        [
+          {
+            "node": "Aprobación HITL en Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobación HITL en Telegram": {
+      "main": [
+        [
+          {
+            "node": "Procesador de Lote en Telegram (1 a 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escuchador de Clics en Telegram": {
+      "main": [
+        [
+          {
+            "node": "Boton Aprobar Clicked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Boton Aprobar Clicked?": {
+      "main": [
+        [
+          {
+            "node": "Despachador de Correo (Resend API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Despachador de Correo (Resend API)": {
+      "main": [
+        [
+          {
+            "node": "Confirmación Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "adcb76f7bcf0303e12776533fc264ac24c6fe44d5407fb342e9fedf76edd7e10"
+  }
+}

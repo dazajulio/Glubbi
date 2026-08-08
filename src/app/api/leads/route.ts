@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from: 'Glubbi Contacto <hola@glubbi.app>',
         to: 'soporte@glubbi.app',
-        subject: `[Glubbi Contacto] Solicitud de ${inquiryType || 'Contacto'}: ${restaurantName}`,
+        subject: `[Lead Contactado] ${restaurantName}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
             <h2 style="color: #f97316; margin-top: 0;">Nueva solicitud de contacto</h2>

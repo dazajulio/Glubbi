@@ -90,6 +90,12 @@ export function PaymentDetailsModal({ order, isOpen, onClose }: PaymentDetailsMo
 
             {validationDetails ? (
               <div className="bg-orange-50/70 border border-orange-200/80 rounded-2xl p-4 space-y-3 text-sm">
+                {validationDetails.destino && (
+                  <div className="flex items-center justify-between border-b border-orange-200/50 pb-2">
+                    <span className="text-gray-600 flex items-center gap-1.5"><Building2 className="w-4 h-4 text-orange-500"/> Cuenta Destino del Local:</span>
+                    <span className="font-bold text-orange-600 bg-white px-2 py-0.5 rounded border border-orange-200">{validationDetails.destino}</span>
+                  </div>
+                )}
                 {validationDetails.ref && (
                   <div className="flex items-center justify-between border-b border-orange-200/50 pb-2">
                     <span className="text-gray-600 flex items-center gap-1.5"><Hash className="w-4 h-4 text-orange-500"/> N° Referencia:</span>

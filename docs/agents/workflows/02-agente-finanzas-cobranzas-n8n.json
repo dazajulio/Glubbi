@@ -1,0 +1,252 @@
+{
+  "name": "Glubbi - Agente 02 Finanzas & Cobranzas",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "glubbi-payment-report",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "webhook-payment-report",
+      "name": "Webhook Reporte Pago Móvil"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "seconds": 0,
+              "minutes": 0,
+              "hours": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "id": "cron-daily-billing",
+      "name": "Cron Diario de Cobranza (8 AM)"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "restaurant_id",
+              "value": "f5798a9e-6a3f-48af-837b-6baec4e39b69"
+            },
+            {
+              "name": "restaurant_name",
+              "value": "Star Food"
+            },
+            {
+              "name": "email",
+              "value": "gerencia@starfood.com"
+            },
+            {
+              "name": "amount_bs",
+              "value": "1,050.00 Bs"
+            },
+            {
+              "name": "reference_number",
+              "value": "98765432"
+            },
+            {
+              "name": "bank_origin",
+              "value": "Banesco"
+            },
+            {
+              "name": "payment_date",
+              "value": "2026-08-07"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0],
+      "id": "mock-payment-data",
+      "name": "Datos de Pago Móvil Recibido"
+    },
+    {
+      "parameters": {
+        "chatId": "TU_TELEGRAM_CHAT_ID",
+        "text": "=💳 NUEVO PAGO MÓVIL REPORTADO EN GLUBBI\n\nRestaurante: {{ $json.restaurant_name }}\nReferencia: {{ $json.reference_number }}\nBanco: {{ $json.bank_origin }}\nMonto: {{ $json.amount_bs }}\nFecha: {{ $json.payment_date }}\nEmail: {{ $json.email }}\n\nAprobar extension de suscripcion (+30 dias)?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "buttons": [
+                {
+                  "text": "🟢 Aprobar (+30 Días)",
+                  "additionalFields": {
+                    "callback_data": "=approvepay_{{ $json.restaurant_id }}"
+                  }
+                },
+                {
+                  "text": "🔴 Rechazar Pago",
+                  "additionalFields": {
+                    "callback_data": "=rejectpay_{{ $json.restaurant_id }}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [440, 0],
+      "id": "telegram-payment-card",
+      "name": "Tarjeta HITL Aprobacion de Pago",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ]
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "id": "telegram-callback-payment",
+      "name": "Escuchador de Clics Pago",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.callback_query.data }}",
+              "operation": "startsWith",
+              "value2": "approvepay_"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [880, 0],
+      "id": "check-approval-payment",
+      "name": "Pago Aprobado?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer TU_RESEND_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Glubbi Facturacion <soporte@glubbi.app>\",\n  \"to\": [\"gerencia@starfood.com\"],\n  \"subject\": \"Recibo de Pago Confirmado - Glubbi SaaS\",\n  \"html\": \"<div style='font-family: sans-serif; color: #1e293b;'><h2 style='color: #f97316;'>Pago Recibido Exitosamente</h2><p>Hemos procesado tu pago movil por la suscripcion de Glubbi.</p><p>Tu servicio se encuentra 100% activo por 30 dias mas.</p><p>Gracias por confiar en Glubbi!</p></div>\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -100],
+      "id": "resend-receipt-dispatcher",
+      "name": "Enviar Recibo de Pago (Resend)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.callback_query.message.chat.id }}",
+        "text": "=✅ Suscripción extendida por 30 días y Recibo enviado por email!"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1320, -100],
+      "id": "telegram-confirm-payment",
+      "name": "Confirmación Pago Aprobado",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot Credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Reporte Pago Móvil": {
+      "main": [
+        [
+          {
+            "node": "Datos de Pago Móvil Recibido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos de Pago Móvil Recibido": {
+      "main": [
+        [
+          {
+            "node": "Tarjeta HITL Aprobacion de Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escuchador de Clics Pago": {
+      "main": [
+        [
+          {
+            "node": "Pago Aprobado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pago Aprobado?": {
+      "main": [
+        [
+          {
+            "node": "Enviar Recibo de Pago (Resend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Recibo de Pago (Resend)": {
+      "main": [
+        [
+          {
+            "node": "Confirmación Pago Aprobado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

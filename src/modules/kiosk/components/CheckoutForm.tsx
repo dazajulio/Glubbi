@@ -92,7 +92,7 @@ export function CheckoutForm({
     if (!pmReference || !pmAmount || !pmDate || !pmBank || !pmCedula) return;
     
     const currTag = verificationMethod?.currency === 'USD' ? '$ USD' : 'Bs.';
-    const verificationNotes = `Validación: Ref: ${pmReference} | Monto: ${currTag} ${pmAmount} | Fecha: ${pmDate} | Banco: ${pmBank} | CI/RIF/Titular: ${pmCedula}`;
+    const verificationNotes = `Validación: Destino: ${verificationMethod?.title || 'Pago Móvil'} | Ref: ${pmReference} | Monto: ${currTag} ${pmAmount} | Fecha: ${pmDate} | Banco: ${pmBank} | CI/RIF/Titular: ${pmCedula}`;
     onSelectPayment(verificationMethod, verificationNotes);
   };
 
