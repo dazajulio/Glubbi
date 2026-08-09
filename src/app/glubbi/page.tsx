@@ -134,6 +134,11 @@ export default function GlubbiMarketplace() {
       // Priorizar los que están abiertos
       if (a.isOpen && !b.isOpen) return -1;
       if (!a.isOpen && b.isOpen) return 1;
+
+      // Priorizar los que tienen Envío Gratis activado
+      if (a.has_free_delivery && !b.has_free_delivery) return -1;
+      if (!a.has_free_delivery && b.has_free_delivery) return 1;
+
       // Priorizar los que tienen imagen de portada
       if (a.cover_image_url && !b.cover_image_url) return -1;
       if (!a.cover_image_url && b.cover_image_url) return 1;
@@ -278,7 +283,7 @@ export default function GlubbiMarketplace() {
         title="Envío Gratis" 
         subtitle="Ahorra en tu domicilio"
         icon={<Bike className="w-5 h-5 text-emerald-500" />}
-        restaurants={filteredRestaurants.filter((r: any) => r.delivery_fee === 0).slice(0, 4)}
+        restaurants={filteredRestaurants.filter((r: any) => Boolean(r.has_free_delivery)).slice(0, 4)}
         tagText="ENVÍO $0"
         tagColor="bg-emerald-500 text-white"
       />
@@ -367,7 +372,7 @@ export default function GlubbiMarketplace() {
                             <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
                           </div>
                         )}
-                        {restaurant.delivery_fee === 0 && (
+                        {restaurant.has_free_delivery && (
                           <div className="bg-emerald-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
                             <span className="text-[10px] font-black text-white uppercase tracking-wider">Envío $0</span>
                           </div>
@@ -392,7 +397,7 @@ export default function GlubbiMarketplace() {
                       <div className="flex items-center gap-1">
                         <span className="text-gray-400">•</span>
                         <span>
-                          🏍️ {restaurant.delivery_fee === 0 ? 'Envío Gratis' : `Envío $${(restaurant.delivery_fee || 0).toLocaleString('es-CO')}`}
+                          🏍️ {restaurant.has_free_delivery ? 'Envío Gratis' : (restaurant.delivery_fee && restaurant.delivery_fee > 0 ? `Envío $${(restaurant.delivery_fee).toLocaleString('es-CO')}` : 'Envío disponible')}
                         </span>
                       </div>
                     </div>
