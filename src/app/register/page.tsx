@@ -95,6 +95,7 @@ export default function RegisterPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; discount_percentage: number; code: string } | null>(null);
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   // Auto-apply welcome coupon INICIOGLUBBI on mount
   React.useEffect(() => {
@@ -111,6 +112,7 @@ export default function RegisterPage() {
         if (data) {
           setCouponCode('INICIOGLUBBI');
           setAppliedCoupon(data);
+          setShowWelcomeModal(true);
         }
       } catch (e) {
         console.error('Error auto loading welcome coupon:', e);
@@ -1012,6 +1014,56 @@ export default function RegisterPage() {
         )}
 
       </main>
+
+      {/* WELCOME POPUP MODAL FOR INICIOGLUBBI */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-100 space-y-6 relative overflow-hidden transform animate-scale-up">
+            {/* Top decorative gradient glow */}
+            <div className="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-orange-500 via-emerald-500 to-teal-500" />
+            
+            <div className="text-center space-y-3 pt-2">
+              <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-xl shadow-emerald-500/30 animate-bounce">
+                🎁
+              </div>
+              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> ¡Regalo de Bienvenida Activo!
+              </span>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                ¡Tus primeros 30 Días son 100% GRATIS!
+              </h2>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Hemos activado automáticamente el cupón de bienvenida <strong className="text-emerald-600 font-black">INICIOGLUBBI</strong>. Registra tu local hoy y prueba el sistema completo por <strong className="text-slate-900 font-bold">$0.00 hoy</strong>.
+              </p>
+            </div>
+
+            {/* Benefit Highlights */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700 font-semibold">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>$0.00 a pagar hoy</strong> (100% de descuento).</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Sin ingresar tarjeta de crédito ni datos bancarios hoy.</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Acceso inmediato al menú digital, KDS y panel de gerente.</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowWelcomeModal(false)}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-base py-4 rounded-2xl shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+            >
+              🚀 Reclamar Mis 30 Días Gratis
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="relative z-20 py-6 border-t border-white/10 text-center text-xs text-slate-400 w-full select-none">
