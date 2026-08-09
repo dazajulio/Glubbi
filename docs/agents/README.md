@@ -12,6 +12,7 @@ Este directorio contiene las especificaciones técnicas, prompts, esquemas de da
 | :--- | :--- | :--- | :--- | :--- |
 | `AG-SDR-01` | **Agente 01: SDR & Prospección de Ventas** | Búsqueda activa, ICP Scoring, Cold Email y captación de registros (`/register`). | 🟢 **Listo** | [`01-agente-sdr-ventas.md`](./01-agente-sdr-ventas.md) \| [Blueprint JSON](./workflows/01-agente-sdr-ventas-n8n.json) |
 | `AG-FIN-02` | **Agente 02: Finanzas, Pagos & Cobranzas** | Conciliación de pago móvil, aprobación en 1-clic y alertas de vencimiento de suscripción. | 🟢 **Listo** | [`02-agente-finanzas-cobranzas.md`](./02-agente-finanzas-cobranzas.md) \| [Blueprint JSON](./workflows/02-agente-finanzas-cobranzas-n8n.json) |
+| `AG-AUD-03` | **Agente 03: Auditor de Procesos y Confiabilidad** | Monitoreo de flujos web, detección de errores en tiempo real y alertas instantáneas (Telegram + Email). | 🟢 **Listo** | [`03-agente-auditor-procesos.md`](./03-agente-auditor-procesos.md) \| [Blueprint JSON](./workflows/03-agente-auditor-procesos-n8n.json) |
 | `AG-CEO-00` | **Agente 00: CEO IA & Orquestador Central** | Clasificación de intención, división de tareas y enrutamiento inteligente entre agentes. | ⏳ Pendiente | `00-agente-ceo-orquestador.md` |
 | `AG-CS-03` | **Agente 03: Customer Success & QA** | Soporte técnico, verificación de salud de menús y tickets. | ⏳ Pendiente | `03-agente-customer-success.md` |
 | `AG-MKT-04` | **Agente 04: Marketing & SEO** | Creación de contenido, posicionamiento de keywords y copys para redes. | ⏳ Pendiente | `04-agente-marketing-seo.md` |
