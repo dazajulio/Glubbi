@@ -22,6 +22,7 @@ import {
 import { cn, formatElapsedTime } from '@/lib/utils';
 import type { OrderWithItems, OrderStatus, ModifierSnapshot } from '@/types/database';
 import { PinAuthModal } from '@/components/shared/PinAuthModal';
+import { PaymentDetailsModal } from '@/modules/history/components/PaymentDetailsModal';
 
 // ----------------------------------------------------------------------------
 // Types
@@ -352,6 +353,7 @@ export function printOrder(order: OrderWithItems) {
 
 export function OrderCard({ order, onStatusChange, onPaymentValidate, onCancel }: OrderCardProps) {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Refresh elapsed time every 30 seconds
   const [, setTick] = useState(0);
