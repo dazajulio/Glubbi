@@ -1,0 +1,210 @@
+{
+  "name": "Glubbi - AG-AUD-03: Agente Auditor de Procesos y Confiabilidad Web",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "glubbi-process-audit-webhook",
+        "options": {}
+      },
+      "id": "node-webhook-audit",
+      "name": "Webhook: Realtime Process Error",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "node-cron-healthcheck",
+      "name": "Cron: Audit Healthcheck (5 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizar payload de error o resultado de healthcheck\nconst item = $input.item.json;\nconst isCron = !!item.timestamp;\n\nlet restaurantId = item.body?.restaurantId || item.restaurantId || 'SISTEMA_GLOBAL';\nlet action = item.body?.action || item.action || 'AUDIT_HEALTHCHECK';\nlet details = item.body?.details || item.details || 'Verificación periódica de flujos web';\nlet errorStack = item.body?.errorStack || item.errorStack || '';\nlet category = item.body?.category || item.category || 'SYSTEM_EVENT';\nlet isCritical = category === 'ERROR_CRITICAL' || errorStack.length > 0;\n\nreturn {\n  json: {\n    isCron,\n    isCritical,\n    restaurantId,\n    action,\n    details,\n    category,\n    errorStack,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-format-payload",
+      "name": "Formateador de Evento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isCritical }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-if-critical",
+      "name": "If: ¿Es Error Crítico?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        260,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "TU_GEMINI_API_KEY_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Eres el Agente Auditor de Procesos y Confiabilidad (AG-AUD-03) de Glubbi.\\nAnaliza el siguiente evento:\\nContexto: {{ $json.restaurantId }}\\nAcción: {{ $json.action }}\\nCategoría: {{ $json.category }}\\nDetalles: {{ $json.details }}\\nStack: {{ $json.errorStack }}\\n\\nDiagnostica en 2 frases cortas la causa raíz y la solución técnica.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-ai-gemini-agent",
+      "name": "Gemini AI: Agente Auditor (Diagnóstico)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "887321647",
+        "text": "=🚨 *[GLUBBI CRITICAL PROCESS ALERT]* 🚨\n\n🏬 *Restaurante / Módulo:* `{{ $(\"Formateador de Evento\").item.json.restaurantId }}`\n⚠️ *Acción / Evento:* `{{ $(\"Formateador de Evento\").item.json.action }}`\n📍 *Categoría:* `{{ $(\"Formateador de Evento\").item.json.category }}`\n\n📝 *Detalles del Error:*\n{{ $(\"Formateador de Evento\").item.json.details }}\n\n🧠 *Diagnóstico del Agente Auditor (AG-AUD-03):*\n{{ $json.candidates[0].content.parts[0].text || $(\"Formateador de Evento\").item.json.details }}\n\n⏱️ *Timestamp:* {{ $(\"Formateador de Evento\").item.json.timestamp }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "reply_markup": {
+            "inline_keyboard": [
+              [
+                {
+                  "text": "🔍 Ver Logs en Supabase",
+                  "url": "https://supabase.com/dashboard"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "id": "node-telegram-dispatch",
+      "name": "Telegram: Alerta Instantánea al Fundador",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        750,
+        -110
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Glubbi Audit Engine <onboarding@resend.dev>\",\n  \"to\": [\"dazajulio@gmail.com\"],\n  \"subject\": \"🚨 [ALERTA GLUBBI CRÍTICA] Fallo de Proceso en {{ $(\"Formateador de Evento\").item.json.restaurantId }}\",\n  \"html\": \"<div style='font-family: sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'><h2 style='color: #e11d48;'>🚨 Reporte del Agente Auditor de Procesos (AG-AUD-03)</h2><p><strong>Restaurante:</strong> {{ $(\"Formateador de Evento\").item.json.restaurantId }}</p><p><strong>Acción:</strong> {{ $(\"Formateador de Evento\").item.json.action }}</p><p><strong>Detalles:</strong> {{ $(\"Formateador de Evento\").item.json.details }}</p><hr/><h3 style='color: #0f172a;'>Diagnóstico de la IA (Gemini):</h3><p style='background: #f8fafc; padding: 15px; border-radius: 8px;'>{{ $json.candidates[0].content.parts[0].text || $(\"Formateador de Evento\").item.json.details }}</p></div>\"\n}",
+        "options": {}
+      },
+      "id": "node-email-dispatch",
+      "name": "Resend: Alerta por Correo Electrónico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        750,
+        96
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Realtime Process Error": {
+      "main": [
+        [
+          {
+            "node": "Formateador de Evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron: Audit Healthcheck (5 min)": {
+      "main": [
+        [
+          {
+            "node": "Formateador de Evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formateador de Evento": {
+      "main": [
+        [
+          {
+            "node": "If: ¿Es Error Crítico?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: ¿Es Error Crítico?": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI: Agente Auditor (Diagnóstico)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Gemini AI: Agente Auditor (Diagnóstico)": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Alerta Instantánea al Fundador",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Resend: Alerta por Correo Electrónico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
