@@ -590,12 +590,24 @@ export default function KioskPage({ params }: KioskPageProps) {
     // Add custom payment method name to notes so KDS/Gerente can see it
     notesPrefix = notesPrefix ? `${notesPrefix} | [Pago vía: ${method.title || method.id}]` : `[Pago vía: ${method.title || method.id}]`;
 
+    // Ensure customer_id is a valid UUID in public.customers or null to satisfy FK constraint 23503
+    let validCustomerId: string | null = null;
+    const candidateCustId = customerId || customer?.id;
+    if (candidateCustId && isValidUUID(candidateCustId)) {
+      const { data: checkCust } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('id', candidateCustId)
+        .maybeSingle();
+      if (checkCust) validCustomerId = checkCust.id;
+    }
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         restaurant_id: restaurantId || GLUBBI_ID,
-        table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
-        customer_id: customerId || customer?.id || null,
+        table_id: (targetTableId && targetTableId !== 'takeaway' && targetTableId !== 'delivery' && isValidUUID(targetTableId)) ? targetTableId : null,
+        customer_id: validCustomerId,
         status: 'pending',
         total_amount: finalTotal,
         payment_method: methodType, // Use validated method to pass DB constraint
@@ -651,12 +663,24 @@ export default function KioskPage({ params }: KioskPageProps) {
 
     setLastTotal(finalTotal);
 
+    // Ensure customer_id is a valid UUID in public.customers or null to satisfy FK constraint 23503
+    let validCustomerId: string | null = null;
+    const candidateCustId = customerId || customer?.id;
+    if (candidateCustId && isValidUUID(candidateCustId)) {
+      const { data: checkCust } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('id', candidateCustId)
+        .maybeSingle();
+      if (checkCust) validCustomerId = checkCust.id;
+    }
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         restaurant_id: restaurantId || GLUBBI_ID,
-        table_id: (targetTableId && targetTableId !== 'takeaway' && isValidUUID(targetTableId)) ? targetTableId : null,
-        customer_id: customerId || customer?.id || null,
+        table_id: (targetTableId && targetTableId !== 'takeaway' && targetTableId !== 'delivery' && isValidUUID(targetTableId)) ? targetTableId : null,
+        customer_id: validCustomerId,
         status: 'pending',
         total_amount: finalTotal,
         payment_method: 'cash',
