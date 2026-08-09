@@ -96,6 +96,29 @@ export default function RegisterPage() {
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
 
+  // Auto-apply welcome coupon INICIOGLUBBI on mount
+  React.useEffect(() => {
+    async function autoApplyWelcomeCoupon() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('code', 'INICIOGLUBBI')
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (data) {
+          setCouponCode('INICIOGLUBBI');
+          setAppliedCoupon(data);
+        }
+      } catch (e) {
+        console.error('Error auto loading welcome coupon:', e);
+      }
+    }
+    autoApplyWelcomeCoupon();
+  }, []);
+
   const handleApplyCoupon = async () => {
     setCouponError('');
     setCouponLoading(true);
@@ -120,6 +143,38 @@ export default function RegisterPage() {
       }
     }
     setCouponLoading(false);
+  };
+
+  const handleSelectFreeRegistration = async () => {
+    setIsLoading(true);
+    setErrorMsg('');
+    setStep('redirecting');
+
+    try {
+      const paymentReference = `Cupón Bienvenida 100% OFF (${appliedCoupon?.code || 'INICIOGLUBBI'})`;
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...formData, 
+          manualPayment: true, 
+          paymentReference, 
+          couponId: appliedCoupon?.id,
+          referral_source: referralSource,
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Error al registrar.');
+
+      setRegisteredSlug(result.slug);
+      setStep('success');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error inesperado.');
+      setStep('payment_selection');
+      setIsLoading(false);
+    }
   };
 
 
@@ -680,9 +735,45 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                {/* Payment Methods Options */}
-                <div className="space-y-3 pt-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Métodos de pago disponibles</label>
+                {/* Payment Methods Options OR 100% Free Activation */}
+                {appliedCoupon && appliedCoupon.discount_percentage === 100 ? (
+                  <div className="space-y-4 pt-1">
+                    <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                      <div className="flex items-start gap-4 relative z-10">
+                        <div className="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center shrink-0 text-2xl font-bold shadow-inner">
+                          🎁
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-3 py-0.5 rounded-full inline-block">
+                            Oferta Exclusiva de Bienvenida
+                          </span>
+                          <h3 className="text-xl font-black text-white">30 Días 100% GRATIS Otorgados</h3>
+                          <p className="text-xs text-white/90 leading-relaxed">
+                            Cupón de bienvenida <span className="font-extrabold underline">{appliedCoupon.code}</span> activo. Accede al sistema completo sin costo por tu primer mes.
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleSelectFreeRegistration}
+                        disabled={isLoading}
+                        className="w-full mt-6 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-base py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <><Loader2 className="w-5 h-5 animate-spin" /> Activando tu cuenta...</>
+                        ) : (
+                          <>
+                            ✨ Activar Mis 30 Días Gratis Ahora
+                            <ChevronRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pt-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Métodos de pago disponibles</label>
 
                   {/* Lemon Squeezy Option */}
                   <button
@@ -734,6 +825,7 @@ export default function RegisterPage() {
                     <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                   </button>
                 </div>
+                )}
 
                 {/* Trust & Guarantee Badge */}
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 select-none">

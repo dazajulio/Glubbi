@@ -95,6 +95,35 @@ export async function POST(request: Request) {
       // If listUsers fails for any reason, continue — the createUser call below will catch duplicates
     }
 
+    // 1.5 Pre-validate Coupon: If coupon is INICIOGLUBBI, ensure this email has not redeemed it before
+    if (couponId) {
+      try {
+        const { data: cData } = await supabaseAdmin
+          .from('coupons')
+          .select('id, code, discount_percentage')
+          .eq('id', couponId)
+          .maybeSingle();
+
+        if (cData && cData.code === 'INICIOGLUBBI') {
+          const { data: prevRedemption } = await supabaseAdmin
+            .from('team_sales')
+            .select('id')
+            .eq('email', email.trim().toLowerCase())
+            .eq('code_used', 'INICIOGLUBBI')
+            .maybeSingle();
+
+          if (prevRedemption) {
+            return NextResponse.json(
+              { success: false, error: 'El cupón de bienvenida INICIOGLUBBI ya fue utilizado por este correo electrónico previamente. Solo se permite 1 uso por nuevo registro.' },
+              { status: 400 }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Error pre-validating coupon email:', err);
+      }
+    }
+
     // 2. Generate unique slug
     let baseSlug = slugify(restaurantName);
     if (!baseSlug || baseSlug.length < 3) {
@@ -168,6 +197,9 @@ export async function POST(request: Request) {
           brand_color_primary: '#FF6B00',
           brand_color_secondary: '#1A1A2E',
           is_active: manualPayment ? true : false,
+          subscription_type: 'pago_movil',
+          subscription_status: 'active',
+          subscription_renews_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           glubbi_type: glubbi_type || 'Restaurantes',
           glubbi_category: glubbi_category || 'Comida',
           payment_methods: manualPayment && paymentReference ? [{
@@ -211,6 +243,9 @@ export async function POST(request: Request) {
           brand_color_primary: '#FF6B00',
           brand_color_secondary: '#1A1A2E',
           is_active: manualPayment ? true : false,
+          subscription_type: 'pago_movil',
+          subscription_status: 'active',
+          subscription_renews_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           payment_methods: manualPayment && paymentReference ? [{
             id: 'manual-pm-registro',
             type: 'pago_movil',
