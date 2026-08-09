@@ -256,15 +256,18 @@ export async function POST(request: Request) {
     // 4.5 Register Coupon Redemption if exists
     if (couponId) {
       try {
-        const { data: couponData } = await supabaseAdmin.from('coupons').select('discount_percentage, current_uses').eq('id', couponId).single();
-        if (couponData) {
+        const { data: couponData } = await supabaseAdmin.from('coupons').select('id, discount_percentage, current_uses, max_uses').eq('id', couponId).single();
+        if (couponData && (!couponData.max_uses || couponData.current_uses < couponData.max_uses)) {
           const discountApplied = 29 * (couponData.discount_percentage / 100);
           await supabaseAdmin.from('coupon_redemptions').insert({
             coupon_id: couponId,
             restaurant_id: newRestaurantId,
             discount_applied: discountApplied
           });
-          // Increment uses
+          // Increment uses count
+          await supabaseAdmin.from('coupons').update({
+            current_uses: (couponData.current_uses || 0) + 1
+          }).eq('id', couponId);
         }
       } catch (err) {
         console.error('Error redeeming coupon:', err);
