@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Mail, Phone, ChevronRight, MapPin, Clock, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, ChevronRight, MapPin, Clock, Loader2, Navigation } from 'lucide-react';
 import { isValidEmail } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { createClient } from '@/lib/supabase/client';
@@ -20,12 +20,70 @@ interface CustomerFormProps {
   isLoading?: boolean;
   isDelivery?: boolean;
   orderType?: 'pickup' | 'delivery';
+  deliveryZoneInfo?: {
+    isChecking: boolean;
+    zone: any | null;
+    price: number | null;
+    outsideZone: boolean;
+  } | null;
 }
 
-export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderType }: CustomerFormProps) {
+export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderType, deliveryZoneInfo }: CustomerFormProps) {
   const isPickup = orderType === 'pickup' || (!isDelivery && orderType !== 'delivery');
 
-  const { customer } = useGlubbiStore();
+  const { customer, location, setLocation } = useGlubbiStore();
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<string | null>(null);
+
+  const handleGetGpsLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Tu dispositivo no soporta geolocalización.');
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationStatus('Obteniendo posición GPS...');
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+          if (token) {
+            const res = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}&types=address,poi,neighborhood,locality,place&limit=1`
+            );
+            const data = await res.json();
+            if (data.features && data.features.length > 0) {
+              const placeName = data.features[0].place_name;
+              setAddress(placeName);
+              setLocation({ lat: latitude, lng: longitude }, placeName);
+            } else {
+              setLocation({ lat: latitude, lng: longitude }, 'Ubicación GPS');
+            }
+          } else {
+            setLocation({ lat: latitude, lng: longitude }, 'Ubicación GPS');
+          }
+          setLocationStatus('¡Ubicación GPS detectada!');
+          setTimeout(() => setLocationStatus(null), 3000);
+        } catch (err) {
+          console.error('Error reverse geocoding:', err);
+          setLocation({ lat: latitude, lng: longitude }, 'Ubicación GPS');
+          setLocationStatus('¡Ubicación GPS detectada!');
+          setTimeout(() => setLocationStatus(null), 3000);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        setLocationStatus('Permiso de GPS denegado');
+        setIsLocating(false);
+        setTimeout(() => setLocationStatus(null), 4000);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
 
   const [name, setName] = useState(customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() : '');
   const [email, setEmail] = useState(customer?.email || '');
@@ -276,11 +334,11 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
           </div>
         )}
 
-        {/* Delivery Address field (Reference field removed) */}
+        {/* Delivery Address field */}
         {isDelivery && (
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             {knownAddresses.length > 0 && (
-              <div className="mb-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1.5 ml-1">
                   Mis Direcciones Guardadas
                 </label>
@@ -299,9 +357,32 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1.5 ml-1">
-                Dirección Exacta de Entrega <span className="text-red-400">*</span>
-              </label>
+              <div className="flex justify-between items-center mb-1.5 ml-1">
+                <label className="block text-sm font-medium text-gray-500">
+                  Dirección Exacta de Entrega <span className="text-red-400">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGetGpsLocation}
+                  disabled={isLocating}
+                  className="text-xs font-bold brand-text hover:opacity-80 flex items-center gap-1 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200 active:scale-95 transition-all"
+                >
+                  {isLocating ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Navigation className="w-3.5 h-3.5" />
+                  )}
+                  {isLocating ? 'Detectando...' : 'Usar GPS actual'}
+                </button>
+              </div>
+
+              {locationStatus && (
+                <div className="text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg mb-2 flex items-center gap-1.5">
+                  <Navigation className="w-3.5 h-3.5 animate-pulse text-orange-500" />
+                  {locationStatus}
+                </div>
+              )}
+
               <div className="relative">
                 <div className="absolute top-3.5 left-4 pointer-events-none">
                   <MapPin className="h-5 w-5 text-gray-400" />
@@ -320,6 +401,35 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
                 />
               </div>
               {errors.address && <p className="text-xs text-red-400 mt-1 ml-1">{errors.address}</p>}
+
+              {/* Delivery Zone Match or Warning Badges */}
+              {deliveryZoneInfo && deliveryZoneInfo.outsideZone && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-start gap-2">
+                  <span className="text-base">⚠️</span>
+                  <div>
+                    <p className="font-bold">Fuera de Cobertura de Delivery</p>
+                    <p className="font-normal text-red-600 mt-0.5">
+                      Tu ubicación actual se encuentra fuera de la zona de entregas configurada por el restaurante. 
+                      Puedes cambiar tu ubicación GPS o elegir la opción "Yo busco mi pedido".
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {deliveryZoneInfo && deliveryZoneInfo.zone && (
+                <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📍</span>
+                    <div>
+                      <p className="font-bold text-emerald-900">Dentro de Cobertura: {deliveryZoneInfo.zone.name}</p>
+                      <p className="font-normal text-emerald-700 text-[11px]">Tarifa de envío verificada por GPS</p>
+                    </div>
+                  </div>
+                  <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-xs font-black">
+                    ${Number(deliveryZoneInfo.price).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -327,7 +437,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
 
       <button
         type="submit"
-        disabled={isLoading || isCheckingEmail}
+        disabled={isLoading || isCheckingEmail || (isDelivery && Boolean(deliveryZoneInfo?.outsideZone))}
         className="w-full mt-6 brand-bg hover:brightness-110 text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
       >
         {isLoading || isCheckingEmail ? (

@@ -17,6 +17,7 @@ import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
 import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck, Heart } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { formatPrice, isRestaurantOpen } from '@/lib/utils';
+import { findMatchingDeliveryZone } from '@/lib/delivery-zones';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -55,6 +56,12 @@ export default function KioskPage({ params }: KioskPageProps) {
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [deliveryZoneInfo, setDeliveryZoneInfo] = useState<{
+    isChecking: boolean;
+    zone: any | null;
+    price: number | null;
+    outsideZone: boolean;
+  } | null>(null);
   
   // Flow state
   const [step, setStep] = useState<FlowStep>('browse');
@@ -247,16 +254,41 @@ export default function KioskPage({ params }: KioskPageProps) {
   useEffect(() => {
     if (isDelivery && restaurantId && location) {
       async function calculateZoneDelivery() {
-        const supabase = createClient();
-        const { data, error } = await supabase.rpc('get_delivery_zones_for_location', {
-          user_lat: location.lat,
-          user_lng: location.lng,
-          target_restaurant_id: restaurantId
-        });
+        setDeliveryZoneInfo(prev => ({ isChecking: true, zone: prev?.zone || null, price: prev?.price || null, outsideZone: false }));
         
-        if (data && data.length > 0) {
-          // Si cae en alguna zona, usa el precio de la primera zona encontrada
-          setDeliveryFee(data[0].price);
+        const supabase = createClient();
+        const { data: zones } = await supabase
+          .from('delivery_zones')
+          .select('*')
+          .eq('restaurant_id', restaurantId);
+
+        if (zones && zones.length > 0) {
+          const match = findMatchingDeliveryZone(location.lat, location.lng, zones);
+          if (match) {
+            setDeliveryFee(match.price);
+            setDeliveryZoneInfo({
+              isChecking: false,
+              zone: match.zone,
+              price: match.price,
+              outsideZone: false
+            });
+          } else {
+            // Restaurant has zones defined, but user GPS is outside all of them
+            setDeliveryZoneInfo({
+              isChecking: false,
+              zone: null,
+              price: null,
+              outsideZone: true
+            });
+          }
+        } else {
+          // Restaurant has no custom polygon zones, use default flat delivery fee
+          setDeliveryZoneInfo({
+            isChecking: false,
+            zone: null,
+            price: deliveryFee,
+            outsideZone: false
+          });
         }
       }
       calculateZoneDelivery();
@@ -787,6 +819,7 @@ export default function KioskPage({ params }: KioskPageProps) {
           isLoading={isProcessing} 
           isDelivery={isDelivery} 
           orderType={orderType}
+          deliveryZoneInfo={deliveryZoneInfo}
         />
       </div>
     );
