@@ -11,9 +11,9 @@ export async function GET(request: Request) {
   const manifest = {
     id: `/${slug}/cocina`,
     scope: `/${slug}/cocina`,
-    name: `KDS - ${slug}`,
-    short_name: "KDS",
-    description: "Kitchen Display System",
+    name: "Glubbi KDS",
+    short_name: "Glubbi KDS",
+    description: "Glubbi Kitchen Display System",
     start_url: `/${slug}/cocina`,
     display: "standalone",
     background_color: "#1e293b",
@@ -28,6 +28,12 @@ export async function GET(request: Request) {
       },
       {
         src: "/logo-glubbi.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any maskable"
+      },
+      {
+        src: "/icon.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any maskable"

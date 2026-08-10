@@ -82,13 +82,13 @@ export default function GerenteLayout({
 
   const handleDownloadShortcut = () => {
     const kdsUrl = `${window.location.origin}/${slug}/cocina`;
-    // Create Windows Standalone App Launcher (.bat) opening Edge/Chrome in --app mode (borderless native window)
-    const content = `@echo off\r\ntitle Glubbi KDS - Cocina (${slug})\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
+    // Create Windows Standalone App Launcher (.cmd) opening Edge/Chrome in --app mode with Glubbi KDS title
+    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Cargando Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
     const blob = new Blob([content], { type: 'application/x-msdos-program' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Glubbi_KDS_${slug}.bat`;
+    a.download = `Glubbi KDS.cmd`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -198,12 +198,12 @@ export default function GerenteLayout({
             <div className="bg-[#1E222A] border border-slate-800 text-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
-                    <ChefHat className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-orange-500/40 flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-md">
+                    <img src="/logo-glubbi.png" alt="Glubbi Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base">Descargar App de Cocina (KDS)</h3>
-                    <p className="text-xs text-slate-400">Acceso exclusivo para personal de caja y cocina</p>
+                    <h3 className="font-extrabold text-base text-white">Descargar Glubbi KDS</h3>
+                    <p className="text-xs text-slate-400">Acceso exclusivo en ventana nativa para caja y cocina</p>
                   </div>
                 </div>
                 <button 
@@ -220,7 +220,7 @@ export default function GerenteLayout({
                     🛡️ Acceso Aislado de Seguridad
                   </p>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Este ejecutable abre <strong>únicamente la pantalla de cocina</strong>. Los empleados no tendrán acceso al área de gerencia ni a datos administrativos.
+                    Este ejecutable abre <strong>únicamente la pantalla de cocina (Glubbi KDS)</strong>. Los empleados no tendrán acceso al área de gerencia ni a datos administrativos.
                   </p>
                 </div>
 
@@ -234,10 +234,10 @@ export default function GerenteLayout({
                       className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all group"
                     >
                       <div className="flex items-center gap-3">
-                        <Download className="w-5 h-5" />
+                        <img src="/logo-glubbi.png" alt="Glubbi" className="w-6 h-6 object-contain" />
                         <div className="text-left">
-                          <span className="block text-sm">Instalar PWA Naitva en PC</span>
-                          <span className="block text-[10px] text-orange-100 font-normal">Acceso directo independiente al escritorio</span>
+                          <span className="block text-sm">Instalar PWA Nativa (Glubbi KDS)</span>
+                          <span className="block text-[10px] text-orange-100 font-normal">Registra la aplicación oficial con el ícono "G" en Windows</span>
                         </div>
                       </div>
                       <span className="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:bg-white/30">Instalar</span>
@@ -251,8 +251,8 @@ export default function GerenteLayout({
                     <div className="flex items-center gap-3">
                       <Download className="w-5 h-5 text-orange-400" />
                       <div className="text-left">
-                        <span className="block text-sm">Descargar Lanzador de App Nativa (.bat)</span>
-                        <span className="block text-[10px] text-slate-400 font-normal">Abre KDS en ventana de aplicación independiente (sin pestañas ni barra URL)</span>
+                        <span className="block text-sm">Descargar Lanzador Ejecutable (Glubbi KDS.cmd)</span>
+                        <span className="block text-[10px] text-slate-400 font-normal">Abre Glubbi KDS en ventana independiente (sin pestañas ni barra URL)</span>
                       </div>
                     </div>
                     <span className="text-xs bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg group-hover:bg-orange-500/30">Descargar</span>
@@ -262,9 +262,9 @@ export default function GerenteLayout({
                 <div className="p-3 bg-slate-900/40 rounded-xl border border-slate-800 space-y-2">
                   <p className="font-bold text-xs text-white">⚡ Instrucciones para Auto-Inicio con Windows:</p>
                   <ol className="list-decimal list-inside text-[11px] text-slate-400 space-y-1">
-                    <li>Descarga el archivo <strong>Glubbi_KDS.bat</strong> arriba.</li>
+                    <li>Descarga el ejecutable <strong>Glubbi KDS.cmd</strong> o instala la PWA.</li>
                     <li>Presiona <code>Win + R</code>, escribe <code>shell:startup</code> y presiona Enter.</li>
-                    <li>Mueve o copia el ejecutable descargado a esa carpeta para que KDS se abra en ventana nativa al encender la PC.</li>
+                    <li>Copia el archivo descargado a esa carpeta para que <strong>Glubbi KDS</strong> cargue automáticamente al encender la PC.</li>
                   </ol>
                 </div>
               </div>
