@@ -180,7 +180,9 @@ export default function KioskPage({ params }: KioskPageProps) {
       setDeliveryFee(restaurant.delivery_fee || 0);
       setDeliveryEnabled(restaurant.delivery_enabled !== false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
-      setIsClosed(!isRestaurantOpen(restaurant.schedule, restaurant.timezone));
+      const shiftInactive = restaurant.is_shift_active === false;
+      const scheduleClosed = !isRestaurantOpen(restaurant.schedule, restaurant.timezone);
+      setIsClosed(shiftInactive || scheduleClosed);
       
       // Load categories
       const { data: catsData } = await supabase
@@ -245,6 +247,31 @@ export default function KioskPage({ params }: KioskPageProps) {
       }
       
       setIsLoading(false);
+
+      // Subscribe to live shift status changes
+      const channel = supabase
+        .channel(`restaurant_status_${restaurant.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'restaurants',
+            filter: `id=eq.${restaurant.id}`,
+          },
+          (payload) => {
+            if (payload.new && typeof payload.new.is_shift_active === 'boolean') {
+              const newShiftOff = payload.new.is_shift_active === false;
+              const schedClosed = !isRestaurantOpen(payload.new.schedule || restaurant.schedule, payload.new.timezone || restaurant.timezone);
+              setIsClosed(newShiftOff || schedClosed);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
     
     loadData();

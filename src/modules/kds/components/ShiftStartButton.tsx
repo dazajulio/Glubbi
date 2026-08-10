@@ -25,6 +25,13 @@ import { cn } from '@/lib/utils';
 // ----------------------------------------------------------------------------
 
 import { useKdsStore } from '@/modules/kds/stores/kds-store';
+import { createClient } from '@/lib/supabase/client';
+import type { OrderWithItems } from '@/types/database';
+import { getCustomerName } from './OrderCard';
+
+export interface ShiftStartButtonProps {
+  restaurantId?: string;
+}
 
 export interface ShiftStartButtonHandle {
   playNewOrderSound: (order?: OrderWithItems) => void;
@@ -34,10 +41,57 @@ export interface ShiftStartButtonHandle {
 // Component
 // ----------------------------------------------------------------------------
 
-export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
-  function ShiftStartButton(_props, ref) {
+export const ShiftStartButton = forwardRef<ShiftStartButtonHandle, ShiftStartButtonProps>(
+  function ShiftStartButton(props, ref) {
+    const { restaurantId } = props;
     const { audioContext, isUnlocked, selectedTone, setAudioContext, setTone } = useKdsStore();
     const [isLoading, setIsLoading] = useState(false);
+    const keepAliveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Sync shift status to Supabase DB
+    const updateStoreShiftStatus = useCallback(async (active: boolean) => {
+      if (!restaurantId) return;
+      try {
+        const supabase = createClient();
+        await supabase
+          .from('restaurants')
+          .update({ is_shift_active: active } as any)
+          .eq('id', restaurantId);
+      } catch (e) {
+        console.warn('[KDS] Error updating store shift status in Supabase:', e);
+      }
+    }, [restaurantId]);
+
+    // Keep AudioContext alive in background when tab is minimized
+    useEffect(() => {
+      if (isUnlocked && audioContext) {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: 'Glubbi KDS - Alarma Activa',
+            artist: 'Glubbi FoodTech',
+            album: 'Monitoreo de Cocina en Tiempo Real',
+          });
+        }
+
+        // Silent heartbeat pulse to keep Web Audio API active when minimized
+        keepAliveIntervalRef.current = setInterval(() => {
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume().catch(() => {});
+          }
+        }, 8000);
+      } else {
+        if (keepAliveIntervalRef.current) {
+          clearInterval(keepAliveIntervalRef.current);
+          keepAliveIntervalRef.current = null;
+        }
+      }
+
+      return () => {
+        if (keepAliveIntervalRef.current) {
+          clearInterval(keepAliveIntervalRef.current);
+        }
+      };
+    }, [isUnlocked, audioContext]);
 
     // Auto-restore AudioContext on mount if turn was active in localStorage
     useEffect(() => {
@@ -50,6 +104,7 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
            const ctx = new AudioCtx();
            setAudioContext(ctx);
+           updateStoreShiftStatus(true);
 
            const resumeAudio = () => {
              if (ctx.state === 'suspended') ctx.resume();
@@ -60,7 +115,7 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
            console.warn('Could not auto-restore audio context', e);
         }
       }
-    }, [setTone, isUnlocked, audioContext, setAudioContext]);
+    }, [setTone, isUnlocked, audioContext, setAudioContext, updateStoreShiftStatus]);
 
     // Handle Tone Selector Change
     const handleToneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -74,12 +129,13 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
     // ------------------------------------------------------------------
     const unlockAudio = useCallback(async () => {
       if (isUnlocked) {
-        if (window.confirm('¿Seguro que deseas desactivar el turno y dejar de recibir alertas sonoras?')) {
+        if (window.confirm('¿Seguro que deseas desactivar el turno y dejar de recibir alertas sonoras? Al desactivarlo, la tienda aparecerá cerrada para los clientes.')) {
           if (audioContext) {
             audioContext.close();
             setAudioContext(null);
           }
           localStorage.removeItem('kds_shift_active');
+          await updateStoreShiftStatus(false);
         }
         return;
       }
@@ -116,12 +172,13 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle>(
 
         setAudioContext(ctx);
         localStorage.setItem('kds_shift_active', 'true');
+        await updateStoreShiftStatus(true);
       } catch (err) {
         console.error('[KDS] Error unlocking audio:', err);
       } finally {
         setIsLoading(false);
       }
-    }, [isUnlocked, audioContext, setAudioContext]);
+    }, [isUnlocked, audioContext, setAudioContext, updateStoreShiftStatus]);
 
     // ------------------------------------------------------------------
     // Play the notification sound via Web Audio API Oscillator & System Notifications

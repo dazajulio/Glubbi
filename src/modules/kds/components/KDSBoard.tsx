@@ -248,7 +248,7 @@ export function KDSBoard({ restaurantId }: KDSBoardProps) {
             ))}
           </div>
 
-          <ShiftStartButton ref={shiftButtonRef} />
+          <ShiftStartButton ref={shiftButtonRef} restaurantId={restaurantId} />
           
           {/* PWA Button removed from here and moved to Gerente Layout */}
           

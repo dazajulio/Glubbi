@@ -78,19 +78,34 @@ export default function GerenteLayout({
     };
   }, [slug]);
 
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  const handleDownloadShortcut = () => {
+    const kdsUrl = `${window.location.origin}/${slug}/cocina`;
+    // Create Windows Internet Shortcut (.url) content targeting KDS standalone
+    const content = `[InternetShortcut]\r\nURL=${kdsUrl}\r\nIDList=\r\nHotKey=0\r\nIconFile=C:\\Windows\\System32\\shell32.dll\r\nIconIndex=13\r\n`;
+    const blob = new Blob([content], { type: 'application/x-mswinurl' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Glubbi_KDS_${slug}.url`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleInstallPWA = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') setDeferredPrompt(null);
     } else {
-      // Fallback: Si ya está instalada o el navegador no soporta el prompt nativo, abre KDS directamente en nueva pestaña
-      window.open(`/${slug}/cocina`, '_blank');
+      handleDownloadShortcut();
     }
   };
 
   const links = [
-    { href: `/${slug}/cocina`, label: 'Cocina', icon: ChefHat },
     { href: `/${slug}/gerente/menu`, label: 'Menú', icon: UtensilsCrossed },
     { href: `/${slug}/gerente/history`, label: 'Registro', icon: ClipboardList },
     { href: `/${slug}/gerente/settings`, label: 'Administrador', icon: BarChart3 },
@@ -145,14 +160,14 @@ export default function GerenteLayout({
         </nav>
 
         <div className="mt-auto pt-4 space-y-2 border-t border-slate-800">
-          {/* PWA Install / KDS Open Button — bottom of sidebar */}
+          {/* Descargar KDS Button — bottom of sidebar */}
           <button
-            onClick={handleInstallPWA}
-            title={deferredPrompt ? "Instalar App de Cocina (KDS)" : "Abrir Pantalla de Cocina (KDS)"}
+            onClick={() => setShowDownloadModal(true)}
+            title="Descargar Acceso Directo de Cocina (KDS)"
             className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all text-xs font-bold shadow-sm"
           >
             <Download className="w-4 h-4 shrink-0" />
-            <span>{deferredPrompt ? 'Descargar KDS' : 'Abrir KDS (Cocina)'}</span>
+            <span>Descargar KDS</span>
           </button>
 
           {/* Logout Button */}
@@ -176,6 +191,95 @@ export default function GerenteLayout({
             {children}
           </GerentePinGuard>
         </ProcessErrorBoundary>
+
+        {/* Modal Descargar KDS */}
+        {showDownloadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-[#1E222A] border border-slate-800 text-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
+                    <ChefHat className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base">Descargar App de Cocina (KDS)</h3>
+                    <p className="text-xs text-slate-400">Acceso exclusivo para personal de caja y cocina</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowDownloadModal(false)}
+                  className="text-slate-400 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-white/10"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs text-slate-300">
+                <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                  <p className="font-bold text-orange-400 flex items-center gap-1.5">
+                    🛡️ Acceso Aislado de Seguridad
+                  </p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Este ejecutable abre <strong>únicamente la pantalla de cocina</strong>. Los empleados no tendrán acceso al área de gerencia ni a datos administrativos.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {deferredPrompt && (
+                    <button
+                      onClick={() => {
+                        handleInstallPWA();
+                        setShowDownloadModal(false);
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Download className="w-5 h-5" />
+                        <div className="text-left">
+                          <span className="block text-sm">Instalar PWA Naitva en PC</span>
+                          <span className="block text-[10px] text-orange-100 font-normal">Acceso directo independiente al escritorio</span>
+                        </div>
+                      </div>
+                      <span className="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:bg-white/30">Instalar</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleDownloadShortcut}
+                    className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl font-bold transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Download className="w-5 h-5 text-orange-400" />
+                      <div className="text-left">
+                        <span className="block text-sm">Descargar Acceso Directo de Escritorio (.url)</span>
+                        <span className="block text-[10px] text-slate-400 font-normal">Crear archivo con ícono oficial Glubbi "G" para Escritorio / Inicio</span>
+                      </div>
+                    </div>
+                    <span className="text-xs bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg group-hover:bg-orange-500/30">Descargar</span>
+                  </button>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 rounded-xl border border-slate-800 space-y-2">
+                  <p className="font-bold text-xs text-white">⚡ Instrucciones para Auto-Inicio con Windows:</p>
+                  <ol className="list-decimal list-inside text-[11px] text-slate-400 space-y-1">
+                    <li>Descarga el archivo <strong>Glubbi_KDS.url</strong> arriba.</li>
+                    <li>Presiona <code>Win + R</code>, escribe <code>shell:startup</code> y presiona Enter.</li>
+                    <li>Mueve o copia el archivo descargado a esa carpeta para que KDS abra automáticamente al encender la computadora.</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="flex justify-end border-t border-slate-800 pt-4">
+                <button
+                  onClick={() => setShowDownloadModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Floating Action Button (FAB +) - Quick Action shortcut */}
         <Link 

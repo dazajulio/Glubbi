@@ -44,6 +44,8 @@ export interface Database {
           timezone: string;
           is_active: boolean;
           is_glubbi_active: boolean;
+          is_shift_active?: boolean;
+          opening_hours?: Json | null;
           cover_image_url: string | null;
           glubbi_type: string | null;
           glubbi_category: string | null;
