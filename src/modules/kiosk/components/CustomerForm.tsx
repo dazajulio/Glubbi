@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Mail, Phone, ChevronRight, MapPin, Clock, Loader2, Navigation } from 'lucide-react';
 import { isValidEmail } from '@/lib/utils';
 import { t } from '@/lib/i18n';
@@ -129,7 +129,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
         .from('glubbi_customers')
         .select('first_name, last_name, phone, addresses')
         .eq('email', targetEmail.trim().toLowerCase())
-        .maybeSingle();
+        .maybeSingle() as any;
 
       if (data) {
         if (!name) setName(`${data.first_name || ''} ${data.last_name || ''}`.trim());
@@ -148,7 +148,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
           .eq('email', targetEmail.trim().toLowerCase())
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle();
+          .maybeSingle() as any;
 
         if (kData) {
           if (!name) setName(kData.name || '');
