@@ -93,63 +93,28 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle, ShiftStartBut
       };
     }, [isUnlocked, audioContext]);
 
-    // Auto-restore AudioContext and sync with Supabase DB shift status on mount
+    // Auto-restore AudioContext on mount if turn was active in localStorage
     useEffect(() => {
+      const isShiftActive = localStorage.getItem('kds_shift_active') === 'true';
       const savedTone = localStorage.getItem('kds_selected_tone');
       if (savedTone) setTone(savedTone);
 
-      let isMounted = true;
+      if (isShiftActive && !isUnlocked && !audioContext) {
+        try {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          const ctx = new AudioCtx();
+          setAudioContext(ctx);
 
-      const checkAndRestoreShift = async () => {
-        let activeInDb = false;
-
-        // 1. Consult Supabase DB for store shift status
-        if (restaurantId) {
-          try {
-            const supabase = createClient();
-            const { data } = await supabase
-              .from('restaurants')
-              .select('is_shift_active')
-              .eq('id', restaurantId)
-              .single();
-            if (data?.is_shift_active) {
-              activeInDb = true;
-            }
-          } catch (e) {
-            console.warn('[KDS] Error checking DB shift status:', e);
-          }
+          const resumeAudio = () => {
+            if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+            document.removeEventListener('click', resumeAudio);
+          };
+          document.addEventListener('click', resumeAudio);
+        } catch (e) {
+          console.warn('[KDS] Could not auto-restore audio context:', e);
         }
-
-        const isShiftActiveLocal = localStorage.getItem('kds_shift_active') === 'true';
-        const shouldBeActive = activeInDb || isShiftActiveLocal;
-
-        if (shouldBeActive && isMounted && !isUnlocked && !audioContext) {
-          try {
-            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-            const ctx = new AudioCtx();
-            setAudioContext(ctx);
-            localStorage.setItem('kds_shift_active', 'true');
-            if (!activeInDb && restaurantId) {
-              updateStoreShiftStatus(true);
-            }
-
-            const resumeAudio = () => {
-              if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-              document.removeEventListener('click', resumeAudio);
-            };
-            document.addEventListener('click', resumeAudio);
-          } catch (e) {
-            console.warn('Could not auto-restore audio context', e);
-          }
-        }
-      };
-
-      checkAndRestoreShift();
-
-      return () => {
-        isMounted = false;
-      };
-    }, [restaurantId, setTone, isUnlocked, audioContext, setAudioContext, updateStoreShiftStatus]);
+      }
+    }, [setTone, isUnlocked, audioContext, setAudioContext]);
 
     // Handle Tone Selector Change
     const handleToneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -169,7 +134,6 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle, ShiftStartBut
             setAudioContext(null);
           }
           localStorage.removeItem('kds_shift_active');
-          await updateStoreShiftStatus(false);
         }
         return;
       }
@@ -202,13 +166,12 @@ export const ShiftStartButton = forwardRef<ShiftStartButtonHandle, ShiftStartBut
 
         setAudioContext(ctx);
         localStorage.setItem('kds_shift_active', 'true');
-        await updateStoreShiftStatus(true);
       } catch (err) {
         console.error('[KDS] Error unlocking audio:', err);
       } finally {
         setIsLoading(false);
       }
-    }, [isUnlocked, audioContext, setAudioContext, updateStoreShiftStatus]);
+    }, [isUnlocked, audioContext, setAudioContext]);
 
     // ------------------------------------------------------------------
     // Play the notification sound via Web Audio API Oscillator & System Notifications

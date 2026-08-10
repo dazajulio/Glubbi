@@ -82,8 +82,8 @@ export default function GerenteLayout({
 
   const handleDownloadShortcut = () => {
     const kdsUrl = `${window.location.origin}/${slug}/cocina`;
-    // Create Windows Standalone App Launcher (.cmd) that creates a Desktop shortcut 'Glubbi KDS.lnk' and opens --app mode
-    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Creando acceso directo Glubbi KDS en el Escritorio de Windows...\r\npowershell -Command "$Wsh = New-Object -ComObject WScript.Shell; $s = $Wsh.CreateShortcut('$env:USERPROFILE\\Desktop\\Glubbi KDS.lnk'); $s.TargetPath = 'msedge.exe'; $s.Arguments = '--app=\\"${kdsUrl}\\"'; $s.Save()"\r\necho Cargando Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
+    // Create Windows Standalone App Launcher (.cmd) that builds a Desktop shortcut 'Glubbi KDS.lnk' via native VBScript
+    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Creando acceso directo Glubbi KDS en el Escritorio de Windows...\r\n(echo Set w = CreateObject("WScript.Shell")\r\necho Set s = w.CreateShortcut("%USERPROFILE%\\Desktop\\Glubbi KDS.lnk")\r\necho s.TargetPath = "msedge.exe"\r\necho s.Arguments = "--app=${kdsUrl}"\r\necho s.Save) > "%TEMP%\\kds_lnk.vbs"\r\ncscript //nologo "%TEMP%\\kds_lnk.vbs"\r\ndel "%TEMP%\\kds_lnk.vbs"\r\necho Abriendo Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
     const blob = new Blob([content], { type: 'application/x-msdos-program' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
