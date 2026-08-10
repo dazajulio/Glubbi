@@ -82,8 +82,8 @@ export default function GerenteLayout({
 
   const handleDownloadShortcut = () => {
     const kdsUrl = `${window.location.origin}/${slug}/cocina`;
-    // Create Windows Standalone App Launcher (.cmd) opening Edge/Chrome in --app mode with Glubbi KDS title
-    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Cargando Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
+    // Create Windows Standalone App Launcher (.cmd) that creates a Desktop shortcut 'Glubbi KDS.lnk' and opens --app mode
+    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Creando acceso directo Glubbi KDS en el Escritorio de Windows...\r\npowershell -Command "$Wsh = New-Object -ComObject WScript.Shell; $s = $Wsh.CreateShortcut('$env:USERPROFILE\\Desktop\\Glubbi KDS.lnk'); $s.TargetPath = 'msedge.exe'; $s.Arguments = '--app=\\"${kdsUrl}\\"'; $s.Save()"\r\necho Cargando Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
     const blob = new Blob([content], { type: 'application/x-msdos-program' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
