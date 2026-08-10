@@ -117,8 +117,8 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleEmailBlur = async () => {
-    if (!email || !isValidEmail(email)) return;
+  const fetchKnownAddresses = async (targetEmail: string) => {
+    if (!targetEmail || !isValidEmail(targetEmail)) return;
     setIsCheckingEmail(true);
     
     try {
@@ -128,44 +128,56 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
       const { data } = await supabase
         .from('glubbi_customers')
         .select('first_name, last_name, phone, addresses')
-        .eq('email', email.trim().toLowerCase())
+        .eq('email', targetEmail.trim().toLowerCase())
         .maybeSingle();
 
       if (data) {
-        if (!name) setName(`${data.first_name} ${data.last_name}`);
+        if (!name) setName(`${data.first_name || ''} ${data.last_name || ''}`.trim());
         if (!phone && data.phone) setPhone(data.phone);
         
         if (data.addresses && Array.isArray(data.addresses) && data.addresses.length > 0) {
           setKnownAddresses(data.addresses);
           const def = data.addresses.find((a: any) => a.is_default) || data.addresses[0];
-          if (!address) setAddress(def.address || '');
+          if (!address && def?.address) setAddress(def.address);
         }
       } else {
         // Check Kiosk guests
         const { data: kData } = await supabase
           .from('customers')
           .select('name, phone, addresses')
-          .eq('email', email.trim().toLowerCase())
+          .eq('email', targetEmail.trim().toLowerCase())
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (kData) {
-          if (!name) setName(kData.name);
+          if (!name) setName(kData.name || '');
           if (!phone && kData.phone) setPhone(kData.phone);
           
           if (kData.addresses && Array.isArray(kData.addresses) && kData.addresses.length > 0) {
             setKnownAddresses(kData.addresses);
             const def = kData.addresses.find((a: any) => a.is_default) || kData.addresses[0];
-            if (!address) setAddress(def.address || '');
+            if (!address && def?.address) setAddress(def.address);
           }
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error('[CustomerForm] Error fetching addresses:', e);
+    } finally {
+      setIsCheckingEmail(false);
     }
-    
-    setIsCheckingEmail(false);
+  };
+
+  // Auto-fetch saved addresses on mount if customer/email is present
+  useEffect(() => {
+    const userEmail = customer?.email || email;
+    if (userEmail && isValidEmail(userEmail)) {
+      fetchKnownAddresses(userEmail);
+    }
+  }, [customer?.email]);
+
+  const handleEmailBlur = () => {
+    fetchKnownAddresses(email);
   };
 
   const handleAddressSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -338,18 +350,50 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
         {isDelivery && (
           <div className="pt-2 space-y-3">
             {knownAddresses.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1.5 ml-1">
-                  Mis Direcciones Guardadas
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 ml-1 flex items-center justify-between">
+                  <span>📍 Mis Direcciones Guardadas</span>
+                  <span className="text-[10px] text-orange-600 font-semibold">{knownAddresses.length} registradas</span>
                 </label>
+
+                {/* Quick selector pills */}
+                <div className="flex flex-wrap gap-2 mb-1">
+                  {knownAddresses.map(a => {
+                    const isSelected = address === a.address;
+                    return (
+                      <button
+                        type="button"
+                        key={a.id}
+                        onClick={() => {
+                          setAddress(a.address || '');
+                          if (a.phone) setPhone(a.phone);
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
+                            : 'bg-white text-slate-700 border-gray-200 hover:bg-orange-50 hover:border-orange-200'
+                        }`}
+                      >
+                        <span>{a.label || 'Dirección'}</span>
+                        {a.is_default && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase ${isSelected ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-700'}`}>
+                            Predeterminada
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <select 
                   onChange={handleAddressSelect}
-                  className="block w-full px-4 py-3 bg-orange-50/50 border border-orange-200 text-orange-900 rounded-xl focus:ring-2 focus:ring-orange-500/50 outline-none font-medium"
+                  value={knownAddresses.find(a => a.address === address)?.id || 'new'}
+                  className="block w-full px-4 py-2.5 bg-slate-50 border border-gray-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-orange-500/50 outline-none text-xs font-medium"
                 >
-                  <option value="new">Seleccionar o crear una nueva...</option>
+                  <option value="new">✏️ Escribir otra dirección diferente...</option>
                   {knownAddresses.map(a => (
                     <option key={a.id} value={a.id}>
-                      {a.label} - {a.address.substring(0, 30)}...
+                      {a.label} — {a.address}
                     </option>
                   ))}
                 </select>
@@ -372,7 +416,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
                   ) : (
                     <Navigation className="w-3.5 h-3.5" />
                   )}
-                  {isLocating ? 'Detectando...' : 'Usar GPS actual'}
+                  {isLocating ? 'Detectando...' : 'Usar GPS'}
                 </button>
               </div>
 

@@ -13,87 +13,21 @@ export default function GlobalCustomersPage() {
 
   useEffect(() => {
     async function loadCustomers() {
-      // 1. Fetch all customers
-      const { data: customersData } = await supabase
-        .from('customers')
-        .select('*');
-        
-      const { data: glubbiCustomersData } = await supabase
-        .from('glubbi_customers')
-        .select('*');
-        
-      let combinedCustomers: any[] = [];
-      if (customersData) {
-        combinedCustomers = [...customersData];
-      }
-      if (glubbiCustomersData) {
-        const mapped = glubbiCustomersData.map(gc => ({
-          id: gc.id,
-          name: `${gc.first_name} ${gc.last_name}`.trim(),
-          email: gc.email,
-          phone: gc.phone,
-          restaurant_id: 'APP_GLUBBI',
-        }));
-        combinedCustomers = [...combinedCustomers, ...mapped];
-      }
-        
-      // 2. Fetch all orders to calculate GMV per customer
-      // Since some orders don't have customer_id, we will do our best to match by email if it were saved,
-      // or we just show the customer data we have.
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('id, customer_id, total_amount, restaurant_id, status, payment_status');
-        
-      if (combinedCustomers.length > 0) {
-        // Group customers by email (to merge users who bought in multiple restaurants)
-        const grouped: { [email: string]: any } = {};
-        
-        combinedCustomers.forEach(c => {
-          const email = c.email?.toLowerCase().trim() || `no-email-${c.id}`;
-          if (!grouped[email]) {
-            grouped[email] = {
-              name: c.name,
-              email: c.email,
-              phone: c.phone,
-              restaurants: new Set(),
-              orderCount: 0,
-              totalSpent: 0,
-              ids: []
-            };
-          }
-          grouped[email].restaurants.add(c.restaurant_id);
-          grouped[email].ids.push(c.id);
-        });
-
-        // Add order stats
-        if (ordersData) {
-          ordersData.forEach(o => {
-            if (o.status === 'cancelled') return;
-            // Find which group this order belongs to
-            const group = Object.values(grouped).find(g => g.ids.includes(o.customer_id));
-            if (group) {
-              group.orderCount += 1;
-              group.totalSpent += Number(o.total_amount || 0);
-              group.restaurants.add(o.restaurant_id);
-            }
-          });
+      try {
+        const res = await fetch('/api/admin/customers');
+        const json = await res.json();
+        if (json.success && json.data) {
+          setCustomers(json.data);
         }
-
-        const formatted = Object.values(grouped).map(g => ({
-          ...g,
-          restaurantsCount: g.restaurants.size
-        }));
-
-        // Sort by total spent descending
-        formatted.sort((a, b) => b.totalSpent - a.totalSpent);
-        setCustomers(formatted);
+      } catch (err) {
+        console.error('Error loading global customers:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     }
     
     loadCustomers();
-  }, [supabase]);
+  }, []);
 
   const filteredCustomers = customers.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
