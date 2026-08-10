@@ -82,13 +82,13 @@ export default function GerenteLayout({
 
   const handleDownloadShortcut = () => {
     const kdsUrl = `${window.location.origin}/${slug}/cocina`;
-    // Create Windows Standalone App Launcher (.cmd) that builds a Desktop shortcut 'Glubbi KDS.lnk' via native VBScript
-    const content = `@echo off\r\ntitle Glubbi KDS\r\necho Creando acceso directo Glubbi KDS en el Escritorio de Windows...\r\n(echo Set w = CreateObject("WScript.Shell")\r\necho Set s = w.CreateShortcut("%USERPROFILE%\\Desktop\\Glubbi KDS.lnk")\r\necho s.TargetPath = "msedge.exe"\r\necho s.Arguments = "--app=${kdsUrl}"\r\necho s.Save) > "%TEMP%\\kds_lnk.vbs"\r\ncscript //nologo "%TEMP%\\kds_lnk.vbs"\r\ndel "%TEMP%\\kds_lnk.vbs"\r\necho Abriendo Glubbi KDS en ventana nativa...\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
-    const blob = new Blob([content], { type: 'application/x-msdos-program' });
+    // Create standard Windows Internet Shortcut (.url) - 100% safe, ZERO security warnings
+    const content = `[InternetShortcut]\r\nURL=${kdsUrl}\r\nIDList=\r\nHotKey=0\r\nIconFile=C:\\Windows\\System32\\shell32.dll\r\nIconIndex=13\r\n`;
+    const blob = new Blob([content], { type: 'application/x-mswinurl' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Glubbi KDS.cmd`;
+    a.download = `Glubbi KDS.url`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -163,11 +163,11 @@ export default function GerenteLayout({
           {/* Descargar KDS Button — bottom of sidebar */}
           <button
             onClick={() => setShowDownloadModal(true)}
-            title="Descargar Acceso Directo de Cocina (KDS)"
-            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all text-xs font-bold shadow-sm"
+            title="Instalar App Nativa de Cocina (KDS)"
+            className="w-full flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all"
           >
-            <Download className="w-4 h-4 shrink-0" />
-            <span>Descargar KDS</span>
+            <Sparkles className="w-4 h-4 shrink-0 animate-pulse" />
+            <span>📲 Instalar App de Cocina (KDS)</span>
           </button>
 
           {/* Logout Button */}
@@ -202,8 +202,8 @@ export default function GerenteLayout({
                     <img src="/logo-glubbi.png" alt="Glubbi Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-white">Descargar Glubbi KDS</h3>
-                    <p className="text-xs text-slate-400">Acceso exclusivo en ventana nativa para caja y cocina</p>
+                    <h3 className="font-extrabold text-base text-white">Instalar Glubbi KDS</h3>
+                    <p className="text-xs text-slate-400">Acceso directo en Escritorio para caja y cocina</p>
                   </div>
                 </div>
                 <button 
@@ -220,51 +220,49 @@ export default function GerenteLayout({
                     🛡️ Acceso Aislado de Seguridad
                   </p>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Este ejecutable abre <strong>únicamente la pantalla de cocina (Glubbi KDS)</strong>. Los empleados no tendrán acceso al área de gerencia ni a datos administrativos.
+                    Abre <strong>únicamente la pantalla de cocina (Glubbi KDS)</strong>. Los empleados no tendrán acceso al área de gerencia ni a datos administrativos.
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  {deferredPrompt && (
-                    <button
-                      onClick={() => {
-                        handleInstallPWA();
-                        setShowDownloadModal(false);
-                      }}
-                      className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img src="/logo-glubbi.png" alt="Glubbi" className="w-6 h-6 object-contain" />
-                        <div className="text-left">
-                          <span className="block text-sm">Instalar PWA Nativa (Glubbi KDS)</span>
-                          <span className="block text-[10px] text-orange-100 font-normal">Registra la aplicación oficial con el ícono "G" en Windows</span>
-                        </div>
+                  <button
+                    onClick={() => {
+                      handleInstallPWA();
+                      setShowDownloadModal(false);
+                    }}
+                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src="/logo-glubbi.png" alt="Glubbi" className="w-6 h-6 object-contain" />
+                      <div className="text-left">
+                        <span className="block text-sm">📲 Instalar App Nativa en mi PC (1-Clic)</span>
+                        <span className="block text-[10px] text-orange-100 font-normal">Crea el acceso directo en el Escritorio con la "G" oficial de Glubbi</span>
                       </div>
-                      <span className="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:bg-white/30">Instalar</span>
-                    </button>
-                  )}
+                    </div>
+                    <span className="text-xs bg-white/20 px-2.5 py-1 rounded-lg group-hover:bg-white/30 shrink-0">Instalar</span>
+                  </button>
 
                   <button
                     onClick={handleDownloadShortcut}
                     className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl font-bold transition-all group"
                   >
                     <div className="flex items-center gap-3">
-                      <Download className="w-5 h-5 text-orange-400" />
+                      <Download className="w-5 h-5 text-orange-400 shrink-0" />
                       <div className="text-left">
-                        <span className="block text-sm">Descargar Lanzador Ejecutable (Glubbi KDS.cmd)</span>
-                        <span className="block text-[10px] text-slate-400 font-normal">Abre Glubbi KDS en ventana independiente (sin pestañas ni barra URL)</span>
+                        <span className="block text-sm">🔗 Descargar Acceso Directo de Enlace (.url)</span>
+                        <span className="block text-[10px] text-slate-400 font-normal">Acceso directo 100% seguro (sin advertencias de seguridad de Windows)</span>
                       </div>
                     </div>
-                    <span className="text-xs bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg group-hover:bg-orange-500/30">Descargar</span>
+                    <span className="text-xs bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg group-hover:bg-orange-500/30 shrink-0">Descargar</span>
                   </button>
                 </div>
 
                 <div className="p-3 bg-slate-900/40 rounded-xl border border-slate-800 space-y-2">
                   <p className="font-bold text-xs text-white">⚡ Instrucciones para Auto-Inicio con Windows:</p>
                   <ol className="list-decimal list-inside text-[11px] text-slate-400 space-y-1">
-                    <li>Descarga el ejecutable <strong>Glubbi KDS.cmd</strong> o instala la PWA.</li>
+                    <li>Instala la App o descarga el enlace <strong>Glubbi KDS.url</strong>.</li>
                     <li>Presiona <code>Win + R</code>, escribe <code>shell:startup</code> y presiona Enter.</li>
-                    <li>Copia el archivo descargado a esa carpeta para que <strong>Glubbi KDS</strong> cargue automáticamente al encender la PC.</li>
+                    <li>Copia el acceso directo a esa carpeta para que <strong>Glubbi KDS</strong> cargue automáticamente al encender la PC.</li>
                   </ol>
                 </div>
               </div>
