@@ -78,6 +78,9 @@ export default function ReportesPage() {
           id,
           total_amount,
           created_at,
+          customer_id,
+          notes,
+          table_id,
           customer:customers (
             id,
             name,
