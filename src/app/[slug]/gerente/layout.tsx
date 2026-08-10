@@ -82,13 +82,13 @@ export default function GerenteLayout({
 
   const handleDownloadShortcut = () => {
     const kdsUrl = `${window.location.origin}/${slug}/cocina`;
-    // Create Windows Internet Shortcut (.url) content targeting KDS standalone
-    const content = `[InternetShortcut]\r\nURL=${kdsUrl}\r\nIDList=\r\nHotKey=0\r\nIconFile=C:\\Windows\\System32\\shell32.dll\r\nIconIndex=13\r\n`;
-    const blob = new Blob([content], { type: 'application/x-mswinurl' });
+    // Create Windows Standalone App Launcher (.bat) opening Edge/Chrome in --app mode (borderless native window)
+    const content = `@echo off\r\ntitle Glubbi KDS - Cocina (${slug})\r\nstart msedge --app="${kdsUrl}" || start chrome --app="${kdsUrl}"\r\n`;
+    const blob = new Blob([content], { type: 'application/x-msdos-program' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Glubbi_KDS_${slug}.url`;
+    a.download = `Glubbi_KDS_${slug}.bat`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -251,8 +251,8 @@ export default function GerenteLayout({
                     <div className="flex items-center gap-3">
                       <Download className="w-5 h-5 text-orange-400" />
                       <div className="text-left">
-                        <span className="block text-sm">Descargar Acceso Directo de Escritorio (.url)</span>
-                        <span className="block text-[10px] text-slate-400 font-normal">Crear archivo con ícono oficial Glubbi "G" para Escritorio / Inicio</span>
+                        <span className="block text-sm">Descargar Lanzador de App Nativa (.bat)</span>
+                        <span className="block text-[10px] text-slate-400 font-normal">Abre KDS en ventana de aplicación independiente (sin pestañas ni barra URL)</span>
                       </div>
                     </div>
                     <span className="text-xs bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg group-hover:bg-orange-500/30">Descargar</span>
@@ -262,9 +262,9 @@ export default function GerenteLayout({
                 <div className="p-3 bg-slate-900/40 rounded-xl border border-slate-800 space-y-2">
                   <p className="font-bold text-xs text-white">⚡ Instrucciones para Auto-Inicio con Windows:</p>
                   <ol className="list-decimal list-inside text-[11px] text-slate-400 space-y-1">
-                    <li>Descarga el archivo <strong>Glubbi_KDS.url</strong> arriba.</li>
+                    <li>Descarga el archivo <strong>Glubbi_KDS.bat</strong> arriba.</li>
                     <li>Presiona <code>Win + R</code>, escribe <code>shell:startup</code> y presiona Enter.</li>
-                    <li>Mueve o copia el archivo descargado a esa carpeta para que KDS abra automáticamente al encender la computadora.</li>
+                    <li>Mueve o copia el ejecutable descargado a esa carpeta para que KDS se abra en ventana nativa al encender la PC.</li>
                   </ol>
                 </div>
               </div>
