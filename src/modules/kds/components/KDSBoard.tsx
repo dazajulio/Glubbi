@@ -104,6 +104,40 @@ export function KDSBoard({ restaurantId }: KDSBoardProps) {
     setDeferredPrompt(null);
   };
 
+  // Screen Wake Lock API: Mantiene la pantalla de cocina siempre encendida
+  useEffect(() => {
+    let wakeLock: any = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+          console.log('[KDS] Screen Wake Lock activo - Pantalla de cocina encendida permanentemente');
+        }
+      } catch (err) {
+        console.warn('[KDS] Wake Lock no disponible o denegado:', err);
+      }
+    };
+
+    requestWakeLock();
+
+    // Re-activar Wake Lock si la pestaña vuelve a primer plano
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+      }
+    };
+  }, []);
+
   // Block page close or reload if shift is active
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
