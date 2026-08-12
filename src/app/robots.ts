@@ -5,7 +5,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/api/'],
+      disallow: [
+        '/admin/',
+        '/api/',
+        '/*/*/cocina',
+        '/*/*/gerente',
+        '/*/mesa/*',
+        '/kyc-mobile/',
+      ],
     },
     sitemap: 'https://glubbi.app/sitemap.xml',
   };
