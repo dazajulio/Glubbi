@@ -27,7 +27,8 @@ import {
   Store,
   Tag,
   CreditCard,
-  Smartphone
+  Smartphone,
+  UserCheck
 } from 'lucide-react';
 
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -137,11 +138,12 @@ export default function RegisterPage() {
       setCouponError('Cupón inválido o inactivo');
       setAppliedCoupon(null);
     } else {
-      if (data.max_uses && data.current_uses >= data.max_uses) {
+      const couponRecord = data as any;
+      if (couponRecord.max_uses && couponRecord.current_uses >= couponRecord.max_uses) {
         setCouponError('El cupón alcanzó su límite de usos');
         setAppliedCoupon(null);
       } else {
-        setAppliedCoupon(data);
+        setAppliedCoupon(couponRecord);
       }
     }
     setCouponLoading(false);
@@ -185,7 +187,7 @@ export default function RegisterPage() {
   const [registeredSlug, setRegisteredSlug] = useState('');
 
   // Form handlers
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -750,9 +752,9 @@ export default function RegisterPage() {
                           <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-3 py-0.5 rounded-full inline-block">
                             Oferta Exclusiva de Bienvenida
                           </span>
-                          <h3 className="text-xl font-black text-white">30 Días 100% GRATIS Otorgados</h3>
+                          <h3 className="text-xl font-black text-white">60 Días 100% GRATIS Otorgados</h3>
                           <p className="text-xs text-white/90 leading-relaxed">
-                            Cupón de bienvenida <span className="font-extrabold underline">{appliedCoupon.code}</span> activo. Accede al sistema completo sin costo por tu primer mes.
+                            Cupón de bienvenida <span className="font-extrabold underline">{appliedCoupon.code}</span> activo. Accede al sistema completo sin costo por tus primeros 2 meses (60 días).
                           </p>
                         </div>
                       </div>
@@ -766,7 +768,7 @@ export default function RegisterPage() {
                           <><Loader2 className="w-5 h-5 animate-spin" /> Activando tu cuenta...</>
                         ) : (
                           <>
-                            ✨ Activar Mis 30 Días Gratis Ahora
+                            ✨ Activar Mis 60 Días Gratis Ahora
                             <ChevronRight className="w-5 h-5" />
                           </>
                         )}
@@ -1030,10 +1032,10 @@ export default function RegisterPage() {
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> ¡Regalo de Bienvenida Activo!
               </span>
               <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                ¡Tus primeros 30 Días son 100% GRATIS!
+                ¡Tus primeros 60 Días son 100% GRATIS!
               </h2>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Hemos activado automáticamente el cupón de bienvenida <strong className="text-emerald-600 font-black">INICIOGLUBBI</strong>. Registra tu local hoy y prueba el sistema completo por <strong className="text-slate-900 font-bold">$0.00 hoy</strong>.
+                Hemos activado automáticamente el cupón de bienvenida <strong className="text-emerald-600 font-black">INICIOGLUBBI</strong>. Registra tu local hoy y disfruta del sistema completo por <strong className="text-slate-900 font-bold">2 meses ($0.00 hoy)</strong>.
               </p>
             </div>
 
@@ -1041,7 +1043,7 @@ export default function RegisterPage() {
             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700 font-semibold">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span><strong>$0.00 a pagar hoy</strong> (100% de descuento).</span>
+                <span><strong>$0.00 a pagar hoy</strong> (100% de descuento durante 60 días).</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -1058,7 +1060,7 @@ export default function RegisterPage() {
               onClick={() => setShowWelcomeModal(false)}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-base py-4 rounded-2xl shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
             >
-              🚀 Reclamar Mis 30 Días Gratis
+              🚀 Reclamar Mis 60 Días Gratis
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>

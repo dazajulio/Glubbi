@@ -102,7 +102,7 @@ export async function POST(request: Request) {
           .from('coupons')
           .select('id, code, discount_percentage')
           .eq('id', couponId)
-          .maybeSingle();
+          .maybeSingle() as any;
 
         if (cData && cData.code === 'INICIOGLUBBI') {
           const { data: prevRedemption } = await supabaseAdmin
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
           is_active: manualPayment ? true : false,
           subscription_type: 'pago_movil',
           subscription_status: 'active',
-          subscription_renews_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_renews_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
           glubbi_type: glubbi_type || 'Restaurantes',
           glubbi_category: glubbi_category || 'Comida',
           payment_methods: manualPayment && paymentReference ? [{
@@ -245,7 +245,7 @@ export async function POST(request: Request) {
           is_active: manualPayment ? true : false,
           subscription_type: 'pago_movil',
           subscription_status: 'active',
-          subscription_renews_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_renews_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
           payment_methods: manualPayment && paymentReference ? [{
             id: 'manual-pm-registro',
             type: 'pago_movil',
@@ -291,16 +291,16 @@ export async function POST(request: Request) {
     // 4.5 Register Coupon Redemption if exists
     if (couponId) {
       try {
-        const { data: couponData } = await supabaseAdmin.from('coupons').select('id, discount_percentage, current_uses, max_uses').eq('id', couponId).single();
+        const { data: couponData } = await supabaseAdmin.from('coupons').select('id, discount_percentage, current_uses, max_uses').eq('id', couponId).single() as any;
         if (couponData && (!couponData.max_uses || couponData.current_uses < couponData.max_uses)) {
-          const discountApplied = 29 * (couponData.discount_percentage / 100);
+          const discountApplied = 58 * (couponData.discount_percentage / 100);
           await supabaseAdmin.from('coupon_redemptions').insert({
             coupon_id: couponId,
             restaurant_id: newRestaurantId,
             discount_applied: discountApplied
-          });
+          } as any);
           // Increment uses count
-          await supabaseAdmin.from('coupons').update({
+          await (supabaseAdmin.from('coupons') as any).update({
             current_uses: (couponData.current_uses || 0) + 1
           }).eq('id', couponId);
         }
@@ -320,7 +320,7 @@ export async function POST(request: Request) {
           .from('team_members')
           .select('id, name')
           .eq('code', codeUpper)
-          .maybeSingle();
+          .maybeSingle() as any;
 
         if (member) {
           teamMemberId = member.id;
@@ -428,13 +428,13 @@ export async function POST(request: Request) {
         html: `
           <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
             <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
-            <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma.</p>
+            <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma con <strong>60 días de acceso activo 100% bonificado (2 meses)</strong>.</p>
             <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
             <p style="text-align: center; margin: 30px 0;">
               <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
             </p>
             <p style="font-size: 13px; color: #666; background-color: #fff3e0; padding: 10px; border-left: 3px solid #FF6B00;">
-              <strong>Nota sobre tu Pago Móvil:</strong> Es posible que algunas funciones tarden en habilitarse mientras verificamos tu pago de forma manual.
+              <strong>Promoción de Bienvenida:</strong> Cuentas con 60 días continuos de acceso total antes de tu próxima fecha de facturación.
             </p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
             <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">

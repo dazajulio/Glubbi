@@ -50,7 +50,7 @@ export default function AcuerdoDeUso() {
               Facturación y Pagos
             </h2>
             <div className="pl-10 space-y-3">
-              <p><strong>3.1. Mensualidad:</strong> El costo base por el uso de la plataforma es de <strong>$29 USD mensuales</strong> (sujeto a descuentos aplicados al registro). Este monto es un pago por adelantado para obtener acceso al sistema durante los siguientes 30 días continuos.</p>
+              <p><strong>3.1. Mensualidad y Períodos Promocionales:</strong> El costo base por el uso ordinario de la plataforma es de <strong>$29 USD mensuales</strong>. Para nuevos registros que apliquen promociones oficiales de bienvenida (ej. cupón de 60 días gratis), El Cliente disfrutará de un período bonificado de <strong>sesenta (60) días continuos</strong> a costo $0.00 USD antes de iniciar su ciclo regular de facturación mensual anticipada.</p>
               <p><strong>3.2. Cobro Automatizado:</strong> Si El Cliente afilia una tarjeta internacional (vía Lemon Squeezy), acepta que la plataforma de pagos debite automáticamente la mensualidad en su fecha de corte.</p>
               <p><strong>3.3. Pago Móvil / Manuales:</strong> Si El Cliente opta por pagos manuales, es su estricta obligación reportar dicho pago en el módulo "Suscripción" de su Panel, al menos el mismo día de su vencimiento. El monto en moneda local será calculado a la tasa oficial (BCV) del día.</p>
               <p><strong>3.4. Suspensión por Impago:</strong> Si transcurren <strong>cinco (5) días calendario</strong> posteriores a la fecha de vencimiento sin acreditación del pago, el sistema <strong>suspenderá automáticamente</strong> la cuenta (bloqueando el acceso administrativo y desactivando el menú público).</p>
