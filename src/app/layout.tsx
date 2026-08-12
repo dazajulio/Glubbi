@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: 'Glubbi',
     images: [
       {
-        url: '/glubbi-header-banner.jpg',
+        url: '/glubbi-header-banner.jpg?v=2',
         width: 1200,
         height: 630,
         alt: 'Glubbi — Plataforma de Pedidos Online para Restaurantes',
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: ['/glubbi-header-banner.jpg'],
+    images: ['/glubbi-header-banner.jpg?v=2'],
   },
   icons: {
     icon: [
