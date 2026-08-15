@@ -218,6 +218,33 @@ export function getCustomerName(order: OrderWithItems): string | null {
 }
 
 // ----------------------------------------------------------------------------
+// Helper: Format Modifiers for Print Ticket
+// ----------------------------------------------------------------------------
+function formatModifiersHtml(modifiersSnapshot: any): string {
+  if (!modifiersSnapshot) return '';
+  let mods: ModifierSnapshot[] = [];
+  if (typeof modifiersSnapshot === 'string') {
+    try {
+      mods = JSON.parse(modifiersSnapshot);
+    } catch {
+      return '';
+    }
+  } else if (Array.isArray(modifiersSnapshot)) {
+    mods = modifiersSnapshot;
+  }
+  if (!Array.isArray(mods) || mods.length === 0) return '';
+
+  return mods.map(group => {
+    if (!group || !group.items || !Array.isArray(group.items) || group.items.length === 0) return '';
+    const itemsFormatted = group.items.map(m => {
+      const priceStr = m.price && Number(m.price) > 0 ? ` (+$${Number(m.price).toFixed(2)})` : '';
+      return `${m.name}${priceStr}`;
+    }).join(', ');
+    return `<div style="font-size: 9px; color: #111; margin-top: 2px; padding-left: 2px; line-height: 1.2;">• <strong>${group.group || 'Opción'}:</strong> ${itemsFormatted}</div>`;
+  }).join('');
+}
+
+// ----------------------------------------------------------------------------
 // Helper: Print Ticket (Comanda duplicada)
 // ----------------------------------------------------------------------------
 export function printOrder(order: OrderWithItems) {
@@ -296,12 +323,16 @@ export function printOrder(order: OrderWithItems) {
         </thead>
         <tbody>
           ${order.order_items.map(item => {
+            const modifiersHtml = formatModifiersHtml(item.modifiers_snapshot);
             return `
               <tr style="border-bottom: 1px dashed #ddd; vertical-align: top;">
-                <td style="padding: 4px 0;">${item.quantity}x</td>
-                <td style="padding: 4px 0;">${item.product_name}</td>
+                <td style="padding: 4px 0; font-weight: bold;">${item.quantity}x</td>
+                <td style="padding: 4px 0;">
+                  <div style="font-weight: bold;">${item.product_name}</div>
+                  ${modifiersHtml}
+                </td>
                 <td style="padding: 4px 0; text-align: right;">$${Number(item.unit_price).toFixed(2)}</td>
-                <td style="padding: 4px 0; text-align: right;">$${Number(item.subtotal).toFixed(2)}</td>
+                <td style="padding: 4px 0; text-align: right; font-weight: bold;">$${Number(item.subtotal).toFixed(2)}</td>
               </tr>
             `;
           }).join('')}

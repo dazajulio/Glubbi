@@ -207,12 +207,8 @@ export default function KioskPage({ params }: KioskPageProps) {
         .order('order_index');
         
       if (prods) {
-        // Sort products to prioritize ones with images
-        const sortedProds = [...prods].sort((a, b) => {
-          if (a.image_url && !b.image_url) return -1;
-          if (!a.image_url && b.image_url) return 1;
-          return 0;
-        });
+        // Sort products by configured order_index
+        const sortedProds = [...prods].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
         setProducts(sortedProds as ProductWithModifiers[]);
         
         // Find upsell products based on restaurant settings, fallback to featured

@@ -188,11 +188,21 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
       const updatedCats = newCategories.map((c, idx) => ({ ...c, order_index: idx }));
       setCategories(updatedCats);
       
-      for (let i = 0; i < updatedCats.length; i++) {
-        const cat = updatedCats[i];
-        supabase.from('categories').update({ order_index: i } as any).eq('id', cat.id).then(({ error }) => {
-          if (error) console.error('Failed to save order for category', cat.id, error);
+      try {
+        const res = await fetch('/api/menu/manage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'reorder_categories',
+            payload: {
+              items: updatedCats.map(c => ({ id: c.id, order_index: c.order_index }))
+            }
+          })
         });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+      } catch (error) {
+        console.error('Failed to persist category order:', error);
       }
       return;
     }
@@ -216,12 +226,21 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
 
     setProducts([...otherProducts, ...updatedCategoryProducts]);
 
-    // Persist to db (fire and forget for snappy UX)
-    for (let i = 0; i < updatedCategoryProducts.length; i++) {
-      const prod = updatedCategoryProducts[i];
-      supabase.from('products').update({ order_index: i } as any).eq('id', prod.id).then(({ error }) => {
-        if (error) console.error('Failed to save order for', prod.id, error);
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reorder_products',
+          payload: {
+            items: updatedCategoryProducts.map(p => ({ id: p.id, order_index: p.order_index }))
+          }
+        })
       });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+    } catch (error) {
+      console.error('Failed to persist product order:', error);
     }
   };
 

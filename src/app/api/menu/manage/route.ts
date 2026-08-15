@@ -178,6 +178,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, productId });
     }
 
+    if (action === 'reorder_products') {
+      const { items } = payload;
+      if (!Array.isArray(items)) {
+        return NextResponse.json({ success: false, error: 'Lista de productos inválida' }, { status: 400 });
+      }
+
+      await Promise.all(
+        items.map((item: { id: string; order_index: number }) =>
+          supabaseAdmin
+            .from('products')
+            .update({ order_index: item.order_index, updated_at: new Date().toISOString() })
+            .eq('id', item.id)
+        )
+      );
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'reorder_categories') {
+      const { items } = payload;
+      if (!Array.isArray(items)) {
+        return NextResponse.json({ success: false, error: 'Lista de categorías inválida' }, { status: 400 });
+      }
+
+      await Promise.all(
+        items.map((item: { id: string; order_index: number }) =>
+          supabaseAdmin
+            .from('categories')
+            .update({ order_index: item.order_index })
+            .eq('id', item.id)
+        )
+      );
+
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json({ success: false, error: 'Acción no válida' }, { status: 400 });
 
   } catch (error: any) {
