@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Category } from '@/types/database';
-import { X, Plus, Trash2, Copy } from 'lucide-react';
+import { X, Plus, Trash2, Copy, ChevronUp, ChevronDown } from 'lucide-react';
 import { createClient, GLUBBI_ID } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image-compression';
 
@@ -65,7 +65,7 @@ export function ProductFormModal({
 
       if (data) {
         // Filter out current product if editing and keep products with modifier groups
-        const filtered = data.filter(
+        const filtered = (data as any[]).filter(
           (p: any) => p.id !== (productToEdit?.id || '') && p.modifier_groups && p.modifier_groups.length > 0
         );
         setExistingProductsWithGroups(filtered);
@@ -84,16 +84,25 @@ export function ProductFormModal({
     const prod = existingProductsWithGroups.find(p => p.id === selectedProductToCopy);
     if (!prod || !prod.modifier_groups) return;
 
-    const copiedGroups: GroupInput[] = prod.modifier_groups.map((g: any) => ({
-      name: g.name,
-      is_required: g.is_required || false,
-      min_selections: g.min_selections || 0,
-      max_selections: g.max_selections || 1,
-      modifiers: (g.modifiers || []).map((m: any) => ({
-        name: m.name,
-        extra_price: m.extra_price || 0
-      }))
-    }));
+    const sortedCopyGroups = [...prod.modifier_groups].sort(
+      (a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0)
+    );
+
+    const copiedGroups: GroupInput[] = sortedCopyGroups.map((g: any) => {
+      const sortedMods = [...(g.modifiers || [])].sort(
+        (a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0)
+      );
+      return {
+        name: g.name,
+        is_required: g.is_required || false,
+        min_selections: g.min_selections || 0,
+        max_selections: g.max_selections || 1,
+        modifiers: sortedMods.map((m: any) => ({
+          name: m.name,
+          extra_price: m.extra_price || 0
+        }))
+      };
+    });
 
     setGroups(prev => [...prev, ...copiedGroups]);
     setIsCopyModalOpen(false);
@@ -111,18 +120,26 @@ export function ProductFormModal({
         setHasOffer((productToEdit.discount_percentage || 0) > 0);
         setDiscountPercentage(productToEdit.discount_percentage || 0);
         
-        // Map groups
+        // Map groups sorted by order_index
         if (productToEdit.modifier_groups) {
-          const mappedGroups = productToEdit.modifier_groups.map((g: any) => ({
-            name: g.name,
-            is_required: g.is_required,
-            min_selections: g.min_selections,
-            max_selections: g.max_selections,
-            modifiers: (g.modifiers || []).map((m: any) => ({
-              name: m.name,
-              extra_price: m.extra_price
-            }))
-          }));
+          const sortedGroups = [...productToEdit.modifier_groups].sort(
+            (a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0)
+          );
+          const mappedGroups = sortedGroups.map((g: any) => {
+            const sortedMods = [...(g.modifiers || [])].sort(
+              (a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0)
+            );
+            return {
+              name: g.name,
+              is_required: g.is_required,
+              min_selections: g.min_selections,
+              max_selections: g.max_selections,
+              modifiers: sortedMods.map((m: any) => ({
+                name: m.name,
+                extra_price: m.extra_price
+              }))
+            };
+          });
           setGroups(mappedGroups);
         } else {
           setGroups([]);
@@ -150,6 +167,14 @@ export function ProductFormModal({
     setGroups(groups.filter((_, i) => i !== idx));
   };
 
+  const moveGroup = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= groups.length) return;
+    const newGroups = [...groups];
+    const [moved] = newGroups.splice(fromIdx, 1);
+    newGroups.splice(toIdx, 0, moved);
+    setGroups(newGroups);
+  };
+
   const addModifier = (groupIdx: number) => {
     const newGroups = [...groups];
     newGroups[groupIdx].modifiers.push({ name: '', extra_price: 0 });
@@ -159,6 +184,16 @@ export function ProductFormModal({
   const removeModifier = (groupIdx: number, modIdx: number) => {
     const newGroups = [...groups];
     newGroups[groupIdx].modifiers = newGroups[groupIdx].modifiers.filter((_, i) => i !== modIdx);
+    setGroups(newGroups);
+  };
+
+  const moveModifier = (groupIdx: number, fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= groups[groupIdx].modifiers.length) return;
+    const newGroups = [...groups];
+    const newMods = [...newGroups[groupIdx].modifiers];
+    const [moved] = newMods.splice(fromIdx, 1);
+    newMods.splice(toIdx, 0, moved);
+    newGroups[groupIdx].modifiers = newMods;
     setGroups(newGroups);
   };
 
@@ -341,7 +376,10 @@ export function ProductFormModal({
           {/* Modifiers */}
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <h3 className="text-lg font-semibold text-gray-900">Grupos de Modificadores</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Grupos de Modificadores</h3>
+                <p className="text-xs text-gray-500">Puedes cambiar el orden de las secciones y de las opciones usando las flechas.</p>
+              </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button 
                   type="button" 
@@ -363,12 +401,47 @@ export function ProductFormModal({
             )}
 
             {groups.map((group, groupIdx) => (
-              <div key={groupIdx} className="bg-slate-50/50 border border-gray-200 rounded-xl p-4 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="grid grid-cols-2 gap-3 flex-1 mr-4">
-                    <input required placeholder="Nombre del grupo (Ej. Salsas)" value={group.name} onChange={e => {
-                      const newGroups = [...groups]; newGroups[groupIdx].name = e.target.value; setGroups(newGroups);
-                    }} className="col-span-2 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-slate-800 placeholder-gray-400" />
+              <div key={groupIdx} className="bg-slate-50/70 border border-gray-200 rounded-2xl p-4 space-y-4 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  {/* Reorder Group buttons */}
+                  <div className="flex flex-col gap-1 shrink-0 pt-0.5">
+                    <button
+                      type="button"
+                      disabled={groupIdx === 0}
+                      onClick={() => moveGroup(groupIdx, groupIdx - 1)}
+                      title="Subir sección de modificador"
+                      className="p-1 rounded-lg border border-gray-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={groupIdx === groups.length - 1}
+                      onClick={() => moveGroup(groupIdx, groupIdx + 1)}
+                      title="Bajar sección de modificador"
+                      className="p-1 rounded-lg border border-gray-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xs"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 flex-1">
+                    <div className="col-span-2 flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-500 bg-gray-200/70 px-2 py-1 rounded-md shrink-0">
+                        Sección #{groupIdx + 1}
+                      </span>
+                      <input 
+                        required 
+                        placeholder="Nombre del grupo (Ej. Salsas, Extras, Término)" 
+                        value={group.name} 
+                        onChange={e => {
+                          const newGroups = [...groups]; 
+                          newGroups[groupIdx].name = e.target.value; 
+                          setGroups(newGroups);
+                        }} 
+                        className="flex-1 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-slate-800 placeholder-gray-400 font-semibold" 
+                      />
+                    </div>
                     
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Min. Selecciones</label>
@@ -381,7 +454,7 @@ export function ProductFormModal({
                           newGroups[groupIdx].max_selections = newMin;
                         }
                         setGroups(newGroups);
-                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
+                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center font-bold" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Max. Selecciones</label>
@@ -390,35 +463,84 @@ export function ProductFormModal({
                         const newMax = parseInt(e.target.value) || 1;
                         newGroups[groupIdx].max_selections = Math.max(newGroups[groupIdx].min_selections, newMax); 
                         setGroups(newGroups);
-                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center" />
+                      }} className="w-16 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-center font-bold" />
                     </div>
                   </div>
-                  <button type="button" onClick={() => removeGroup(groupIdx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg">
+                  <button type="button" onClick={() => removeGroup(groupIdx)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar grupo">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="pl-4 border-l-2 border-gray-200 space-y-2">
+                {/* Modifiers items list inside group */}
+                <div className="pl-4 border-l-2 border-orange-300/60 space-y-2.5">
                   {group.modifiers.map((mod, modIdx) => (
-                    <div key={modIdx} className="flex items-center space-x-2">
-                      <input required placeholder="Opcion (Ej. Queso Cheddar)" value={mod.name} onChange={e => {
-                        const newGroups = [...groups]; newGroups[groupIdx].modifiers[modIdx].name = e.target.value; setGroups(newGroups);
-                      }} className="flex-1 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-slate-800 placeholder-gray-400 text-sm" />
+                    <div key={modIdx} className="flex items-center space-x-2 bg-white/70 p-1.5 rounded-xl border border-gray-100 shadow-2xs">
+                      {/* Reorder modifier items */}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          disabled={modIdx === 0}
+                          onClick={() => moveModifier(groupIdx, modIdx, modIdx - 1)}
+                          title="Subir opción"
+                          className="p-1 rounded-md border border-gray-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={modIdx === group.modifiers.length - 1}
+                          onClick={() => moveModifier(groupIdx, modIdx, modIdx + 1)}
+                          title="Bajar opción"
+                          className="p-1 rounded-md border border-gray-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <input 
+                        required 
+                        placeholder="Opción (Ej. Queso Cheddar)" 
+                        value={mod.name} 
+                        onChange={e => {
+                          const newGroups = [...groups]; 
+                          newGroups[groupIdx].modifiers[modIdx].name = e.target.value; 
+                          setGroups(newGroups);
+                        }} 
+                        className="flex-1 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-1.5 text-slate-800 placeholder-gray-400 text-sm font-medium" 
+                      />
                       
-                      <div className="flex items-center">
-                        <span className="text-gray-400 mr-2 text-sm">+$</span>
-                        <input type="number" step="0.01" min="0" value={mod.extra_price} onChange={e => {
-                          const newGroups = [...groups]; newGroups[groupIdx].modifiers[modIdx].extra_price = parseFloat(e.target.value) || 0; setGroups(newGroups);
-                        }} className="w-20 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-2 text-slate-800 text-sm text-center" />
+                      <div className="flex items-center shrink-0">
+                        <span className="text-gray-400 mr-1 text-sm font-semibold">+$</span>
+                        <input 
+                          type="number" 
+                          step="0.01" 
+                          min="0" 
+                          value={mod.extra_price} 
+                          onChange={e => {
+                            const newGroups = [...groups]; 
+                            newGroups[groupIdx].modifiers[modIdx].extra_price = parseFloat(e.target.value) || 0; 
+                            setGroups(newGroups);
+                          }} 
+                          className="w-20 bg-white shadow-sm border border-gray-200 rounded-lg px-2 py-1.5 text-slate-800 text-sm text-center font-bold" 
+                        />
                       </div>
                       
-                      <button type="button" onClick={() => removeModifier(groupIdx, modIdx)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md">
+                      <button 
+                        type="button" 
+                        onClick={() => removeModifier(groupIdx, modIdx)} 
+                        className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                        title="Eliminar opción"
+                      >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
-                  <button type="button" onClick={() => addModifier(groupIdx)} className="text-xs text-gray-500 hover:text-slate-800 flex items-center mt-2">
-                    <Plus className="w-3 h-3 mr-1" /> Añadir Opción
+                  <button 
+                    type="button" 
+                    onClick={() => addModifier(groupIdx)} 
+                    className="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200/60 flex items-center mt-2 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Añadir Opción a esta sección
                   </button>
                 </div>
               </div>

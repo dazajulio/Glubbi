@@ -148,3 +148,99 @@ export function isRestaurantOpen(schedule: any, timezone: string = 'America/Cara
   // Horario normal (ej. 09:00 a 22:00)
   return currentTime >= openTime && currentTime <= closeTime;
 }
+
+export interface OpeningInfo {
+  isOpen: boolean;
+  nextOpenDay: string;
+  nextOpenTime: string;
+  formattedMessage: string;
+}
+
+const DAYS_OF_WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+const DAY_NAMES_ES: Record<string, string> = {
+  sunday: 'Domingo',
+  monday: 'Lunes',
+  tuesday: 'Martes',
+  wednesday: 'Miércoles',
+  thursday: 'Jueves',
+  friday: 'Viernes',
+  saturday: 'Sábado',
+};
+
+/**
+ * Obtiene información detallada sobre la próxima apertura del restaurante.
+ */
+export function getNextOpeningInfo(schedule: any, timezone: string = 'America/Caracas'): OpeningInfo {
+  if (!schedule) {
+    return {
+      isOpen: true,
+      nextOpenDay: 'Hoy',
+      nextOpenTime: '',
+      formattedMessage: 'Abierto',
+    };
+  }
+
+  const openNow = isRestaurantOpen(schedule, timezone);
+  const now = new Date();
+  
+  // Obtener día actual en la zona horaria del restaurante
+  const dayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'long' });
+  const currentDayName = dayFormatter.format(now).toLowerCase();
+  
+  const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const currentTime = timeFormatter.format(now);
+
+  const currentDayIdx = DAYS_OF_WEEK.indexOf(currentDayName as any);
+  const validIdx = currentDayIdx === -1 ? 0 : currentDayIdx;
+
+  if (openNow) {
+    const todaySched = schedule[currentDayName];
+    return {
+      isOpen: true,
+      nextOpenDay: 'Hoy',
+      nextOpenTime: todaySched?.close || '',
+      formattedMessage: `Abierto hasta las ${todaySched?.close || ''}`,
+    };
+  }
+
+  // Si no está abierto hoy, verificar si abre más tarde hoy
+  const todaySched = schedule[currentDayName];
+  if (todaySched && todaySched.isOpen && todaySched.open && currentTime < todaySched.open) {
+    return {
+      isOpen: false,
+      nextOpenDay: 'Hoy',
+      nextOpenTime: todaySched.open,
+      formattedMessage: `Hoy a las ${todaySched.open}`,
+    };
+  }
+
+  // Buscar en los siguientes 7 días
+  for (let offset = 1; offset <= 7; offset++) {
+    const nextIdx = (validIdx + offset) % 7;
+    const nextDayKey = DAYS_OF_WEEK[nextIdx];
+    const nextSched = schedule[nextDayKey];
+
+    if (nextSched && nextSched.isOpen && nextSched.open) {
+      const dayLabel = offset === 1 ? 'Mañana' : DAY_NAMES_ES[nextDayKey] || nextDayKey;
+      return {
+        isOpen: false,
+        nextOpenDay: dayLabel,
+        nextOpenTime: nextSched.open,
+        formattedMessage: `${dayLabel} a las ${nextSched.open}`,
+      };
+    }
+  }
+
+  return {
+    isOpen: false,
+    nextOpenDay: 'Próximamente',
+    nextOpenTime: '',
+    formattedMessage: 'Próximamente',
+  };
+}
+

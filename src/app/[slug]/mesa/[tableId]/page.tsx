@@ -14,9 +14,9 @@ import { OrderStatus } from '@/modules/kiosk/components/OrderStatus';
 import { ProductCustomizationModal } from '@/modules/kiosk/components/ProductCustomizationModal';
 import { useCartStore } from '@/modules/kiosk/stores/cart-store';
 import { useGlubbiStore } from '@/modules/glubbi/stores/glubbi-store';
-import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck, Heart } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Home, MessageCircle, ShieldCheck, Heart, Clock } from 'lucide-react';
 import { t } from '@/lib/i18n';
-import { formatPrice, isRestaurantOpen } from '@/lib/utils';
+import { formatPrice, isRestaurantOpen, getNextOpeningInfo, type OpeningInfo } from '@/lib/utils';
 import { findMatchingDeliveryZone } from '@/lib/delivery-zones';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -181,7 +181,9 @@ export default function KioskPage({ params }: KioskPageProps) {
       setDeliveryEnabled(restaurant.delivery_enabled !== false);
       setDiscountPercentage(restaurant.discount_percentage || 0);
       const shiftInactive = restaurant.is_shift_active === false;
-      const scheduleClosed = !isRestaurantOpen(restaurant.schedule, restaurant.timezone);
+      const openInfo = getNextOpeningInfo(restaurant.schedule, restaurant.timezone);
+      setOpeningInfo(openInfo);
+      const scheduleClosed = !openInfo.isOpen;
       setIsClosed(shiftInactive || scheduleClosed);
       
       // Load categories
@@ -207,19 +209,29 @@ export default function KioskPage({ params }: KioskPageProps) {
         .order('order_index');
         
       if (prods) {
-        // Sort products by configured order_index
-        const sortedProds = [...prods].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+        // Sort products and nested modifier groups & modifiers by order_index
+        const sortedProds = [...prods]
+          .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+          .map(p => ({
+            ...p,
+            modifier_groups: (p.modifier_groups || [])
+              .sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+              .map((mg: any) => ({
+                ...mg,
+                modifiers: (mg.modifiers || []).sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+              }))
+          }));
         setProducts(sortedProds as ProductWithModifiers[]);
         
         // Find upsell products based on restaurant settings, fallback to featured
-        const upsells = prods.filter(p => 
+        const upsells = sortedProds.filter(p => 
           p.id === restaurant.upsell_item_1_id || p.id === restaurant.upsell_item_2_id
         );
         
         if (upsells.length > 0) {
            setUpsellProducts(upsells as ProductWithModifiers[]);
         } else {
-            setUpsellProducts(prods.filter(p => p.is_featured) as ProductWithModifiers[]);
+            setUpsellProducts(sortedProds.filter(p => p.is_featured) as ProductWithModifiers[]);
         }
       }
 
@@ -256,10 +268,11 @@ export default function KioskPage({ params }: KioskPageProps) {
             filter: `id=eq.${restaurant.id}`,
           },
           (payload) => {
-            if (payload.new && typeof payload.new.is_shift_active === 'boolean') {
+            if (payload.new) {
               const newShiftOff = payload.new.is_shift_active === false;
-              const schedClosed = !isRestaurantOpen(payload.new.schedule || restaurant.schedule, payload.new.timezone || restaurant.timezone);
-              setIsClosed(newShiftOff || schedClosed);
+              const newOpenInfo = getNextOpeningInfo(payload.new.schedule || restaurant.schedule, payload.new.timezone || restaurant.timezone);
+              setOpeningInfo(newOpenInfo);
+              setIsClosed(newShiftOff || !newOpenInfo.isOpen);
             }
           }
         )
@@ -442,6 +455,7 @@ export default function KioskPage({ params }: KioskPageProps) {
     }
   }, [customer, customerName]);
   const [isClosed, setIsClosed] = useState(false);
+  const [openingInfo, setOpeningInfo] = useState<OpeningInfo | null>(null);
 
   const handleCheckoutClick = () => {
     setIsCartOpen(false);
@@ -628,14 +642,18 @@ export default function KioskPage({ params }: KioskPageProps) {
     // Append origin & customer tags to notes
     let notesPrefix = '';
     const custTag = customerName ? `[Cliente: ${customerName}]` : '';
+    const scheduledTag = isClosed ? `[Pedido Programado - Apertura: ${openingInfo?.formattedMessage || 'Próxima apertura'}]` : '';
+
     if (isDelivery) {
-      notesPrefix = `[Origen: Delivery]${custTag ? ` | ${custTag}` : ''} | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone}`;
+      notesPrefix = `[Origen: Delivery]${scheduledTag ? ` | ${scheduledTag}` : ''}${custTag ? ` | ${custTag}` : ''} | Dirección: ${deliveryAddress} | Teléfono: ${deliveryPhone}`;
     } else if (orderType === 'pickup' || tableId === 'takeaway') {
-      notesPrefix = `[Origen: Retiro en Local]${custTag ? ` | ${custTag}` : ''} | Hora estimada: ${pickupTime || 'En 20-30 min'}${deliveryPhone ? ` | Teléfono: ${deliveryPhone}` : ''}`;
+      notesPrefix = `[Origen: Retiro en Local]${scheduledTag ? ` | ${scheduledTag}` : ''}${custTag ? ` | ${custTag}` : ''} | Hora estimada: ${pickupTime || 'En 20-30 min'}${deliveryPhone ? ` | Teléfono: ${deliveryPhone}` : ''}`;
     } else if (isWaiter) {
-      notesPrefix = `[Origen: Mesero: ${waiterName}]${custTag ? ` | ${custTag}` : ''}`;
+      notesPrefix = `[Origen: Mesero: ${waiterName}]${scheduledTag ? ` | ${scheduledTag}` : ''}${custTag ? ` | ${custTag}` : ''}`;
     } else if (custTag) {
-      notesPrefix = custTag;
+      notesPrefix = scheduledTag ? `${scheduledTag} | ${custTag}` : custTag;
+    } else if (scheduledTag) {
+      notesPrefix = scheduledTag;
     }
 
     if (verificationNotes) {
@@ -712,9 +730,10 @@ export default function KioskPage({ params }: KioskPageProps) {
     const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const targetTableId = isWaiter ? selectedTableId : tableId;
     const custTag = customerName ? `[Cliente: ${customerName}]` : '';
+    const scheduledTag = isClosed ? `[Pedido Programado - Apertura: ${openingInfo?.formattedMessage || 'Próxima apertura'}]` : '';
     const notesPrefix = isWaiter
-      ? `[Origen: Mesero: ${waiterName}] | [Pagar al final]${custTag ? ` | ${custTag}` : ''}`
-      : `[Pagar al final]${custTag ? ` | ${custTag}` : ''}`;
+      ? `[Origen: Mesero: ${waiterName}]${scheduledTag ? ` | ${scheduledTag}` : ''} | [Pagar al final]${custTag ? ` | ${custTag}` : ''}`
+      : `${scheduledTag ? `${scheduledTag} | ` : ''}[Pagar al final]${custTag ? ` | ${custTag}` : ''}`;
 
     setLastTotal(finalTotal);
 
@@ -842,6 +861,8 @@ export default function KioskPage({ params }: KioskPageProps) {
           isLoading={isProcessing} 
           isDelivery={isDelivery} 
           orderType={orderType}
+          isClosed={isClosed}
+          openingInfo={openingInfo}
           deliveryZoneInfo={deliveryZoneInfo}
         />
       </div>
@@ -980,6 +1001,28 @@ export default function KioskPage({ params }: KioskPageProps) {
         <div className="sticky top-0 bg-slate-50/95 backdrop-blur-md z-50 border-b border-gray-200/60 shadow-md">
           <ElegantHeader />
 
+          {/* Pre-order banner when closed */}
+          {isClosed && openingInfo && (
+            <div className="mx-4 mb-2.5 p-3 bg-amber-50/95 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-950">
+                    🌙 Fuera de horario • Abre: {openingInfo.formattedMessage}
+                  </p>
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    Puedes pedir ahora y tu orden se preparará a la apertura.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold uppercase bg-amber-500 text-white px-2 py-1 rounded-lg shrink-0 shadow-xs">
+                Pre-Orden
+              </span>
+            </div>
+          )}
+
           {isWaiter && (
             <div className="bg-indigo-600 text-white text-xs font-bold text-center py-2.5 px-4 flex items-center justify-center gap-2">
               <span>🧑‍💼 MODO MESERO ACTIVO — Tomando pedido para: {allTables.find(t => t.id === selectedTableId)?.label || `Mesa ${selectedTableId}`}</span>
@@ -1018,7 +1061,6 @@ export default function KioskPage({ params }: KioskPageProps) {
                       product={product} 
                       onAdd={handleAddToCart}
                       currency={currency}
-                      disabled={isClosed}
                     />
                   ))}
                 </div>
@@ -1029,27 +1071,6 @@ export default function KioskPage({ params }: KioskPageProps) {
       </div>
 
       </div>
-
-      {/* Closed Overlay */}
-      {isClosed && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-scale-in">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-slate-200">
-              <span className="text-4xl">😴</span>
-            </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">Estamos Cerrados</h3>
-            <p className="text-slate-500 mb-6">
-              El restaurante se encuentra fuera de su horario de atención. Vuelve más tarde para disfrutar de nuestro menú.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
-            >
-              Actualizar
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Floating Cart Button */}
       {getItemCount() > 0 && step === 'browse' && (

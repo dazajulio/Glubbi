@@ -38,8 +38,18 @@ export function MenuToggle({ restaurantId }: MenuToggleProps) {
 
     if (cats) setCategories(cats);
     if (prods) {
-      // Ensure products are sorted by order_index
-      const sorted = [...prods].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      // Ensure products, modifier_groups and modifiers are sorted by order_index
+      const sorted = (prods as any[])
+        .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+        .map((p: any) => ({
+          ...p,
+          modifier_groups: (p.modifier_groups || [])
+            .sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+            .map((mg: any) => ({
+              ...mg,
+              modifiers: (mg.modifiers || []).sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+            }))
+        }));
       setProducts(sorted);
     }
     setIsLoading(false);

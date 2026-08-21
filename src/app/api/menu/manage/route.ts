@@ -134,7 +134,8 @@ export async function POST(request: Request) {
 
       // Insert Modifier Groups & Modifiers
       if (groups && Array.isArray(groups) && groups.length > 0) {
-        for (const group of groups) {
+        for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+          const group = groups[gIdx];
           if (!group.name || !group.name.trim()) continue;
           const minSel = Math.max(0, parseInt(group.min_selections) || 0);
           const maxSel = Math.max(minSel, Math.max(1, parseInt(group.max_selections) || 1));
@@ -147,7 +148,8 @@ export async function POST(request: Request) {
               name: group.name.trim(),
               is_required: minSel > 0 || group.is_required || false,
               min_selections: minSel,
-              max_selections: maxSel
+              max_selections: maxSel,
+              order_index: gIdx
             })
             .select('id')
             .single();
@@ -157,11 +159,12 @@ export async function POST(request: Request) {
           if (group.modifiers && Array.isArray(group.modifiers) && group.modifiers.length > 0) {
             const modsToInsert = group.modifiers
               .filter((m: any) => m.name && m.name.trim())
-              .map((m: any) => ({
+              .map((m: any, mIdx: number) => ({
                 group_id: newGroup.id,
                 name: m.name.trim(),
                 extra_price: m.extra_price || 0,
-                is_available: true
+                is_available: true,
+                order_index: mIdx
               }));
 
             if (modsToInsert.length > 0) {

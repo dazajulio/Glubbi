@@ -239,24 +239,51 @@ export function ProductCustomizationModal({
                       return (
                         <div
                           key={modifier.id}
-                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+                          onClick={() => {
+                            if (!isMultiSelect) {
+                              addModifier(group, modifier);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all select-none ${
+                            !isMultiSelect ? 'cursor-pointer active:scale-[0.99]' : ''
+                          } ${
                             isSelected 
                               ? 'border-orange-500 bg-orange-50/50 shadow-sm' 
                               : 'border-gray-200 bg-white hover:bg-slate-50'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            {!isMultiSelect && (
-                              <div className={`w-5 h-5 flex items-center justify-center rounded-full border ${
+                          <div 
+                            className="flex items-center space-x-3 flex-1 min-w-0 pr-2 cursor-pointer"
+                            onClick={(e) => {
+                              if (isMultiSelect) {
+                                e.stopPropagation();
+                                if (modCount === 0 && !isGroupFull) {
+                                  addModifier(group, modifier);
+                                } else if (modCount > 0) {
+                                  removeModifier(group, modifier);
+                                }
+                              }
+                            }}
+                          >
+                            {!isMultiSelect ? (
+                              <div className={`w-6 h-6 flex items-center justify-center rounded-full border transition-all shrink-0 ${
                                 isSelected 
-                                  ? 'bg-orange-500 border-orange-500 text-white' 
-                                  : 'border-zinc-400 bg-white'
+                                  ? 'bg-orange-500 border-orange-500 text-white shadow-sm scale-105' 
+                                  : 'border-zinc-400 bg-white hover:border-orange-400'
                               }`}>
-                                {isSelected && <Check className="w-3.5 h-3.5" />}
+                                {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
+                              </div>
+                            ) : (
+                              <div className={`w-6 h-6 flex items-center justify-center rounded-lg border transition-all shrink-0 ${
+                                isSelected 
+                                  ? 'bg-orange-500 border-orange-500 text-white shadow-sm' 
+                                  : 'border-zinc-400 bg-white hover:border-orange-400'
+                              }`}>
+                                {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                               </div>
                             )}
-                            <div>
-                              <span className={`${isSelected ? 'text-slate-900 font-bold' : 'font-medium text-gray-800'}`}>
+                            <div className="flex-1 truncate">
+                              <span className={`block truncate ${isSelected ? 'text-slate-900 font-bold' : 'font-medium text-gray-800'}`}>
                                 {modifier.name}
                               </span>
                               {modifier.extra_price > 0 && (
@@ -271,17 +298,23 @@ export function ProductCustomizationModal({
                           {!isMultiSelect ? (
                             <button
                               type="button"
-                              onClick={() => addModifier(group, modifier)}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addModifier(group, modifier);
+                              }}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
                                 isSelected
-                                  ? 'bg-orange-500 text-white'
+                                  ? 'bg-orange-500 text-white shadow-sm'
                                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                               }`}
                             >
                               {isSelected ? 'Seleccionado' : 'Seleccionar'}
                             </button>
                           ) : (
-                            <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-xs">
+                            <div 
+                              className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-xs shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
                                 type="button"
                                 disabled={modCount === 0}

@@ -20,6 +20,13 @@ interface CustomerFormProps {
   isLoading?: boolean;
   isDelivery?: boolean;
   orderType?: 'pickup' | 'delivery';
+  isClosed?: boolean;
+  openingInfo?: {
+    isOpen: boolean;
+    nextOpenDay: string;
+    nextOpenTime: string;
+    formattedMessage: string;
+  } | null;
   deliveryZoneInfo?: {
     isChecking: boolean;
     zone: any | null;
@@ -28,7 +35,15 @@ interface CustomerFormProps {
   } | null;
 }
 
-export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderType, deliveryZoneInfo }: CustomerFormProps) {
+export function CustomerForm({ 
+  onSubmit, 
+  isLoading, 
+  isDelivery = false, 
+  orderType, 
+  isClosed = false,
+  openingInfo,
+  deliveryZoneInfo 
+}: CustomerFormProps) {
   const isPickup = orderType === 'pickup' || (!isDelivery && orderType !== 'delivery');
 
   const { customer, location, setLocation } = useGlubbiStore();
@@ -85,18 +100,29 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
     );
   };
 
+  const initialPickupDefault = isClosed && openingInfo?.nextOpenTime 
+    ? `Al abrir (${openingInfo.nextOpenTime})` 
+    : 'En 20-30 min';
+
   const [name, setName] = useState(customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() : '');
   const [email, setEmail] = useState(customer?.email || '');
   const [phone, setPhone] = useState(customer?.phone || '');
   const [address, setAddress] = useState('');
-  const [pickupTime, setPickupTime] = useState('En 20-30 min');
+  const [pickupTime, setPickupTime] = useState(initialPickupDefault);
   
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [knownAddresses, setKnownAddresses] = useState<any[]>([]);
 
   const [errors, setErrors] = useState<{name?: string; email?: string; phone?: string; address?: string; pickupTime?: string}>({});
 
-  const QUICK_TIME_OPTIONS = ['En 15 min', 'En 30 min', 'En 45 min', 'En 1 hora'];
+  const QUICK_TIME_OPTIONS = isClosed && openingInfo?.nextOpenTime
+    ? [
+        `Al abrir (${openingInfo.nextOpenTime})`,
+        `+30 min tras abrir`,
+        `+1 hora tras abrir`,
+        `En la tarde`
+      ]
+    : ['En 15 min', 'En 30 min', 'En 45 min', 'En 1 hora'];
 
   const validate = () => {
     const newErrors: {name?: string; email?: string; phone?: string; address?: string; pickupTime?: string} = {};
@@ -303,7 +329,9 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
           <div className="pt-2 space-y-2">
             <label className="block text-sm font-bold text-slate-800 mb-1 ml-1 flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-orange-500" />
-              ¿A qué hora estimas buscar tu pedido? <span className="text-red-400">*</span>
+              {isClosed && openingInfo?.formattedMessage
+                ? `Programar retiro (Abre: ${openingInfo.formattedMessage})`
+                : '¿A qué hora estimas buscar tu pedido?'} <span className="text-red-400">*</span>
             </label>
             
             {/* Quick Pills */}
@@ -338,7 +366,7 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
                 className={`block w-full px-4 py-3.5 bg-white shadow-sm border rounded-xl text-slate-900 placeholder-zinc-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-sm font-medium ${
                   errors.pickupTime ? 'border-red-500' : 'border-gray-200'
                 }`}
-                placeholder="Ej. En 20-30 min / 2:30 PM"
+                placeholder={isClosed && openingInfo?.formattedMessage ? `Ej. ${openingInfo.formattedMessage}` : "Ej. En 20-30 min / 2:30 PM"}
                 disabled={isLoading}
               />
             </div>
@@ -349,6 +377,21 @@ export function CustomerForm({ onSubmit, isLoading, isDelivery = false, orderTyp
         {/* Delivery Address field */}
         {isDelivery && (
           <div className="pt-2 space-y-3">
+            {/* Notice if restaurant is closed during delivery ordering */}
+            {isClosed && (
+              <div className="p-3.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-300/80 rounded-2xl text-xs text-amber-950 flex items-start gap-3 shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-bold text-amber-900">Restaurante cerrado actualmente</p>
+                  <p className="text-amber-800 text-[11px] mt-0.5 leading-relaxed font-medium">
+                    Puedes confirmar tu pedido ahora. La cocina lo preparará y despachará a tu dirección a partir de la hora de apertura: <strong className="font-bold text-amber-950">{openingInfo?.formattedMessage || 'horario operativo'}</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {knownAddresses.length > 0 && (
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-700 ml-1 flex items-center justify-between">

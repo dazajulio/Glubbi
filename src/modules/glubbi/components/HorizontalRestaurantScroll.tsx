@@ -74,16 +74,16 @@ export default function HorizontalRestaurantScroll({
                 </div>
               )}
               
-              {/* Closed Overlay */}
+              {/* Closed / Pre-order Badge */}
               {rest.isOpen === false && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-                  <span className="bg-slate-900/80 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 shadow-lg">CERRADO</span>
+                <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg text-[10px] font-black bg-slate-900/80 text-white backdrop-blur-xs border border-white/20 flex items-center gap-1 shadow-sm">
+                  <span>🌙</span> Pre-orden
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <div className={`p-3 ${rest.isOpen === false ? 'opacity-60' : ''}`}>
+            <div className="p-3">
               <h4 className="font-bold text-slate-800 text-sm mb-1 truncate">{rest.name}</h4>
               <p className="text-xs text-slate-500 truncate mb-2">{rest.glubbi_category || 'Comida'}</p>
               

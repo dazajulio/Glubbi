@@ -367,6 +367,11 @@ export default function GlubbiMarketplace() {
                             </span>
                           </div>
                         )}
+                        {!restaurant.isOpen && (
+                          <div className="bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit border border-white/10">
+                            <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider">🌙 Pre-orden</span>
+                          </div>
+                        )}
                         {restaurant.glubbi_category && (
                           <div className="bg-blue-600/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1 w-fit">
                             <span className="text-[10px] font-black text-white uppercase tracking-wider">{restaurant.glubbi_category}</span>
