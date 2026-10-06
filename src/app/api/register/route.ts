@@ -65,12 +65,25 @@ export async function POST(request: Request) {
       couponId,
       referral_source,
       team_code,
+      plan_type,
+      is_cgm_member,
+      cgm_member_code,
     } = body;
+
+    const isCgm = Boolean(is_cgm_member || plan_type === 'cgm');
+    const cleanCgmCode = (cgm_member_code || '').trim().toUpperCase();
 
     // Validation
     if (!restaurantName || !contactName || !email || !password || !phone || !address) {
       return NextResponse.json(
         { success: false, error: 'Faltan campos requeridos.' },
+        { status: 400 }
+      );
+    }
+
+    if (isCgm && !cleanCgmCode) {
+      return NextResponse.json(
+        { success: false, error: 'Debes ingresar tu código de afiliado a la Cámara Gastronómica de Mérida.' },
         { status: 400 }
       );
     }
@@ -177,92 +190,115 @@ export async function POST(request: Request) {
 
     const userId = authUser.user.id;
 
-    // 3. Insert Restaurant
-    // Try to insert with custom columns first
+    // 3. Insert Restaurant (with multi-tier fallback for schema compatibility)
     let newRestaurantId = '';
     let insertedRest: any = null;
 
-    try {
-      const { data, error } = await supabaseAdmin
+    // Payload 1: Full payload with all optional and recent columns
+    const fullPayload = {
+      name: restaurantName,
+      slug,
+      phone,
+      address,
+      contact_name: contactName,
+      instagram: instagram || null,
+      facebook: facebook || null,
+      tiktok: tiktok || null,
+      brand_color_primary: '#FF6B00',
+      brand_color_secondary: '#1A1A2E',
+      is_active: true,
+      subscription_type: isCgm ? 'camara_gastronomica' : 'pago_movil',
+      subscription_status: 'active',
+      subscription_renews_at: isCgm ? null : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      is_cgm_member: isCgm,
+      cgm_member_code: isCgm ? cleanCgmCode : null,
+      glubbi_type: glubbi_type || 'Restaurantes',
+      glubbi_category: glubbi_category || 'Comida',
+      payment_methods: (manualPayment || isCgm) && paymentReference ? [{
+        id: isCgm ? 'convenio-cgm-registro' : 'manual-pm-registro',
+        type: isCgm ? 'convenio_cgm' : 'pago_movil',
+        reference: paymentReference
+      }] : null
+    };
+
+    // Payload 2: Standard payload with core subscription columns
+    const standardPayload = {
+      name: restaurantName,
+      slug,
+      phone,
+      address,
+      brand_color_primary: '#FF6B00',
+      brand_color_secondary: '#1A1A2E',
+      is_active: true,
+      subscription_type: isCgm ? 'camara_gastronomica' : 'pago_movil',
+      subscription_status: 'active',
+      subscription_renews_at: isCgm ? null : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      is_cgm_member: isCgm,
+      cgm_member_code: isCgm ? cleanCgmCode : null,
+      payment_methods: (manualPayment || isCgm) && paymentReference ? [{
+        id: isCgm ? 'convenio-cgm-registro' : 'manual-pm-registro',
+        type: isCgm ? 'convenio_cgm' : 'pago_movil',
+        reference: paymentReference
+      }] : null
+    };
+
+    // Payload 3: Minimal essential payload (base table columns only)
+    const minimalPayload = {
+      name: restaurantName,
+      slug,
+      phone,
+      address,
+      brand_color_primary: '#FF6B00',
+      brand_color_secondary: '#1A1A2E',
+      is_active: true
+    };
+
+    // Attempt 1: Full payload
+    const { data: resFull, error: errFull } = await supabaseAdmin
+      .from('restaurants')
+      .insert(fullPayload as any)
+      .select()
+      .single() as any;
+
+    if (!errFull && resFull) {
+      insertedRest = resFull;
+      newRestaurantId = resFull.id;
+    } else {
+      console.warn('Full restaurant insert failed, trying standard payload:', errFull?.message);
+      
+      // Attempt 2: Standard payload
+      const { data: resStd, error: errStd } = await supabaseAdmin
         .from('restaurants')
-        .insert({
-          name: restaurantName,
-          slug,
-          phone,
-          address,
-          contact_name: contactName,
-          instagram: instagram || null,
-          facebook: facebook || null,
-          tiktok: tiktok || null,
-          brand_color_primary: '#FF6B00',
-          brand_color_secondary: '#1A1A2E',
-          is_active: manualPayment ? true : false,
-          subscription_type: 'pago_movil',
-          subscription_status: 'active',
-          subscription_renews_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-          glubbi_type: glubbi_type || 'Restaurantes',
-          glubbi_category: glubbi_category || 'Comida',
-          payment_methods: manualPayment && paymentReference ? [{
-            id: 'manual-pm-registro',
-            type: 'pago_movil',
-            reference: paymentReference
-          }] : null
-        } as any)
+        .insert(standardPayload as any)
         .select()
         .single() as any;
 
-      if (error) {
-        // If error suggests column missing, throw to enter catch block and use fallback
-        if (error.message && (error.message.includes('column') || error.message.includes('contact_name'))) {
-          throw new Error('FALLBACK_INSERT');
+      if (!errStd && resStd) {
+        insertedRest = resStd;
+        newRestaurantId = resStd.id;
+      } else {
+        console.warn('Standard restaurant insert failed, trying minimal payload:', errStd?.message);
+        
+        // Attempt 3: Minimal payload
+        const { data: resMin, error: errMin } = await supabaseAdmin
+          .from('restaurants')
+          .insert(minimalPayload as any)
+          .select()
+          .single() as any;
+
+        if (errMin || !resMin) {
+          console.error('All restaurant insert attempts failed:', errMin);
+          // Clean up created auth user if restaurant creation fails completely
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+          return NextResponse.json(
+            { success: false, error: `Error al crear el restaurante en base de datos: ${errMin?.message || 'Error desconocido'}` },
+            { status: 500 }
+          );
         }
-        throw error;
+
+        insertedRest = resMin;
+        newRestaurantId = resMin.id;
       }
-      
-      insertedRest = data;
-      newRestaurantId = data.id;
-    } catch (err: any) {
-      // Fallback: If custom columns do not exist in Supabase yet, store them in notes/tax_id
-      console.warn('Custom columns not found. Using fallback insertion...', err.message);
-      
-      const backupDetails = {
-        contact_name: contactName,
-        instagram: instagram || null,
-        facebook: facebook || null,
-        tiktok: tiktok || null,
-      };
-
-      const { data, error } = await supabaseAdmin
-        .from('restaurants')
-        .insert({
-          name: restaurantName,
-          slug,
-          phone,
-          address,
-          tax_id: null, // Avoid injecting fallback contact details object here
-          brand_color_primary: '#FF6B00',
-          brand_color_secondary: '#1A1A2E',
-          is_active: manualPayment ? true : false,
-          subscription_type: 'pago_movil',
-          subscription_status: 'active',
-          subscription_renews_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_methods: manualPayment && paymentReference ? [{
-            id: 'manual-pm-registro',
-            type: 'pago_movil',
-            reference: paymentReference
-          }] : null
-        } as any)
-        .select()
-        .single() as any;
-
-      if (error) {
-        // Clean up created auth user if restaurant creation fails
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-        throw error;
-      }
-
-      insertedRest = data;
-      newRestaurantId = data.id;
     }
 
     // 4. Create Restaurant Member linkage
@@ -331,22 +367,22 @@ export async function POST(request: Request) {
       await supabaseAdmin.from('team_sales').insert({
         team_member_id: teamMemberId,
         team_member_name: teamMemberName || (codeUpper ? `Agente (${codeUpper})` : null),
-        code_used: codeUpper || null,
+        code_used: codeUpper || (isCgm ? `CGM:${cleanCgmCode}` : null),
         restaurant_name: restaurantName,
         restaurant_slug: slug,
         contact_name: contactName,
         email,
-        payment_method: manualPayment ? 'PAGO MOVIL' : 'LEMON',
-        amount: 29.00,
-        referral_source: referral_source || 'Desconocido',
+        payment_method: isCgm ? 'CONVENIO CGM' : (manualPayment ? 'PAGO MOVIL' : 'LEMON'),
+        amount: isCgm ? 0.00 : 29.00,
+        referral_source: isCgm ? 'Cámara Gastronómica de Mérida' : (referral_source || 'Desconocido'),
         status: 'completed'
       } as any);
     } catch (teamSaleErr) {
       console.error('Error inserting team sale:', teamSaleErr);
     }
 
-    // 5. Construir URL de checkout de Lemon Squeezy con datos del restaurante
-    if (!manualPayment) {
+    // 5. Construir URL de checkout de Lemon Squeezy con datos del restaurante (solo si no es pago manual ni convenio CGM)
+    if (!manualPayment && !isCgm) {
       let checkoutUrl = '';
 
       if (process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL) {
@@ -411,44 +447,83 @@ export async function POST(request: Request) {
       });
     }
 
-    // 6. Send Internal Admin Email (Pago Movil)
+    // 6. Send Internal Admin Email & Customer Email (Manual Payment or CGM)
     try {
-      await resend.emails.send({
-        from: 'Glubbi <onboarding@glubbi.app>',
-        to: 'soporte@glubbi.app',
-        subject: `💰 Nuevo Registro SaaS (Pago Móvil) - ${restaurantName}`,
-        html: `<p><strong>Local:</strong> ${restaurantName}</p><p><strong>Cliente:</strong> ${contactName}</p><p><strong>Email:</strong> ${email}</p><p><strong>Teléfono:</strong> ${phone}</p><p><strong>Método de Pago:</strong> Pago Móvil (Validar manual)</p><p><strong>Detalles Pago:</strong> ${paymentReference}</p>`
-      });
+      if (isCgm) {
+        await resend.emails.send({
+          from: 'Glubbi <onboarding@glubbi.app>',
+          to: 'soporte@glubbi.app',
+          subject: `🏛️ Nuevo Registro SaaS (Convenio Cámara Gastronómica) - ${restaurantName}`,
+          html: `<p><strong>Local:</strong> ${restaurantName}</p><p><strong>Cliente:</strong> ${contactName}</p><p><strong>Email:</strong> ${email}</p><p><strong>Teléfono:</strong> ${phone}</p><p><strong>Afiliación:</strong> Cámara Gastronómica de Mérida</p><p><strong>Código de Afiliado CGM:</strong> ${cleanCgmCode}</p>`
+        });
 
-      // Send Welcome Email to Customer
-      await resend.emails.send({
-        from: 'Glubbi Soporte <soporte@glubbi.app>',
-        to: email,
-        subject: `Bienvenido a Glubbi, ${restaurantName}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-            <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
-            <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma con <strong>60 días de acceso activo 100% bonificado (2 meses)</strong>.</p>
-            <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
-            <p style="text-align: center; margin: 30px 0;">
-              <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
-            </p>
-            <p style="font-size: 13px; color: #666; background-color: #fff3e0; padding: 10px; border-left: 3px solid #FF6B00;">
-              <strong>Promoción de Bienvenida:</strong> Cuentas con 60 días continuos de acceso total antes de tu próxima fecha de facturación.
-            </p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-            <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">
-              <h3 style="margin-top: 0; color: #333; font-size: 14px;">📄 Acuerdo de Uso y Términos del Servicio</h3>
-              <p>Por motivos de transparencia y seguridad jurídica, hemos adjuntado nuestro Acuerdo de Uso Oficial aplicable a todos los comercios afiliados.</p>
-              <p><strong>Cláusula Legal:</strong> <i>La recepción de este correo electrónico, sumado a tu primer inicio de sesión (Log In) y el uso continuo de la plataforma, constituye una firma digital vinculante y la aceptación total e irrevocable de todos los términos, condiciones y políticas descritas en nuestro Acuerdo de Uso.</i></p>
-              <p style="text-align: center; margin-top: 15px;">
-                <a href="https://www.glubbi.app/legal/acuerdo-de-uso" target="_blank" style="color: #FF6B00; font-weight: bold; text-decoration: underline;">Leer el Acuerdo de Uso Legal</a>
+        await resend.emails.send({
+          from: 'Glubbi Soporte <soporte@glubbi.app>',
+          to: email,
+          subject: `Bienvenido a Glubbi por Convenio Cámara Gastronómica, ${restaurantName}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+              <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
+              <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente bajo el convenio institucional con la <strong>Cámara Gastronómica de Mérida</strong>.</p>
+              <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 8px; margin: 15px 0;">
+                <p style="margin: 0; color: #065f46; font-weight: bold;">🏛️ Beneficio de Afiliación Activo</p>
+                <p style="margin: 5px 0 0 0; color: #047857; font-size: 13px;">Código de Afiliado registrado: <strong>${cleanCgmCode}</strong>. Tu suscripción mensual está 100% bonificada por convenio mientras mantengas tu membresía activa.</p>
+              </div>
+              <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
               </p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">
+                <h3 style="margin-top: 0; color: #333; font-size: 14px;">📄 Acuerdo de Uso y Términos del Servicio</h3>
+                <p>Por motivos de transparencia y seguridad jurídica, hemos adjuntado nuestro Acuerdo de Uso Oficial aplicable a todos los comercios afiliados.</p>
+                <p><strong>Cláusula Legal:</strong> <i>La recepción de este correo electrónico, sumado a tu primer inicio de sesión (Log In) y el uso continuo de la plataforma, constituye una firma digital vinculante y la aceptación total e irrevocable de todos los términos, condiciones y políticas descritas en nuestro Acuerdo de Uso.</i></p>
+                <p style="text-align: center; margin-top: 15px;">
+                  <a href="https://www.glubbi.app/legal/acuerdo-de-uso" target="_blank" style="color: #FF6B00; font-weight: bold; text-decoration: underline;">Leer el Acuerdo de Uso Legal</a>
+                </p>
+              </div>
+              <p style="margin-top: 30px; font-size: 14px;">¡Muchos éxitos en tus ventas!<br><strong>El equipo de Glubbi</strong></p>
             </div>
-            <p style="margin-top: 30px; font-size: 14px;">¡Muchos éxitos en tus ventas!<br><strong>El equipo de Glubbi</strong></p>
-          </div>
-        `
-      });
+          `
+        });
+      } else {
+        await resend.emails.send({
+          from: 'Glubbi <onboarding@glubbi.app>',
+          to: 'soporte@glubbi.app',
+          subject: `💰 Nuevo Registro SaaS (Pago Móvil) - ${restaurantName}`,
+          html: `<p><strong>Local:</strong> ${restaurantName}</p><p><strong>Cliente:</strong> ${contactName}</p><p><strong>Email:</strong> ${email}</p><p><strong>Teléfono:</strong> ${phone}</p><p><strong>Método de Pago:</strong> Pago Móvil (Validar manual)</p><p><strong>Detalles Pago:</strong> ${paymentReference}</p>`
+        });
+
+        // Send Welcome Email to Customer
+        await resend.emails.send({
+          from: 'Glubbi Soporte <soporte@glubbi.app>',
+          to: email,
+          subject: `Bienvenido a Glubbi, ${restaurantName}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+              <h2 style="color: #FF6B00;">¡Hola ${contactName}!</h2>
+              <p>Bienvenido al ecosistema Glubbi. Tu restaurante <strong>${restaurantName}</strong> ha sido registrado exitosamente en nuestra plataforma con <strong>60 días de acceso activo 100% bonificado (2 meses)</strong>.</p>
+              <p>Puedes acceder a tu panel administrativo oficial de forma segura desde el siguiente botón:</p>
+              <p style="text-align: center; margin: 30px 0;">
+                <a href="https://www.glubbi.app/${slug}/gerente" style="background-color: #FF6B00; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Acceder al Panel de Glubbi</a>
+              </p>
+              <p style="font-size: 13px; color: #666; background-color: #fff3e0; padding: 10px; border-left: 3px solid #FF6B00;">
+                <strong>Promoción de Bienvenida:</strong> Cuentas con 60 días continuos de acceso total antes de tu próxima fecha de facturación.
+              </p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; font-size: 13px; color: #555;">
+                <h3 style="margin-top: 0; color: #333; font-size: 14px;">📄 Acuerdo de Uso y Términos del Servicio</h3>
+                <p>Por motivos de transparencia y seguridad jurídica, hemos adjuntado nuestro Acuerdo de Uso Oficial aplicable a todos los comercios afiliados.</p>
+                <p><strong>Cláusula Legal:</strong> <i>La recepción de este correo electrónico, sumado a tu primer inicio de sesión (Log In) y el uso continuo de la plataforma, constituye una firma digital vinculante y la aceptación total e irrevocable de todos los términos, condiciones y políticas descritas en nuestro Acuerdo de Uso.</i></p>
+                <p style="text-align: center; margin-top: 15px;">
+                  <a href="https://www.glubbi.app/legal/acuerdo-de-uso" target="_blank" style="color: #FF6B00; font-weight: bold; text-decoration: underline;">Leer el Acuerdo de Uso Legal</a>
+                </p>
+              </div>
+              <p style="margin-top: 30px; font-size: 14px;">¡Muchos éxitos en tus ventas!<br><strong>El equipo de Glubbi</strong></p>
+            </div>
+          `
+        });
+      }
     } catch (emailErr) {
       console.error('Error sending emails:', emailErr);
     }

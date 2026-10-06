@@ -16,7 +16,8 @@ import {
   CheckCircle2, 
   TrendingUp, 
   BarChart2, 
-  Layers 
+  Layers,
+  Award
 } from 'lucide-react';
 
 export default function TenantsPage() {
@@ -30,6 +31,7 @@ export default function TenantsPage() {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
+  const [editCgmCode, setEditCgmCode] = useState('');
 
   // --- Load Data ---
   async function loadData() {
@@ -63,6 +65,7 @@ export default function TenantsPage() {
       const updated = restaurants.find(r => r.id === selectedTenant.id);
       if (updated) {
         setSelectedTenant(updated);
+        setEditCgmCode(updated.cgm_member_code || '');
       }
     }
   }, [restaurants]);
@@ -172,11 +175,81 @@ export default function TenantsPage() {
     }
   };
 
+  // --- Toggle / Convert CGM Status ---
+  const toggleCgmStatus = async (tenant: any, makeCgm: boolean) => {
+    let newCode = tenant.cgm_member_code || '';
+    if (makeCgm && !newCode) {
+      const prompted = prompt('Ingresa el código de afiliado a la Cámara Gastronómica:', 'CGM-');
+      if (!prompted) return;
+      newCode = prompted.trim().toUpperCase();
+    }
+
+    setIsUpdating(true);
+    setActionMessage(makeCgm ? 'Afiliando a Cámara Gastronómica...' : 'Convirtiendo a Plan Estándar...');
+
+    try {
+      const payload: Record<string, any> = {
+        tenantId: tenant.id,
+        is_cgm_member: makeCgm,
+        subscription_type: makeCgm ? 'camara_gastronomica' : 'pago_movil',
+        cgm_member_code: makeCgm ? newCode : null,
+        subscription_status: 'active',
+        subscription_renews_at: makeCgm ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al cambiar plan.');
+      }
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Error al actualizar convenio.');
+    } finally {
+      setIsUpdating(false);
+      setActionMessage('');
+    }
+  };
+
+  const saveCgmCode = async (tenantId: string) => {
+    if (!editCgmCode.trim()) {
+      alert('Ingresa un código de afiliado válido.');
+      return;
+    }
+    setIsUpdating(true);
+    setActionMessage('Guardando código CGM...');
+    try {
+      const res = await fetch('/api/admin/tenants/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId,
+          cgm_member_code: editCgmCode.trim().toUpperCase(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al guardar código.');
+      }
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Error al guardar.');
+    } finally {
+      setIsUpdating(false);
+      setActionMessage('');
+    }
+  };
+
   // --- Filtered Tenants ---
   const filteredTenants = restaurants.filter(r => 
     r.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     r.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.license_code && r.license_code.toLowerCase().includes(searchTerm.toLowerCase()))
+    (r.license_code && r.license_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (r.cgm_member_code && r.cgm_member_code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -247,6 +320,13 @@ export default function TenantsPage() {
                           <div>
                             <span className="block">{tenant.name}</span>
                             <span className="text-[10px] text-gray-400 font-mono">/{tenant.slug}</span>
+                            {tenant.is_cgm_member && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-amber-500/10 text-amber-700 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                                  🏛️ Cámara Gastronómica {tenant.cgm_member_code ? `(${tenant.cgm_member_code})` : ''}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 font-mono font-bold text-gray-500">
@@ -345,6 +425,74 @@ export default function TenantsPage() {
                     selectedTenant.is_active ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
+              </div>
+
+              {/* CGM Partnership & Plan Conversion Section */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="block text-xs font-bold text-gray-900 uppercase tracking-wider">Convenio Cámara Gastronómica</span>
+                    <span className="text-[10px] text-gray-400">Afiliación institucional Mérida</span>
+                  </div>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                    selectedTenant.is_cgm_member 
+                      ? 'bg-amber-500/10 text-amber-700 border-amber-500/20' 
+                      : 'bg-slate-200 text-slate-600 border-slate-300'
+                  }`}>
+                    {selectedTenant.is_cgm_member ? '🏛️ Afiliado Activo' : 'Plan Estándar'}
+                  </span>
+                </div>
+
+                {selectedTenant.is_cgm_member ? (
+                  <div className="space-y-3 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-700">Código de Afiliado CGM:</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={editCgmCode}
+                          onChange={(e) => setEditCgmCode(e.target.value.toUpperCase())}
+                          placeholder="CGM-104"
+                          className="flex-1 bg-white border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                        />
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => saveCgmCode(selectedTenant.id)}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => {
+                        if (confirm(`¿Convertir "${selectedTenant.name}" a Plan Estándar de Pago ($29/mes)? Esto reactivará el cobro regular si el comercio ya no es miembro de la Cámara.`)) {
+                          toggleCgmStatus(selectedTenant, false);
+                        }
+                      }}
+                      className="w-full py-2 bg-gradient-to-r from-red-600 to-orange-600 hover:brightness-110 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <span>🔄 Convertir a Cuenta de Pago ($29/mes)</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-[11px] text-gray-500">Este restaurante está en Plan Estándar ($29/mes).</p>
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => toggleCgmStatus(selectedTenant, true)}
+                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      <span>Afiliar a Convenio Cámara Gastronómica</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* KYC status switcher */}

@@ -11,6 +11,8 @@ type RestaurantSubscription = {
   subscription_status: string;
   subscription_renews_at: string | null;
   subscription_type: string;
+  is_cgm_member?: boolean;
+  cgm_member_code?: string | null;
 };
 
 type PaymentReport = {
@@ -41,7 +43,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
   const loadData = useCallback(async () => {
     const { data: restData } = await supabase
       .from('restaurants')
-      .select('id, name, is_active, subscription_status, subscription_renews_at, subscription_type')
+      .select('id, name, is_active, subscription_status, subscription_renews_at, subscription_type, is_cgm_member, cgm_member_code')
       .eq('slug', slug)
       .single();
 
@@ -130,169 +132,214 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
 
       {/* ── Status Card ────────────────────────────────────────────── */}
       {restaurant && (
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-zinc-900 text-white rounded-2xl p-6 shadow-xl border border-slate-700/60 relative overflow-hidden">
-          <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-48 h-48 bg-orange-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className={`text-white rounded-2xl p-6 shadow-xl border relative overflow-hidden ${
+          restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica'
+            ? 'bg-gradient-to-br from-slate-900 via-amber-950/40 to-slate-900 border-amber-500/30'
+            : 'bg-gradient-to-br from-slate-900 via-slate-800 to-zinc-900 border-slate-700/60'
+        }`}>
+          <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/80 pb-5">
             <div>
-              <span className="text-xs font-bold text-orange-400 uppercase tracking-wider block mb-1">Plan Mensual Restaurante</span>
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">
+                {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica' 
+                  ? '🏛️ Convenio Institucional Cámara Gastronómica' 
+                  : 'Plan Mensual Restaurante'}
+              </span>
               <h2 className="text-xl font-extrabold">{restaurant.name}</h2>
             </div>
-            <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold border ${statusBadge.bg}`}>
-              {statusBadge.label}
+            <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold border ${
+              restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                : statusBadge.bg
+            }`}>
+              {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica'
+                ? '🏛️ Convenio Mérida Activo'
+                : statusBadge.label}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5">
             <div>
               <p className="text-xs text-slate-400 font-medium">Monto Mensual</p>
-              <p className="text-2xl font-black text-white mt-0.5">$29.99 <span className="text-xs text-slate-400 font-normal">/ mes</span></p>
+              <p className="text-2xl font-black text-white mt-0.5">
+                {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica' ? (
+                  <>
+                    $0.00 <span className="text-xs text-amber-400 font-semibold">(100% Bonificado)</span>
+                  </>
+                ) : (
+                  <>$29.99 <span className="text-xs text-slate-400 font-normal">/ mes</span></>
+                )}
+              </p>
             </div>
 
             <div>
               <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-orange-400" /> Próximo Vencimiento
+                <Calendar className="w-3.5 h-3.5 text-orange-400" /> 
+                {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica' ? 'Código de Afiliado' : 'Próximo Vencimiento'}
               </p>
               <p className="text-base font-bold text-slate-200 mt-0.5">
-                {restaurant.subscription_renews_at 
-                  ? new Date(restaurant.subscription_renews_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-                  : 'Sin fecha registrada'}
+                {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica' 
+                  ? (restaurant.cgm_member_code || 'CGM-ACTIVO') 
+                  : (restaurant.subscription_renews_at 
+                    ? new Date(restaurant.subscription_renews_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+                    : 'Sin fecha registrada')}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-slate-400 font-medium">Días Restantes</p>
-              <p className="text-2xl font-black text-orange-400 mt-0.5">
-                {daysRemaining !== null ? (daysRemaining > 0 ? `${daysRemaining} días` : '0 días') : 'N/A'}
+              <p className="text-xs text-slate-400 font-medium">Estado de Membresía</p>
+              <p className="text-2xl font-black text-emerald-400 mt-0.5">
+                {restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica' 
+                  ? 'Permanente' 
+                  : (daysRemaining !== null ? (daysRemaining > 0 ? `${daysRemaining} días` : '0 días') : 'N/A')}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Official Bank Info Box ──────────────────────────────────── */}
-      <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center gap-2 text-orange-600 font-bold text-sm">
-          <ShieldCheck className="w-5 h-5" />
-          <span>Datos Oficiales para Pago Móvil Glubbi</span>
+      {/* ── If CGM Member: Institutional Notice. Else: Payment Info & Report Form ── */}
+      {restaurant && (restaurant.is_cgm_member || restaurant.subscription_type === 'camara_gastronomica') ? (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 space-y-3 shadow-sm">
+          <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
+            <ShieldCheck className="w-5 h-5 text-amber-600" />
+            <span>Afiliación Institucional Activa - Cámara Gastronómica de Mérida</span>
+          </div>
+          <p className="text-xs text-amber-900 leading-relaxed font-medium">
+            Tu comercio cuenta con el beneficio exclusivo de suscripción SaaS bonificada al 100% mediante el convenio institucional suscrito con la <strong>Cámara Gastronómica de Mérida</strong> (Código de Afiliado: <span className="font-mono font-bold text-slate-900">{restaurant.cgm_member_code || 'CGM-ACTIVO'}</span>).
+          </p>
+          <p className="text-xs text-slate-500">
+            No necesitas reportar pagos móviles mensuales. Tu cuenta se mantiene activa de forma continua e ilimitada mientras pertenezcas a la Cámara Gastronómica.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 font-medium text-[10px]">BANCO</p>
-              <p className="font-bold text-gray-900">Banesco (0134)</p>
+      ) : (
+        <>
+          {/* ── Official Bank Info Box ──────────────────────────────────── */}
+          <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-2 text-orange-600 font-bold text-sm">
+              <ShieldCheck className="w-5 h-5" />
+              <span>Datos Oficiales para Pago Móvil Glubbi</span>
             </div>
-            <button onClick={() => copyToClipboard('0134', 'banco')} className="text-gray-400 hover:text-orange-500">
-              {copiedField === 'banco' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
 
-          <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 font-medium text-[10px]">TELÉFONO</p>
-              <p className="font-bold text-gray-900">0414-1234567</p>
-            </div>
-            <button onClick={() => copyToClipboard('04141234567', 'telefono')} className="text-gray-400 hover:text-orange-500">
-              {copiedField === 'telefono' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+                <div>
+                  <p className="text-gray-400 font-medium text-[10px]">BANCO</p>
+                  <p className="font-bold text-gray-900">Banesco (0134)</p>
+                </div>
+                <button onClick={() => copyToClipboard('0134', 'banco')} className="text-gray-400 hover:text-orange-500">
+                  {copiedField === 'banco' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
 
-          <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 font-medium text-[10px]">RIF</p>
-              <p className="font-bold text-gray-900">J-504938210</p>
-            </div>
-            <button onClick={() => copyToClipboard('J504938210', 'rif')} className="text-gray-400 hover:text-orange-500">
-              {copiedField === 'rif' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+                <div>
+                  <p className="text-gray-400 font-medium text-[10px]">TELÉFONO</p>
+                  <p className="font-bold text-gray-900">0414-1234567</p>
+                </div>
+                <button onClick={() => copyToClipboard('04141234567', 'telefono')} className="text-gray-400 hover:text-orange-500">
+                  {copiedField === 'telefono' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
 
-          <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 font-medium text-[10px]">TITULAR</p>
-              <p className="font-bold text-gray-900 truncate">Glubbi Tech C.A.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+                <div>
+                  <p className="text-gray-400 font-medium text-[10px]">RIF</p>
+                  <p className="font-bold text-gray-900">J-504938210</p>
+                </div>
+                <button onClick={() => copyToClipboard('J504938210', 'rif')} className="text-gray-400 hover:text-orange-500">
+                  {copiedField === 'rif' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
 
-      {/* ── Form Section ────────────────────────────────────────────── */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <Upload className="w-5 h-5 text-orange-500" /> Reportar Nuevo Pago
-        </h2>
-
-        {success && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <div>
-              <p className="font-bold">¡Pago registrado exitosamente!</p>
-              <p className="text-xs text-emerald-700">Nuestro equipo administrativo lo verificará y tu suscripción se renovará automáticamente.</p>
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
+                <div>
+                  <p className="text-gray-400 font-medium text-[10px]">TITULAR</p>
+                  <p className="font-bold text-gray-900 truncate">Glubbi Tech C.A.</p>
+                </div>
+              </div>
             </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Monto Pagado ($)</label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-semibold"
-              placeholder="29.99"
-            />
-          </div>
+          {/* ── Form Section ────────────────────────────────────────────── */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-orange-500" /> Reportar Nuevo Pago
+            </h2>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Número de Referencia</label>
-            <input
-              type="text"
-              required
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-semibold"
-              placeholder="Ej. 123456"
-            />
-          </div>
+            {success && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="font-bold">¡Pago registrado exitosamente!</p>
+                  <p className="text-xs text-emerald-700">Nuestro equipo administrativo lo verificará y tu suscripción se renovará automáticamente.</p>
+                </div>
+              </div>
+            )}
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Banco Emisor</label>
-            <input
-              type="text"
-              required
-              value={bank}
-              onChange={(e) => setBank(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
-              placeholder="Ej. Banesco, Mercantil, Provincial"
-            />
-          </div>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Monto Pagado ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-semibold"
+                  placeholder="29.99"
+                />
+              </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Fecha de Transferencia</label>
-            <input
-              type="date"
-              required
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
-            />
-          </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Número de Referencia</label>
+                <input
+                  type="text"
+                  required
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-semibold"
+                  placeholder="Ej. 123456"
+                />
+              </div>
 
-          <div className="md:col-span-2 pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center items-center gap-2 px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 active:scale-[0.98] disabled:opacity-70 text-sm"
-            >
-              {loading ? 'Enviando Reporte...' : 'Enviar Reporte de Pago Móvil'}
-            </button>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Banco Emisor</label>
+                <input
+                  type="text"
+                  required
+                  value={bank}
+                  onChange={(e) => setBank(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                  placeholder="Ej. Banesco, Mercantil, Provincial"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Fecha de Transferencia</label>
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                />
+              </div>
+
+              <div className="md:col-span-2 pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center items-center gap-2 px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 active:scale-[0.98] disabled:opacity-70 text-sm"
+                >
+                  {loading ? 'Enviando Reporte...' : 'Enviar Reporte de Pago Móvil'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </>
+      )}
 
       {/* ── Payment History Table ───────────────────────────────────── */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden space-y-4">

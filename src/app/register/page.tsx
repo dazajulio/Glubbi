@@ -28,7 +28,8 @@ import {
   Tag,
   CreditCard,
   Smartphone,
-  UserCheck
+  UserCheck,
+  Award
 } from 'lucide-react';
 
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -64,6 +65,10 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [checkoutUrl, setCheckoutUrl] = useState('');
   const [bcvRate, setBcvRate] = useState<number>(0);
+
+  // Plan Type & CGM State
+  const [planType, setPlanType] = useState<'standard' | 'cgm'>('standard');
+  const [cgmMemberCode, setCgmMemberCode] = useState<string>('');
 
   // Referral Source & Team Code State
   const [referralSource, setReferralSource] = useState<string>('Google');
@@ -165,12 +170,16 @@ export default function RegisterPage() {
           paymentReference, 
           couponId: appliedCoupon?.id,
           referral_source: referralSource,
-          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : '',
+          plan_type: 'standard',
+          is_cgm_member: false
         }),
       });
 
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'Error al registrar.');
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Error en el servidor al registrar restaurante. Intenta de nuevo.');
+      }
 
       setRegisteredSlug(result.slug);
       setStep('success');
@@ -181,7 +190,41 @@ export default function RegisterPage() {
     }
   };
 
+  const handleSelectCgmRegistration = async () => {
+    setIsLoading(true);
+    setErrorMsg('');
+    setStep('redirecting');
 
+    try {
+      const paymentReference = `Convenio Cámara Gastronómica de Mérida (Código: ${cgmMemberCode.trim().toUpperCase()})`;
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...formData, 
+          manualPayment: true, 
+          paymentReference, 
+          plan_type: 'cgm',
+          is_cgm_member: true,
+          cgm_member_code: cgmMemberCode.trim().toUpperCase(),
+          referral_source: 'Cámara Gastronómica de Mérida',
+          team_code: ''
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Error en el servidor al afiliar por convenio CGM. Intenta de nuevo.');
+      }
+
+      setRegisteredSlug(result.slug);
+      setStep('success');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error inesperado.');
+      setStep('payment_selection');
+      setIsLoading(false);
+    }
+  };
 
   // Unique generated slug to show at the end
   const [registeredSlug, setRegisteredSlug] = useState('');
@@ -211,7 +254,12 @@ export default function RegisterPage() {
       return;
     }
 
-    if (referralSource === 'Miembro del equipo Glubbi' && !teamMemberCode.trim()) {
+    if (planType === 'cgm' && !cgmMemberCode.trim()) {
+      setErrorMsg('Por favor ingresa tu código de afiliado a la Cámara Gastronómica de Mérida.');
+      return;
+    }
+
+    if (planType === 'standard' && referralSource === 'Miembro del equipo Glubbi' && !teamMemberCode.trim()) {
       setErrorMsg('Por favor ingresa el código del miembro o agente del equipo Glubbi.');
       return;
     }
@@ -239,12 +287,16 @@ export default function RegisterPage() {
           manualPayment: false, 
           couponId: appliedCoupon?.id,
           referral_source: referralSource,
-          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : '',
+          plan_type: 'standard',
+          is_cgm_member: false
         }),
       });
 
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'Error al registrar.');
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Error en el servidor al registrar restaurante. Intenta de nuevo.');
+      }
 
       setRegisteredSlug(result.slug);
       localStorage.setItem('Glubbi_pending_slug', result.slug);
@@ -294,12 +346,16 @@ export default function RegisterPage() {
           paymentReference, 
           couponId: appliedCoupon?.id,
           referral_source: referralSource,
-          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : ''
+          team_code: referralSource === 'Miembro del equipo Glubbi' ? teamMemberCode : '',
+          plan_type: 'standard',
+          is_cgm_member: false
         }),
       });
 
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'Error al registrar.');
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Error en el servidor al registrar restaurante. Intenta de nuevo.');
+      }
 
       setRegisteredSlug(result.slug);
       setStep('success');
@@ -371,56 +427,143 @@ export default function RegisterPage() {
             {/* LEFT COLUMN: Registration Form */}
             <div className="bg-white border border-slate-200/80 p-6 md:p-8 rounded-3xl flex flex-col justify-start gap-y-6 shadow-xl shadow-slate-200/40 relative overflow-hidden">
               
-              {/* Referral Source Selector ("¿Cómo te enteraste de Glubbi?") */}
-              <div className="bg-gradient-to-r from-orange-50/60 via-white to-purple-50/60 p-4.5 rounded-2xl border border-orange-200/80 space-y-3 shadow-sm select-none">
+              {/* Modalidad de Afiliación Selector */}
+              <div className="bg-slate-50/80 border border-slate-200/90 p-4.5 rounded-2xl space-y-3 shadow-sm select-none">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-orange-500" /> ¿Cómo te enteraste de Glubbi? *
+                    <Sparkles className="w-3.5 h-3.5 text-orange-500" /> Modalidad de Afiliación *
                   </label>
-                  <span className="text-[10px] font-extrabold text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">Requerido</span>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                    planType === 'cgm' 
+                      ? 'bg-amber-500/10 text-amber-700 border-amber-500/20' 
+                      : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20'
+                  }`}>
+                    {planType === 'cgm' ? '🏛️ Convenio Cámara' : '🎁 Plan Estándar'}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {REFERRAL_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setReferralSource(opt.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all text-left ${
-                        referralSource === opt.id
-                          ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
-                          : 'bg-white text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/30'
-                      }`}
-                    >
-                      <span className="text-sm">{opt.icon}</span>
-                      <span className="truncate">{opt.label}</span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Option 1: Standard */}
+                  <button
+                    type="button"
+                    onClick={() => setPlanType('standard')}
+                    className={`p-3.5 rounded-xl text-left border transition-all flex items-start gap-3 ${
+                      planType === 'standard'
+                        ? 'bg-white border-orange-500 ring-2 ring-orange-500/20 shadow-md'
+                        : 'bg-white/60 border-slate-200 hover:border-orange-200 hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-2xl shrink-0 mt-0.5">🎁</span>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">Plan Estándar</span>
+                        <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-600 px-1.5 py-0.2 rounded">60 Días Gratis</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">2 meses sin costo ($0.00 hoy), luego $29/mes.</p>
+                    </div>
+                  </button>
+
+                  {/* Option 2: Cámara Gastronómica */}
+                  <button
+                    type="button"
+                    onClick={() => setPlanType('cgm')}
+                    className={`p-3.5 rounded-xl text-left border transition-all flex items-start gap-3 ${
+                      planType === 'cgm'
+                        ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                        : 'bg-white/60 border-slate-200 hover:border-amber-300 hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-2xl shrink-0 mt-0.5">🏛️</span>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">Cámara Gastronómica</span>
+                        <span className="text-[9px] font-black uppercase bg-amber-500/20 text-amber-800 px-1.5 py-0.2 rounded">Convenio Mérida</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-tight">100% bonificado continuo para afiliados activos.</p>
+                    </div>
+                  </button>
                 </div>
 
-                {/* Fluid Code Input when "Miembro del equipo Glubbi" is selected */}
-                {referralSource === 'Miembro del equipo Glubbi' && (
-                  <div className="pt-2 animate-fade-in space-y-1.5">
-                    <label className="text-xs font-bold text-orange-600 flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-orange-500" /> Código del Agente / Miembro de Glubbi *
+                {/* Si es Cámara Gastronómica, pedir Código de Afiliado */}
+                {planType === 'cgm' && (
+                  <div className="pt-2 animate-fade-in space-y-2 bg-gradient-to-r from-amber-50/90 to-orange-50/50 p-4 rounded-xl border border-amber-300 shadow-sm">
+                    <label className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-amber-600" /> Código de Afiliado Cámara Gastronómica de Mérida *
                     </label>
                     <input
                       type="text"
-                      value={teamMemberCode}
-                      onChange={(e) => setTeamMemberCode(e.target.value.toUpperCase())}
-                      placeholder="Ej: CARLOS10 (Ingresa el código)"
-                      required={referralSource === 'Miembro del equipo Glubbi'}
-                      className="w-full bg-white border-2 border-orange-500 rounded-xl px-4 py-3 text-slate-900 font-mono font-black text-sm uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all shadow-sm"
+                      value={cgmMemberCode}
+                      onChange={(e) => setCgmMemberCode(e.target.value.toUpperCase())}
+                      placeholder="Ej: CGM-104 (Ingresa tu código de afiliado)"
+                      required={planType === 'cgm'}
+                      className="w-full bg-white border-2 border-amber-500 rounded-xl px-4 py-3 text-slate-900 font-mono font-black text-sm uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 transition-all shadow-sm"
                     />
+                    <p className="text-[11px] text-amber-800 flex items-center gap-1.5 font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      Tu membresía mensual está 100% cubierta por convenio mientras estés activo en la Cámara.
+                    </p>
                   </div>
                 )}
               </div>
 
+              {/* Referral Source Selector ("¿Cómo te enteraste de Glubbi?") - Solo para Plan Estándar */}
+              {planType === 'standard' && (
+                <div className="bg-gradient-to-r from-orange-50/60 via-white to-purple-50/60 p-4.5 rounded-2xl border border-orange-200/80 space-y-3 shadow-sm select-none">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-orange-500" /> ¿Cómo te enteraste de Glubbi? *
+                    </label>
+                    <span className="text-[10px] font-extrabold text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">Requerido</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {REFERRAL_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setReferralSource(opt.id)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all text-left ${
+                          referralSource === opt.id
+                            ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/30'
+                        }`}
+                      >
+                        <span className="text-sm">{opt.icon}</span>
+                        <span className="truncate">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Fluid Code Input when "Miembro del equipo Glubbi" is selected */}
+                  {referralSource === 'Miembro del equipo Glubbi' && (
+                    <div className="pt-2 animate-fade-in space-y-1.5">
+                      <label className="text-xs font-bold text-orange-600 flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-orange-500" /> Código del Agente / Miembro de Glubbi *
+                      </label>
+                      <input
+                        type="text"
+                        value={teamMemberCode}
+                        onChange={(e) => setTeamMemberCode(e.target.value.toUpperCase())}
+                        placeholder="Ej: CARLOS10 (Ingresa el código)"
+                        required={referralSource === 'Miembro del equipo Glubbi'}
+                        className="w-full bg-white border-2 border-orange-500 rounded-xl px-4 py-3 text-slate-900 font-mono font-black text-sm uppercase placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all shadow-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* STEP 1: Details Form */}
               <form onSubmit={handleSubmitDetails} className="space-y-5">
                 <div className="space-y-2">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Crea tu cuenta de Restaurante</h1>
-                  <p className="text-slate-400 text-sm">Completa el formulario. Te redirigimos al pago seguro en segundos.</p>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                    {planType === 'cgm' ? 'Afiliación por Convenio CGM' : 'Crea tu cuenta de Restaurante'}
+                  </h1>
+                  <p className="text-slate-400 text-sm">
+                    {planType === 'cgm' 
+                      ? 'Completa los datos de tu comercio afiliado a la Cámara Gastronómica.' 
+                      : 'Completa el formulario. Te redirigimos al pago seguro en segundos.'}
+                  </p>
                 </div>
 
                 {errorMsg && (
@@ -693,45 +836,53 @@ export default function RegisterPage() {
                 <div className="bg-gradient-to-r from-orange-50/70 via-white to-purple-50/60 p-5 rounded-2xl border border-orange-200/80 flex items-center justify-between shadow-sm">
                   <div>
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Plan Suscripción Restaurante</span>
-                    <span className="text-lg font-black text-slate-900 block">Glubbi SaaS Profesional</span>
-                    <span className="text-[11px] text-emerald-600 font-bold block mt-0.5">✓ Cancela en cualquier momento sin contrato</span>
+                    <span className="text-lg font-black text-slate-900 block">
+                      {planType === 'cgm' ? 'Convenio Cámara Gastronómica de Mérida' : 'Glubbi SaaS Profesional'}
+                    </span>
+                    <span className="text-[11px] text-emerald-600 font-bold block mt-0.5">
+                      {planType === 'cgm' ? '✓ Membresía 100% bonificada por convenio institucional' : '✓ Cancela en cualquier momento sin contrato'}
+                    </span>
                   </div>
                   <div className="text-right">
                     <span className="text-2xl font-black text-orange-600 block">
-                      {appliedCoupon ? `$${(29 * (1 - appliedCoupon.discount_percentage / 100)).toFixed(2)}` : '$29 USD'}
+                      {planType === 'cgm' ? '$0.00 USD' : (appliedCoupon ? `$${(29 * (1 - appliedCoupon.discount_percentage / 100)).toFixed(2)}` : '$29 USD')}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-semibold block">/ mes</span>
+                    <span className="text-[10px] text-slate-400 font-semibold block">
+                      {planType === 'cgm' ? 'por convenio' : '/ mes'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Coupon Section */}
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-orange-500" /> ¿Tienes un código de descuento o cupón B2B?
-                  </label>
-                  <div className="flex gap-2">
-                    <input 
-                      value={couponCode}
-                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="Ingresa tu cupón"
-                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono font-bold uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-                    />
-                    <button 
-                      onClick={handleApplyCoupon}
-                      type="button"
-                      disabled={couponLoading || !couponCode}
-                      className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-all shadow-sm"
-                    >
-                      {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Aplicar'}
-                    </button>
+                {/* Coupon Section (solo para Plan Estándar) */}
+                {planType === 'standard' && (
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-orange-500" /> ¿Tienes un código de descuento o cupón B2B?
+                    </label>
+                    <div className="flex gap-2">
+                      <input 
+                        value={couponCode}
+                        onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Ingresa tu cupón"
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono font-bold uppercase focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                      />
+                      <button 
+                        onClick={handleApplyCoupon}
+                        type="button"
+                        disabled={couponLoading || !couponCode}
+                        className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-all shadow-sm"
+                      >
+                        {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Aplicar'}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-red-500 text-xs font-semibold mt-1">{couponError}</p>}
+                    {appliedCoupon && (
+                      <p className="text-emerald-600 text-xs font-bold mt-1 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Cupón {appliedCoupon.code} aplicado: {appliedCoupon.discount_percentage}% de descuento otorgado.
+                      </p>
+                    )}
                   </div>
-                  {couponError && <p className="text-red-500 text-xs font-semibold mt-1">{couponError}</p>}
-                  {appliedCoupon && (
-                    <p className="text-emerald-600 text-xs font-bold mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Cupón {appliedCoupon.code} aplicado: {appliedCoupon.discount_percentage}% de descuento otorgado.
-                    </p>
-                  )}
-                </div>
+                )}
 
                 {errorMsg && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-xs font-semibold">
@@ -739,8 +890,53 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                {/* Payment Methods Options OR 100% Free Activation */}
-                {appliedCoupon && appliedCoupon.discount_percentage === 100 ? (
+                {/* CGM Activation Card */}
+                {planType === 'cgm' ? (
+                  <div className="space-y-4 pt-1">
+                    <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white p-6 md:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-36 h-36 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                      <div className="flex items-start gap-4 relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-white/20 text-white flex items-center justify-center shrink-0 text-3xl font-bold shadow-inner">
+                          🏛️
+                        </div>
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] font-black uppercase tracking-wider bg-white/20 text-white px-3 py-0.5 rounded-full inline-block">
+                            Convenio Institucional Oficial
+                          </span>
+                          <h3 className="text-xl md:text-2xl font-black text-white">Membresía Cámara Gastronómica</h3>
+                          <p className="text-xs text-white/90 leading-relaxed">
+                            Código de Afiliado validado: <strong className="font-mono font-extrabold underline text-amber-200">{cgmMemberCode}</strong>. El costo de tu suscripción mensual es cubierto por el convenio institucional.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-white/20 flex items-center justify-between">
+                        <div>
+                          <span className="text-xs text-white/80 font-semibold block">Total a pagar hoy:</span>
+                          <span className="text-2xl font-black text-white">$0.00 USD</span>
+                        </div>
+                        <span className="text-xs font-black uppercase bg-white/20 text-white px-3 py-1 rounded-full border border-white/30">
+                          ✓ 100% Bonificado
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={handleSelectCgmRegistration}
+                        disabled={isLoading}
+                        className="w-full mt-6 bg-white hover:bg-amber-50 text-amber-900 font-black text-base py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {isLoading ? (
+                          <><Loader2 className="w-5 h-5 animate-spin" /> Activando tu cuenta por convenio...</>
+                        ) : (
+                          <>
+                            🏛️ Activar Mi Cuenta por Convenio CGM
+                            <ChevronRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : appliedCoupon && appliedCoupon.discount_percentage === 100 ? (
                   <div className="space-y-4 pt-1">
                     <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
@@ -991,16 +1187,28 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* STEP 3: Manual Success (Pago Movil) */}
+            {/* STEP 3: Success */}
             {step === 'success' && (
               <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-12 shadow-2xl text-center space-y-6 animate-fade-in relative overflow-hidden">
-                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl border ${
+                  planType === 'cgm' 
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' 
+                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                }`}>
+                  {planType === 'cgm' ? '🏛️' : <CheckCircle2 className="w-10 h-10 text-emerald-500" />}
                 </div>
                 <div className="space-y-2">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">¡Pago confirmado!</h1>
-                  <p className="text-slate-500 text-sm max-w-xs mx-auto">
-                    Tu cuenta ha sido activada exitosamente con el Pago Móvil registrado.
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                    {planType === 'cgm' ? '¡Afiliación por Convenio Confirmada!' : '¡Cuenta Activada!'}
+                  </h1>
+                  <p className="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">
+                    {planType === 'cgm' ? (
+                      <>
+                        Tu restaurante ha sido afiliado exitosamente bajo el convenio con la <strong>Cámara Gastronómica de Mérida</strong> (Código: <span className="font-mono font-bold text-amber-700">{cgmMemberCode}</span>). Tu membresía está 100% bonificada de forma continua.
+                      </>
+                    ) : (
+                      'Tu cuenta ha sido activada exitosamente con tu promoción de 60 días gratis. Accede a tu panel para configurar tu local.'
+                    )}
                   </p>
                 </div>
                 <Link
@@ -1017,50 +1225,95 @@ export default function RegisterPage() {
 
       </main>
 
-      {/* WELCOME POPUP MODAL FOR INICIOGLUBBI */}
+      {/* WELCOME POPUP MODAL */}
       {showWelcomeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-100 space-y-6 relative overflow-hidden transform animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-100 space-y-6 relative overflow-hidden transform animate-scale-up">
             {/* Top decorative gradient glow */}
-            <div className="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-orange-500 via-emerald-500 to-teal-500" />
+            <div className="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-orange-500 via-amber-500 to-teal-500" />
             
-            <div className="text-center space-y-3 pt-2">
-              <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto text-3xl shadow-xl shadow-emerald-500/30 animate-bounce">
-                🎁
-              </div>
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> ¡Regalo de Bienvenida Activo!
+            <div className="text-center space-y-2 pt-2">
+              <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-orange-500" /> Opciones de Afiliación
               </span>
               <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                ¡Tus primeros 60 Días son 100% GRATIS!
+                Elige tu modalidad de registro
               </h2>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Hemos activado automáticamente el cupón de bienvenida <strong className="text-emerald-600 font-black">INICIOGLUBBI</strong>. Registra tu local hoy y disfruta del sistema completo por <strong className="text-slate-900 font-bold">2 meses ($0.00 hoy)</strong>.
+              <p className="text-xs text-slate-500">
+                Selecciona cómo deseas afiliar tu local hoy para comenzar de inmediato:
               </p>
             </div>
 
-            {/* Benefit Highlights */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700 font-semibold">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span><strong>$0.00 a pagar hoy</strong> (100% de descuento durante 60 días).</span>
+            {/* 2 Selectable Options */}
+            <div className="space-y-3">
+              {/* Option 1: 60 Days Free */}
+              <div
+                onClick={() => setPlanType('standard')}
+                className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5 ${
+                  planType === 'standard'
+                    ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-2 ring-emerald-500/20'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center text-2xl shrink-0">
+                  🎁
+                </div>
+                <div className="flex-1 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-extrabold text-slate-900">¡Tus primeros 60 Días 100% GRATIS!</h3>
+                    {planType === 'standard' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Cupón de bienvenida <strong className="text-emerald-600 font-bold">INICIOGLUBBI</strong> activo. Disfruta de 2 meses sin costo ($0.00 hoy), luego $29/mes.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Sin ingresar tarjeta de crédito ni datos bancarios hoy.</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Acceso inmediato al menú digital, KDS y panel de gerente.</span>
+
+              {/* Option 2: Cámara Gastronómica de Mérida */}
+              <div
+                onClick={() => setPlanType('cgm')}
+                className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5 ${
+                  planType === 'cgm'
+                    ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
+                    : 'border-slate-200 bg-white hover:border-amber-300'
+                }`}
+              >
+                <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center text-2xl shrink-0">
+                  🏛️
+                </div>
+                <div className="flex-1 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-extrabold text-slate-900">Soy Miembro de la Cámara Gastronómica</h3>
+                    {planType === 'cgm' && <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0" />}
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Convenio oficial Mérida. Suscripción continua <strong className="text-amber-800 font-bold">100% gratuita</strong> ingresando tu código de afiliado.
+                  </p>
+                </div>
               </div>
             </div>
+
+            {planType === 'cgm' && (
+              <div className="space-y-1.5 animate-fade-in bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200">
+                <label className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-amber-600" /> Ingresa tu Código de Afiliado a la Cámara:
+                </label>
+                <input
+                  type="text"
+                  value={cgmMemberCode}
+                  onChange={(e) => setCgmMemberCode(e.target.value.toUpperCase())}
+                  placeholder="Ej: CGM-104 (o tu N° de Afiliado)"
+                  className="w-full bg-white border-2 border-amber-400 rounded-xl px-4 py-2.5 text-xs font-mono font-black uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+            )}
 
             <button
               type="button"
               onClick={() => setShowWelcomeModal(false)}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black text-base py-4 rounded-2xl shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
             >
-              🚀 Reclamar Mis 60 Días Gratis
+              {planType === 'cgm' ? '🏛️ Continuar con Convenio Cámara' : '🚀 Reclamar Mis 60 Días Gratis'}
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
