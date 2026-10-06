@@ -84,25 +84,6 @@ export function KDSBoard({ restaurantId }: KDSBoardProps) {
   const router = useRouter();
   const { slug } = useParams();
   const { isUnlocked } = useKdsStore();
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  // Capture PWA install prompt
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`PWA Installation outcome: ${outcome}`);
-    setDeferredPrompt(null);
-  };
 
   // Screen Wake Lock API: Mantiene la pantalla de cocina siempre encendida
   useEffect(() => {

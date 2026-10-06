@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles, Plus } from 'lucide-react';
+import { ChefHat, UtensilsCrossed, QrCode, ClipboardList, BarChart3, Brain, Download, LogOut, Camera, CreditCard, FileText, MapPin, Sparkles, Plus, Monitor, ExternalLink, Check, Copy } from 'lucide-react';
 import { GerentePinGuard } from '@/components/shared/GerentePinGuard';
 import { ProcessErrorBoundary } from '@/components/shared/ProcessErrorBoundary';
 
@@ -20,7 +20,6 @@ export default function GerenteLayout({
   const [restaurantName, setRestaurantName] = useState('Cargando...');
   const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
   const [restaurantId, setRestaurantId] = useState<string>('');
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     async function fetchRestaurant() {
@@ -44,38 +43,6 @@ export default function GerenteLayout({
     if (slug) {
       fetchRestaurant();
     }
-
-    // Register Service Worker for PWA
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((reg) => console.log('Service Worker registrado con éxito:', reg.scope))
-        .catch((err) => console.error('Error al registrar Service Worker:', err));
-    }
-
-    // Capture PWA install prompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    // Inject dynamic manifest for KDS
-    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-    const originalManifest = manifestLink?.href;
-    
-    if (!manifestLink) {
-      manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      document.head.appendChild(manifestLink);
-    }
-    manifestLink.href = `/api/manifest/kds?slug=${slug}`;
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      if (manifestLink && originalManifest) {
-        manifestLink.href = originalManifest;
-      }
-    };
   }, [slug]);
 
   const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -124,16 +91,6 @@ export default function GerenteLayout({
     navigator.clipboard.writeText(kdsUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
-  };
-
-  const handleInstallPWA = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setDeferredPrompt(null);
-    } else {
-      handleDownloadShortcut();
-    }
   };
 
   const links = [
@@ -191,14 +148,14 @@ export default function GerenteLayout({
         </nav>
 
         <div className="mt-auto pt-4 space-y-2 border-t border-slate-800">
-          {/* Descargar KDS Button — bottom of sidebar */}
+          {/* Autoinicio KDS PC Button — bottom of sidebar */}
           <button
             onClick={() => setShowDownloadModal(true)}
-            title="Instalar App Nativa de Cocina (KDS)"
+            title="Configurar Autoinicio de Cocina (KDS) en PC"
             className="w-full flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all"
           >
-            <Sparkles className="w-4 h-4 shrink-0 animate-pulse" />
-            <span>📲 Instalar App de Cocina (KDS)</span>
+            <Monitor className="w-4 h-4 shrink-0" />
+            <span>🖥️ Autoinicio KDS en PC</span>
           </button>
 
           {/* Logout Button */}
@@ -234,8 +191,8 @@ export default function GerenteLayout({
             onClick={() => setShowDownloadModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold text-[11px] shadow-sm active:scale-95 transition-all"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>KDS Cocina</span>
+            <Monitor className="w-3.5 h-3.5" />
+            <span>Autoinicio KDS</span>
           </button>
         </div>
 
@@ -245,18 +202,18 @@ export default function GerenteLayout({
           </GerentePinGuard>
         </ProcessErrorBoundary>
 
-        {/* Modal Descargar KDS */}
+        {/* Modal Autoinicio KDS */}
         {showDownloadModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-[#1E222A] border border-slate-800 text-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-slate-900 border border-orange-500/40 flex items-center justify-center p-2 shrink-0 overflow-hidden shadow-md">
-                    <img src="/icon.png" alt="Glubbi Logo" className="w-full h-full object-contain" />
+                  <div className="w-11 h-11 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 shrink-0 shadow-md">
+                    <Monitor className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base md:text-lg text-white">Instalar Glubbi KDS</h3>
-                    <p className="text-xs text-slate-400">Terminal de Cocina Autónomo (Pantalla Completa)</p>
+                    <h3 className="font-extrabold text-base md:text-lg text-white">Autoinicio KDS en PC</h3>
+                    <p className="text-xs text-slate-400">Terminal de Cocina Autónomo (Inicio Automático)</p>
                   </div>
                 </div>
                 <button 
@@ -270,105 +227,97 @@ export default function GerenteLayout({
               <div className="space-y-4 text-xs text-slate-300">
                 <div className="p-3.5 bg-slate-900/70 rounded-2xl border border-slate-800/80 space-y-1.5">
                   <p className="font-bold text-orange-400 flex items-center gap-1.5 text-xs">
-                    🛡️ Acceso Aislado & Seguro para Cocineros
+                    ⚡ Inicio Automático al Encender el Computador
                   </p>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Abre <strong>únicamente el monitor de comandas</strong>. Mantiene la pantalla siempre encendida, emite alertas sonoras continuas ante nuevos pedidos y bloquea el acceso a tus ventas y reportes privados.
+                    Al configurar el autoinicio, la pantalla de comandas de cocina (KDS) se abrirá <strong>automáticamente en tu navegador cada vez que enciendas la PC</strong> del restaurante o cocina, sin tener que buscar la página ni recordar enlaces.
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  {/* Opción 1: App Nativa PWA */}
-                  <button
-                    onClick={() => {
-                      handleInstallPWA();
-                      setShowDownloadModal(false);
-                    }}
-                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-2xl font-bold shadow-lg shadow-orange-500/20 transition-all group active:scale-[0.99]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src="/icon.png" alt="Glubbi" className="w-7 h-7 object-contain drop-shadow" />
-                      <div className="text-left">
-                        <span className="block text-sm">📲 Instalar App Nativa (1-Clic)</span>
-                        <span className="block text-[10px] text-orange-100 font-normal">Crea icono oficial de Glubbi en el Escritorio / Inicio</span>
+                {/* Botón Principal de Descarga de Acceso Directo */}
+                <button
+                  onClick={handleDownloadShortcut}
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-2xl font-bold shadow-lg shadow-orange-500/25 transition-all group active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                      <Download className="w-5 h-5 text-white animate-bounce" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-sm font-black">Descargar Acceso Directo (.url)</span>
+                      <span className="block text-[11px] text-orange-100 font-normal">Archivo preparado para inicio automático en Windows</span>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl group-hover:bg-white/30 shrink-0 font-extrabold">
+                    Descargar
+                  </span>
+                </button>
+
+                {/* Guía Paso a Paso para Windows Startup */}
+                <div className="p-4 bg-slate-900/70 rounded-2xl border border-slate-800 space-y-3">
+                  <p className="font-bold text-xs text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                    <span>Pasos para activar el autoinicio en Windows (1 minuto):</span>
+                  </p>
+
+                  <div className="space-y-2.5 text-[11px] text-slate-300">
+                    <div className="flex items-start gap-2.5 bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
+                      <div>
+                        <strong>Descarga el acceso:</strong> Haz clic en el botón naranja superior para descargar <code>Glubbi KDS ({slug}).url</code>.
                       </div>
                     </div>
-                    <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl group-hover:bg-white/30 shrink-0 font-extrabold">Instalar</span>
-                  </button>
 
-                  {/* Opción 2: Acceso Directo de Enlace (.url para Windows) */}
-                  <button
-                    onClick={handleDownloadShortcut}
-                    className="w-full flex items-center justify-between p-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-white rounded-2xl font-bold transition-all group active:scale-[0.99]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Download className="w-5 h-5 text-orange-400 shrink-0" />
-                      <div className="text-left">
-                        <span className="block text-sm">🔗 Descargar Acceso Directo (.url)</span>
-                        <span className="block text-[10px] text-slate-400 font-normal">Ideal para Windows y auto-inicio con el sistema</span>
+                    <div className="flex items-start gap-2.5 bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
+                      <div>
+                        <strong>Abre la carpeta de inicio:</strong> En tu teclado presiona las teclas <kbd className="px-1.5 py-0.5 bg-slate-900 border border-slate-700 rounded text-orange-400 font-mono text-[10px]">Win + R</kbd>, escribe <code className="text-amber-300 font-mono font-bold">shell:startup</code> y presiona <strong>Enter</strong> (o Aceptar).
                       </div>
                     </div>
-                    <span className="text-xs bg-orange-500/20 text-orange-400 px-3 py-1.5 rounded-xl group-hover:bg-orange-500/30 shrink-0">Descargar</span>
-                  </button>
 
-                  {/* Opción 3: Copiar Enlace Directo */}
+                    <div className="flex items-start gap-2.5 bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                      <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
+                      <div>
+                        <strong>Pega o arrastra el archivo:</strong> Mueve el archivo descargado a esa carpeta abierta. ¡Listo! A partir de ahora, cada vez que enciendas la PC, Glubbi KDS se abrirá solo.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acciones Secundarias: Abrir ahora / Tablet */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <a
+                    href={`/${slug}/cocina`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl font-bold text-xs transition-all text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                    <span>Abrir KDS en el navegador</span>
+                  </a>
+
                   <button
                     onClick={handleCopyKdsLink}
-                    className="w-full flex items-center justify-between p-3.5 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl font-bold transition-all active:scale-[0.99]"
+                    className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl font-bold text-xs transition-all"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-base">📋</span>
-                      <div className="text-left truncate max-w-[240px]">
-                        <span className="block text-xs font-semibold">Copiar URL directa para la tablet</span>
-                        <span className="block text-[10px] text-slate-500 font-mono truncate">/{slug}/cocina</span>
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-lg shrink-0 font-bold ${copiedLink ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-300'}`}>
-                      {copiedLink ? '✓ Copiado' : 'Copiar Link'}
-                    </span>
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="text-emerald-400">¡Enlace Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>Copiar Link para Tablet</span>
+                      </>
+                    )}
                   </button>
-                </div>
-
-                {/* Instrucciones Adaptativas según el Dispositivo Detectado */}
-                <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-800 space-y-2">
-                  <p className="font-bold text-xs text-white flex items-center gap-1.5">
-                    <span>⚡ Guía de Configuración Rápida:</span>
-                  </p>
-
-                  {deviceInfo.isIOS ? (
-                    <div className="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
-                      <p className="text-orange-400 font-semibold">📱 Configuración para iPad / iPhone (Safari):</p>
-                      <ol className="list-decimal list-inside text-slate-400 space-y-1">
-                        <li>Abre el enlace copiado en el navegador <strong>Safari</strong> de tu iPad.</li>
-                        <li>Toca el botón <strong>Compartir</strong> (icono de cuadrado con flecha hacia arriba).</li>
-                        <li>Selecciona <strong>"Agregar al inicio"</strong> para tener el KDS en pantalla completa.</li>
-                      </ol>
-                    </div>
-                  ) : deviceInfo.isAndroid ? (
-                    <div className="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
-                      <p className="text-orange-400 font-semibold">🤖 Configuración para Tablet Android (Chrome):</p>
-                      <ol className="list-decimal list-inside text-slate-400 space-y-1">
-                        <li>Abre el enlace en <strong>Google Chrome</strong> en la tablet de cocina.</li>
-                        <li>Toca los tres puntos (⋮) arriba a la derecha.</li>
-                        <li>Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.</li>
-                      </ol>
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
-                      <p className="text-orange-400 font-semibold">🖥️ Inicio Automático al encender tu PC Windows:</p>
-                      <ol className="list-decimal list-inside text-slate-400 space-y-1">
-                        <li>Descarga el archivo <strong>Glubbi KDS ({slug}).url</strong>.</li>
-                        <li>Presiona las teclas <code>Win + R</code>, escribe <code>shell:startup</code> y presiona Enter.</li>
-                        <li>Arrastra o pega el archivo descargado en esa carpeta para que <strong>Glubbi KDS</strong> inicie automáticamente cada vez que enciendas la PC de caja o cocina.</li>
-                      </ol>
-                    </div>
-                  )}
                 </div>
 
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-400 flex items-start gap-2">
                   <span className="text-sm">🔔</span>
                   <div>
-                    <strong>Alarma Activa en Segundo Plano:</strong> Al abrir el KDS, presiona <em>"Iniciar Turno"</em> para que la alarma suene incluso si minimizas la ventana o usas otra aplicación en la PC.
+                    <strong>Alarma Sonora en Cocina:</strong> Al abrir el KDS, presiona <em>"Iniciar Turno"</em> para que la pantalla se mantenga encendida y suene la alarma ante cada nuevo pedido.
                   </div>
                 </div>
               </div>
@@ -378,7 +327,7 @@ export default function GerenteLayout({
                   onClick={() => setShowDownloadModal(false)}
                   className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors"
                 >
-                  Entendido
+                  Cerrar
                 </button>
               </div>
             </div>
