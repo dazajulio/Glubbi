@@ -33,7 +33,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
   const [success, setSuccess] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   
-  const [amount, setAmount] = useState('29.99');
+  const [amount, setAmount] = useState('19.00');
   const [reference, setReference] = useState('');
   const [bank, setBank] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -168,7 +168,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
                     $0.00 <span className="text-xs text-amber-400 font-semibold">(100% Bonificado)</span>
                   </>
                 ) : (
-                  <>$29.99 <span className="text-xs text-slate-400 font-normal">/ mes</span></>
+                  <>$19.00 <span className="text-xs text-slate-400 font-normal">/ mes</span></>
                 )}
               </p>
             </div>
@@ -288,7 +288,7 @@ export default function SuscripcionPage({ params }: { params: Promise<{ slug: st
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm font-semibold"
-                  placeholder="29.99"
+                  placeholder="19.00"
                 />
               </div>
 

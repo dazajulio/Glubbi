@@ -470,18 +470,18 @@ export default function TenantsPage() {
                       type="button"
                       disabled={isUpdating}
                       onClick={() => {
-                        if (confirm(`¿Convertir "${selectedTenant.name}" a Plan Estándar de Pago ($29/mes)? Esto reactivará el cobro regular si el comercio ya no es miembro de la Cámara.`)) {
+                        if (confirm(`¿Convertir "${selectedTenant.name}" a Plan Estándar de Pago ($19/mes)? Esto reactivará el cobro regular si el comercio ya no es miembro de la Cámara.`)) {
                           toggleCgmStatus(selectedTenant, false);
                         }
                       }}
                       className="w-full py-2 bg-gradient-to-r from-red-600 to-orange-600 hover:brightness-110 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
-                      <span>🔄 Convertir a Cuenta de Pago ($29/mes)</span>
+                      <span>🔄 Convertir a Cuenta de Pago ($19/mes)</span>
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-2 pt-1">
-                    <p className="text-[11px] text-gray-500">Este restaurante está en Plan Estándar ($29/mes).</p>
+                    <p className="text-[11px] text-gray-500">Este restaurante está en Plan Estándar ($19/mes).</p>
                     <button
                       type="button"
                       disabled={isUpdating}

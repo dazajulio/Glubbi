@@ -65,7 +65,7 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-white tracking-tight">3. Registro, Suscripción y Tarifas</h2>
             <p>
-              Para acceder al Servicio, el Usuario debe completar el formulario de registro y realizar el pago correspondiente a la suscripción activa. Glubbi se ofrece bajo una tarifa única mensual de <strong>$29.00 USD (veintinueve dólares estadounidenses)</strong>. 
+              Para acceder al Servicio, el Usuario debe completar el formulario de registro y realizar el pago correspondiente a la suscripción activa. Glubbi se ofrece bajo una tarifa única mensual de <strong>$19.00 USD (diecinueve dólares estadounidenses)</strong>. 
             </p>
             <p>
               El cobro se realiza de forma recurrente cada treinta (30) días a partir de la fecha de activación. La contratación es mensual y no existe ningún compromiso de permanencia ni contrato anual forzoso. El Usuario puede solicitar la no renovación o la cancelación de su suscripción en cualquier momento directamente desde su panel administrativo.

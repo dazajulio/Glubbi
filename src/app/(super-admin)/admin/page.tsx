@@ -268,8 +268,8 @@ export default function SuperAdminDashboard() {
   });
 
   const totalMRR = (dateRangeFilter !== 'all' && filteredActiveRestaurants.length > 0)
-    ? filteredActiveRestaurants.length * 29
-    : activeRestaurants.length * 29;
+    ? filteredActiveRestaurants.length * 19
+    : activeRestaurants.length * 19;
     
   const totalARR = totalMRR * 12;
 
@@ -342,7 +342,7 @@ export default function SuperAdminDashboard() {
     // MRR: restaurants created on or before this month's end
     const endOfMonth = new Date(m.year, m.monthNum + 1, 0, 23, 59, 59, 999);
     const activeRestCount = restaurants.filter(r => r.is_active && new Date(r.created_at) <= endOfMonth).length;
-    const mrr = activeRestCount * 29;
+    const mrr = activeRestCount * 19;
 
     // GMV: orders paid in this month
     const gmv = paidOrders

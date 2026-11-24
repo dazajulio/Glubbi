@@ -363,7 +363,7 @@ export default function VentasEquipoPage() {
 
                     {/* Monto */}
                     <td className="py-4 px-4 text-right font-black text-slate-900 text-sm">
-                      ${Number(sale.amount || 29).toFixed(2)}
+                      ${Number(sale.amount || 19).toFixed(2)}
                     </td>
 
                     {/* Estado */}

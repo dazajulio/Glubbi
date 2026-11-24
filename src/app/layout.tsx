@@ -79,7 +79,7 @@ export default function RootLayout({
     applicationCategory: 'BusinessApplication',
     offers: {
       '@type': 'Offer',
-      price: '29.00',
+      price: '19.00',
       priceCurrency: 'USD',
     },
     description:

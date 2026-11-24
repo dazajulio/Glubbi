@@ -459,7 +459,7 @@ export default function RegisterPage() {
                         <span className="text-xs font-bold text-slate-900">Plan Estándar</span>
                         <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-600 px-1.5 py-0.2 rounded">60 Días Gratis</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-tight">2 meses sin costo ($0.00 hoy), luego $29/mes.</p>
+                      <p className="text-[11px] text-slate-500 leading-tight">2 meses sin costo ($0.00 hoy), luego $19/mes.</p>
                     </div>
                   </button>
 
@@ -800,11 +800,11 @@ export default function RegisterPage() {
 
               <div className="mt-8 p-5 bg-gradient-to-br from-white via-orange-50/40 to-purple-50/20 rounded-2xl border border-orange-200/80 shadow-md flex items-start gap-4 select-none">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-orange-600 text-white flex items-center justify-center font-black text-xl shrink-0 shadow-lg shadow-orange-500/20">
-                  $29
+                  $19
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-black text-slate-900">Suscripción $29/mes</span>
+                    <span className="text-base font-black text-slate-900">Suscripción $19/mes</span>
                     <span className="text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-2 py-0.5 rounded-full">Sin Contrato</span>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">
@@ -845,7 +845,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-2xl font-black text-orange-600 block">
-                      {planType === 'cgm' ? '$0.00 USD' : (appliedCoupon ? `$${(29 * (1 - appliedCoupon.discount_percentage / 100)).toFixed(2)}` : '$29 USD')}
+                      {planType === 'cgm' ? '$0.00 USD' : (appliedCoupon ? `$${(19 * (1 - appliedCoupon.discount_percentage / 100)).toFixed(2)}` : '$19 USD')}
                     </span>
                     <span className="text-[10px] text-slate-400 font-semibold block">
                       {planType === 'cgm' ? 'por convenio' : '/ mes'}
@@ -1057,9 +1057,9 @@ export default function RegisterPage() {
 
                 <div className="bg-gradient-to-r from-orange-50/70 via-white to-amber-50/70 border border-orange-200 rounded-2xl p-5 space-y-3 shadow-sm">
                   <div className="flex justify-between items-center border-b border-orange-200/60 pb-3">
-                    <span className="text-slate-700 text-sm font-bold">Monto exacto a pagar ({appliedCoupon ? `Con ${appliedCoupon.discount_percentage}% desc.` : '$29 USD'}):</span>
+                    <span className="text-slate-700 text-sm font-bold">Monto exacto a pagar ({appliedCoupon ? `Con ${appliedCoupon.discount_percentage}% desc.` : '$19 USD'}):</span>
                     <span className="text-2xl font-black text-orange-600">
-                      Bs. {bcvRate ? (bcvRate * (appliedCoupon ? 29 * (1 - appliedCoupon.discount_percentage / 100) : 29)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Calculando...'}
+                      Bs. {bcvRate ? (bcvRate * (appliedCoupon ? 19 * (1 - appliedCoupon.discount_percentage / 100) : 19)).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'Calculando...'}
                     </span>
                   </div>
                   <div className="text-sm text-slate-800 space-y-1 pt-1 font-medium">
@@ -1165,7 +1165,7 @@ export default function RegisterPage() {
                 <div className="space-y-2">
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Redirigiendo al pago seguro...</h1>
                   <p className="text-slate-500 text-sm max-w-xs mx-auto">
-                    Tu cuenta ha sido creada. Te llevamos a Lemon Squeezy para completar tu suscripción de $29/mes.
+                    Tu cuenta ha sido creada. Te llevamos a Lemon Squeezy para completar tu suscripción de $19/mes.
                   </p>
                 </div>
 
@@ -1264,7 +1264,7 @@ export default function RegisterPage() {
                     {planType === 'standard' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Cupón de bienvenida <strong className="text-emerald-600 font-bold">INICIOGLUBBI</strong> activo. Disfruta de 2 meses sin costo ($0.00 hoy), luego $29/mes.
+                    Cupón de bienvenida <strong className="text-emerald-600 font-bold">INICIOGLUBBI</strong> activo. Disfruta de 2 meses sin costo ($0.00 hoy), luego $19/mes.
                   </p>
                 </div>
               </div>

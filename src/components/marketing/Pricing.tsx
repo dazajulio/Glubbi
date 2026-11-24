@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const PLAN = {
   name: 'Plan Pro Único',
-  price: '29',
+  price: '19',
   tagline: 'Todo el poder operativo de Glubbi en un solo plan ilimitado.',
   features: [
     'Menú Digital + Códigos QR/NFC ilimitados',

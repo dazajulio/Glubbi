@@ -373,7 +373,7 @@ export async function POST(request: Request) {
         contact_name: contactName,
         email,
         payment_method: isCgm ? 'CONVENIO CGM' : (manualPayment ? 'PAGO MOVIL' : 'LEMON'),
-        amount: isCgm ? 0.00 : 29.00,
+        amount: isCgm ? 0.00 : 19.00,
         referral_source: isCgm ? 'Cámara Gastronómica de Mérida' : (referral_source || 'Desconocido'),
         status: 'completed'
       } as any);

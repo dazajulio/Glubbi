@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function GlobalSettingsPage() {
-  const [saasPrice, setSaasPrice] = useState('29.00');
+  const [saasPrice, setSaasPrice] = useState('19.00');
   const [supportEmail, setSupportEmail] = useState('soporte@glubbi.app');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

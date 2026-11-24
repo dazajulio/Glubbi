@@ -138,7 +138,7 @@ export function Ecosystem() {
           
           <div className="shrink-0 bg-white/10 border border-white/10 backdrop-blur-md px-6 py-4 rounded-2xl text-center">
             <span className="text-xs text-slate-300 uppercase tracking-wider font-semibold block mb-1">Cero Comisiones por Venta</span>
-            <span className="text-3xl font-black text-orange-400">$29 USD<span className="text-sm font-normal text-slate-300">/mes</span></span>
+            <span className="text-3xl font-black text-orange-400">$19 USD<span className="text-sm font-normal text-slate-300">/mes</span></span>
           </div>
         </div>
 

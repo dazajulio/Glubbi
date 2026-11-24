@@ -45,7 +45,7 @@ export default function BillingPage() {
   }
 
   const activeRestaurants = restaurants.filter(r => r.is_active);
-  const totalSales = activeRestaurants.length * 29;
+  const totalSales = activeRestaurants.length * 19;
   const totalCommission = totalSales * 0.04;
   const invoiceCount = restaurants.length;
 
@@ -68,7 +68,7 @@ export default function BillingPage() {
             <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider block">Integración Activa: Lemon Squeezy (Modo Real)</span>
           </div>
           <p className="text-sm font-semibold text-slate-800">
-            Cobro automático de suscripciones B2B ($29.00/mes) habilitado y conectado a producción.
+            Cobro automático de suscripciones B2B ($19.00/mes) habilitado y conectado a producción.
           </p>
           <p className="text-xs text-slate-500">
             Los eventos de pago, renovaciones y bajas son recibidos en tiempo real vía Webhooks de Lemon Squeezy y sincronizados con la base de datos de Glubbi.
@@ -95,7 +95,7 @@ export default function BillingPage() {
         <div className="bg-white shadow-md border border-gray-200 rounded-3xl p-6 space-y-2">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Transacciones Procesadas</span>
           <p className="text-2xl font-black text-gray-900">{invoiceCount} Facturas</p>
-          <span className="text-[10px] text-gray-500 font-mono block">Ticket recurrente: $29.00/mes</span>
+          <span className="text-[10px] text-gray-500 font-mono block">Ticket recurrente: $19.00/mes</span>
         </div>
 
         {/* KPI 3 */}
@@ -168,7 +168,7 @@ export default function BillingPage() {
                         {new Date(rest.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right font-mono font-bold">
-                        $29.00
+                        $19.00
                       </td>
                       <td className="px-6 py-4 text-center">
                         {rest.is_active ? (

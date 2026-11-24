@@ -42,7 +42,7 @@ El Agente 02 corre un cron diario a las 8:00 AM que revisa la columna `current_p
    * *Acción:* Envía correo: *"Tu suscripción de Glubbi vence en 2 días. Reporta tu pago móvil aquí para mantener tu servicio sin interrupciones."*
 2. **🔔 T-0 Días (Día de Cobro):**
    * *Trigger:* Hoy vence el período.
-   * *Acción:* Recordatorio formal de pago del plan mensual ($29/mes).
+   * *Acción:* Recordatorio formal de pago del plan mensual ($19/mes).
 3. **⛔ T+5 Días (Suspensión Automática):**
    * *Trigger:* Pasan 5 días del vencimiento sin pago reportado.
    * *Acción:* Cambia el estado del restaurante en Supabase a `suspended`. El menú bloquea checkout público e informa amablemente al cliente sobre el pago pendiente.
@@ -67,7 +67,7 @@ El Agente 02 corre un cron diario a las 8:00 AM que revisa la columna `current_p
   <p>Hola equipo de <strong>{{ restaurant_name }}</strong>,</p>
   <p>Hemos procesado exitosamente tu reporte de pago móvil por el plan mensual de Glubbi.</p>
   <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
-    <tr><td style="padding: 8px; font-weight: bold;">Monto Procesado:</td><td style="padding: 8px;">$29.00 USD / Equivalente Bs.</td></tr>
+    <tr><td style="padding: 8px; font-weight: bold;">Monto Procesado:</td><td style="padding: 8px;">$19.00 USD / Equivalente Bs.</td></tr>
     <tr><td style="padding: 8px; font-weight: bold;">Próximo Vencimiento:</td><td style="padding: 8px; color: #16a34a; font-weight: bold;">{{ new_expiry_date }}</td></tr>
   </table>
   <p style="margin-top: 20px;">Tu menú digital, KDS de cocina y sistema de pedidos continúan 100% activos.</p>
